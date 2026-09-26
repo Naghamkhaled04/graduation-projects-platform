@@ -21,7 +21,7 @@ export function mountCart(root: HTMLElement) {
         return `<div class="item ${st.on ? '' : 'off'}">
           <div class="row1">
             <button type="button" class="chk ${st.on ? 'on' : ''}" data-tog="${p.id}" aria-label="تفعيل القطعة">${CHECK}</button>
-            ${sel.img ? `<a class="pimg" href="${esc(sel.url || '#')}"><img src="${esc(sel.img)}" alt="" loading="lazy" /></a>` : ''}
+            ${sel.img ? `<a class="pimg" href="${esc(sel.url || '#')}"><img src="${esc(sel.img)}" alt="" loading="lazy" onerror="this.onerror=null;this.src='/img/part.svg'" /></a>` : ''}
             <div class="mid">
               <div class="nm">${sel.url ? `<a class="plink" href="${esc(sel.url)}">${esc(sel.nm)}</a>` : esc(sel.nm)}${p.req ? '<span class="req">أساسي</span>' : ''}</div>
               <div class="dsc">${esc(sel.d)}</div>

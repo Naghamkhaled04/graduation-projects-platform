@@ -1,9 +1,10 @@
-import catalog from './novatera.json';
+import catalog from './abela.json';
 import partmap from './partmap.json';
+import partblock from './partblock.json';
 import { STORE_URL } from './config';
 
 /**
- * يربط أسماء القطع بمشاريعنا مع منتجات المتجر الحقيقي (نوفاتيرا).
+ * يربط أسماء القطع بمشاريعنا مع منتجات المتجر (كتالوج المورّد أبيلا).
  * أسماء المتجر إنجليزية وأسماء مشاريعنا عربية غالباً، فنترجم الكلمات الشائعة أولاً.
  * القاعدة: ربط غلط أسوأ من عدم الربط — لو الثقة ضعيفة نرجّع null.
  */
@@ -63,7 +64,11 @@ function terms(raw: string) {
 
 const INDEX = items.map((it) => ({ it, n: ' ' + norm(it.nm) + ' ', flat: norm(it.nm).replace(/ /g, '') }));
 
+/** قائمة منع يدوية: أسماء راجعناها بالعين وطلعت مطابقتها الآلية غلط (partblock.json) */
+const BLOCK = new Set(partblock as string[]);
+
 export function findProduct(name: string): Product | null {
+  if (BLOCK.has(String(name).trim())) return null;
   const { groups, models } = terms(name);
   if (!groups.length) return null;
 

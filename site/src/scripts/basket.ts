@@ -26,7 +26,7 @@ export function mountBasket(root: ParentNode = document) {
     total.textContent = `${ar(sum)} د.أ`;
     list.innerHTML = keys.length
       ? keys.map((k) => `<div class="row">
-          <img src="${esc(bag[k].img)}" alt="" loading="lazy" />
+          <img src="${esc(bag[k].img || '/img/part.svg')}" alt="" loading="lazy" onerror="this.onerror=null;this.src='/img/part.svg'" />
           <span class="n">${esc(bag[k].nm)}</span>
           <span class="pp">${ar(bag[k].p * bag[k].n)} د.أ</span>
           <span class="qty"><button type="button" data-m="${esc(k)}" aria-label="أنقص">−</button><b>${ar(bag[k].n)}</b><button type="button" data-p="${esc(k)}" aria-label="زد">+</button></span>

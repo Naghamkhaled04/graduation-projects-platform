@@ -13,7 +13,8 @@ const linked = parts.map((p) => ({
   ...p,
   opts: p.opts.map((o) => {
     const prod = linkedProduct(o.nm);
-    return prod ? { ...o, url: `/store/${slugOf(prod.cat)}#p-${prod.id}`, live: prod.p, img: prod.img } : o;
+    // نربط بس لما سعر القطعة بالمشروع نفس سعر المتجر، عشان سعر السطر ما يختلف عن المجموع
+    return prod && prod.p === o.p ? { ...o, url: `/store/${slugOf(prod.cat)}#p-${prod.id}`, live: prod.p, img: prod.img } : o;
   }),
 }));
 const found = linked.reduce((n, p) => n + p.opts.filter((o: any) => o.url).length, 0);

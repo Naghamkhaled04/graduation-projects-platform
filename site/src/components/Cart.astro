@@ -1,6 +1,6 @@
 ---
 import { WHATSAPP } from '../data/config';
-import { findProduct } from '../data/storelink';
+import { linkedProduct } from '../data/storelink';
 import { slugOf } from '../data/storecats';
 
 interface Opt { k: string; nm: string; d: string; p: number; def?: boolean }
@@ -12,7 +12,7 @@ const { parts, extras = [], project } = Astro.props;
 const linked = parts.map((p) => ({
   ...p,
   opts: p.opts.map((o) => {
-    const prod = findProduct(o.nm);
+    const prod = linkedProduct(o.nm);
     return prod ? { ...o, url: `/store/${slugOf(prod.cat)}#p-${prod.id}`, live: prod.p, img: prod.img } : o;
   }),
 }));

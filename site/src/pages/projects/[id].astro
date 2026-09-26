@@ -15,14 +15,18 @@ const p = byId(Astro.params.id!)!;
 const d = (details as Record<string, any>)[p.id] ?? {};
 
 // أرقام عربية → لاتينية (٧٫٥ → 7.5)
-const num = (s: string) => Number(String(s).replace(/[٠-٩]/g, (c) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(c))).replace(/٫/g, '.').replace(/[^\d.]/g, '')) || 0;
+const num = (s: string) => Number(String(s).replace(/[٠-٩]/g, (c) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(c))).replace(/٫/g, '.').match(/\d+(\.\d+)?/)?.[0]) || 0;
 
 // المشاريع اللي ما إلها صفحة قديمة: نبني القطع من قائمة الفهرس (بدون بدائل)
 const parts: any[] = d.parts?.length
   ? d.parts
   : p.x
     ? []
-    : p.bom.map((r, i) => ({ id: `b${i}`, nm: r[0], req: true, qty: num(r[1]) || 1, opts: [{ k: 'x', nm: r[0], d: 'من كتالوج المتجر', p: num(r[2]), def: true }] }));
+    : p.bom.map((r, i) => {
+        // سعر الفهرس للسطر كامل، والسلة بتضرب سعر القطعة بالكمية
+        const qty = num(r[1]) || 1;
+        return { id: `b${i}`, nm: r[0], req: true, qty, opts: [{ k: 'x', nm: r[0], d: 'من كتالوج المتجر', p: num(r[2]) / qty, def: true }] };
+      });
 const extras: any[] = d.extras ?? [];
 const description: string = p.d; // المعتمد: وصف الفهرس (ملف index الذي أرسله المستخدم). own-descriptions.json محفوظ للرجوع إليه
 const problem: string = d.problem || p.prob;

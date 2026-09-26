@@ -1,4 +1,5 @@
 import catalog from './novatera.json';
+import partmap from './partmap.json';
 import { STORE_URL } from './config';
 
 /**
@@ -96,5 +97,16 @@ export function findProduct(name: string): Product | null {
   return bestScore >= 55 ? best : null;
 }
 
-export const productUrl = (id: string) => `${STORE_URL}/product/${id}`;
+/**
+ * ربط قطع المشاريع بالمتجر من قائمة مدقّقة يدوياً (partmap.json: اسم القطعة ← رقم المنتج).
+ * هاد اللي بتعتمد عليه السلة والأسعار. findProduct فوق للاقتراح بس، لأنه بيغلط بأسماء عامة.
+ * قطعة جديدة مش بالقائمة ← ما بتنربط لحد ما تنضاف للقائمة.
+ */
+const BY_ID = new Map(items.map((it) => [it.id, it]));
+export function linkedProduct(name: string): Product | null {
+  const id = (partmap as Record<string, string>)[String(name).trim()];
+  return id ? BY_ID.get(id) ?? null : null;
+}
+
+export const productUrl =(id: string) => `${STORE_URL}/product/${id}`;
 export const STORE_HOME = `${STORE_URL}/store`;

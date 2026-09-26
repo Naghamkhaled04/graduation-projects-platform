@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>شبكة اتصال طوارئ بدرون فوق مناطق الكوارث — مشروع تخرج</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#141824;--ink2:#3D4354;--dim:#767C8C;--faint:#A8ADBA;
+  --line:#E6E8EE;--soft:#F4F5F8;--paper:#FBFBFD;--white:#fff;
+  --acc:#5B3DF5;--acc2:#7C63F7;--accs:#EFEBFF;
+  --wa:#25D366;--ok:#0E9F6E;--okbg:#DEF7EC;
+  --hard:#E02424;--hardbg:#FDE8E8;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'IBM Plex Sans Arabic',sans-serif;background:var(--paper);
+  color:var(--ink);line-height:1.65;font-size:15px;-webkit-font-smoothing:antialiased}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+a{color:inherit;text-decoration:none}
+
+.dbar{background:var(--ink);color:#fff;padding:9px 24px;font-size:12.5px}
+.dbar b{font-weight:600}
+.dbar span{color:var(--faint);margin-inline-start:12px}
+
+header{background:var(--white);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:30}
+.hin{max-width:900px;margin:0 auto;padding:0 24px;height:60px;display:flex;align-items:center;gap:12px}
+.logo{display:flex;align-items:center;gap:9px;font-weight:700;font-size:16px}
+.logo i{width:29px;height:29px;border-radius:9px;background:var(--acc);display:grid;
+  place-items:center;color:#fff;font-style:normal;font-size:14px;font-weight:700}
+.hin .wa{margin-inline-start:auto;background:var(--acc);color:#fff;padding:9px 15px;
+  border-radius:8px;font-size:13px;font-weight:600}
+
+.wrap{max-width:900px;margin:0 auto;padding:30px 24px 70px}
+
+.dhead{display:flex;gap:9px;align-items:center;margin-bottom:11px;flex-wrap:wrap}
+.lvl{padding:4px 11px;border-radius:99px;font-size:11.5px;font-weight:600;
+  background:var(--hardbg);color:var(--hard)}
+.cat{font-size:11.5px;font-weight:600;color:var(--acc)}
+h1{font-size:31px;font-weight:700;line-height:1.32;margin-bottom:13px;letter-spacing:-.3px}
+.lead{font-size:16.5px;color:var(--ink2);line-height:1.78;margin-bottom:26px}
+
+.viewer{height:360px;background:linear-gradient(165deg,#EAF4FB,#D4E7F4);
+  border:1px solid var(--line);border-radius:14px;margin-bottom:32px;
+  display:grid;place-items:center;position:relative;overflow:hidden}
+.viewer .cap{position:absolute;bottom:13px;inset-inline-start:50%;transform:translateX(50%);
+  font-size:12px;color:var(--dim);background:rgba(255,255,255,.82);padding:5px 13px;
+  border-radius:99px}
+
+.sec{margin-bottom:32px}
+.sec h2{font-size:19px;font-weight:600;margin-bottom:13px}
+.sec p{color:var(--ink2);line-height:1.82}
+.sec ul{list-style:none;display:flex;flex-direction:column;gap:10px;margin-top:5px}
+.sec li{padding-inline-start:23px;position:relative;color:var(--ink2);line-height:1.72}
+.sec li::before{content:'';position:absolute;inset-inline-start:0;top:11px;width:6px;height:6px;
+  border-radius:50%;background:var(--acc)}
+
+.how{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-top:6px}
+
+/* الفيديو */
+.vid{position:relative;border-radius:14px;overflow:hidden;border:1px solid var(--line);
+  background:#0B0D12;aspect-ratio:16/9;cursor:pointer}
+.vid video{width:100%;height:100%;object-fit:cover;display:block;background:#0B0D12}
+.vid .wm{position:absolute;bottom:14px;inset-inline-end:16px;color:rgba(255,255,255,.42);
+  font-size:12.5px;font-weight:600;pointer-events:none;z-index:3;
+  text-shadow:0 1px 6px rgba(0,0,0,.6)}
+.vid .play{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}
+.vid .play i{width:64px;height:64px;border-radius:50%;background:rgba(220,38,38,.94);
+  display:grid;place-items:center;font-style:normal;box-shadow:0 6px 24px rgba(0,0,0,.35);
+  transition:.25s}
+.vid:hover .play i{transform:scale(1.08);background:#DC2626}
+.vid .play svg{margin-inline-start:4px}
+.vidnote{font-size:12.5px;color:var(--dim);margin-top:9px;display:flex;align-items:center;gap:7px}
+.step{background:var(--white);border:1px solid var(--line);border-radius:12px;padding:15px 16px}
+.step b{display:block;font-size:13px;color:var(--acc);font-weight:600;margin-bottom:5px}
+.step span{font-size:13.5px;color:var(--ink2);line-height:1.6}
+
+/* ===== السلة ===== */
+.box{background:var(--white);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.boxhead{padding:17px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+.boxhead h2{font-size:17px;font-weight:600}
+.boxhead .n{margin-inline-start:auto;font-size:13px;color:var(--dim)}
+
+.item{border-bottom:1px solid var(--line);padding:15px 20px}
+.item:last-of-type{border-bottom:none}
+.item.off{background:var(--soft)}
+.item.off .nm{color:var(--faint);text-decoration:line-through}
+
+.row1{display:flex;align-items:flex-start;gap:12px}
+.chk{width:21px;height:21px;border:2px solid var(--line);border-radius:6px;flex-shrink:0;
+  margin-top:2px;display:grid;place-items:center;transition:.15s;background:#fff}
+.chk.on{background:var(--acc);border-color:var(--acc)}
+.chk svg{opacity:0;transition:.15s}
+.chk.on svg{opacity:1}
+.mid{flex:1;min-width:0}
+.nm{font-size:15px;font-weight:600;line-height:1.45}
+.dsc{font-size:13px;color:var(--dim);margin-top:2px}
+.req{display:inline-block;font-size:11px;font-weight:600;background:var(--accs);
+  color:var(--acc);padding:2px 8px;border-radius:99px;margin-inline-start:7px;vertical-align:middle}
+.pr{font-size:15px;font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums}
+.pr small{font-size:11.5px;color:var(--dim);font-weight:400;display:block;text-align:end}
+
+.qty{display:flex;align-items:center;gap:2px;margin-top:9px;border:1px solid var(--line);
+  border-radius:7px;width:fit-content;background:#fff}
+.qty button{width:28px;height:28px;color:var(--dim);font-size:15px;font-weight:600}
+.qty button:hover{color:var(--ink);background:var(--soft)}
+.qty span{min-width:30px;text-align:center;font-size:13.5px;font-weight:600}
+
+.alts{margin-top:11px;padding-inline-start:33px}
+.altlbl{font-size:12px;color:var(--dim);font-weight:500;margin-bottom:7px}
+.alt{display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid var(--line);
+  border-radius:9px;margin-bottom:6px;cursor:pointer;transition:.14s;background:#fff}
+.alt:hover{border-color:var(--acc2)}
+.alt.on{border-color:var(--acc);background:var(--accs)}
+.rad{width:16px;height:16px;border:2px solid var(--line);border-radius:50%;flex-shrink:0;
+  display:grid;place-items:center}
+.alt.on .rad{border-color:var(--acc)}
+.alt.on .rad::after{content:'';width:7px;height:7px;border-radius:50%;background:var(--acc)}
+.alt .an{flex:1;font-size:13.5px;font-weight:500}
+.alt .ad{font-size:12px;color:var(--dim);font-weight:400}
+.alt .ap{font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums}
+
+.add{padding:15px 20px;border-top:1px solid var(--line);background:var(--soft)}
+.add .lbl{font-size:12.5px;font-weight:600;color:var(--dim);margin-bottom:9px}
+.addrow{display:flex;align-items:center;gap:11px;padding:9px 12px;background:#fff;
+  border:1px solid var(--line);border-radius:9px;margin-bottom:6px;cursor:pointer;transition:.14s}
+.addrow:hover{border-color:var(--acc2)}
+.addrow.on{border-color:var(--acc);background:var(--accs)}
+.addrow .an{flex:1;font-size:13.5px;font-weight:500}
+.addrow .ad{font-size:12px;color:var(--dim)}
+.addrow .ap{font-size:13.5px;font-weight:600}
+
+.total{padding:18px 20px;background:var(--ink);color:#fff}
+.trow{display:flex;justify-content:space-between;font-size:14px;
+  color:rgba(255,255,255,.62);margin-bottom:7px}
+.trow.big{font-size:21px;font-weight:700;color:#fff;margin:12px 0 0;
+  padding-top:14px;border-top:1px solid rgba(255,255,255,.14)}
+.tnum{font-variant-numeric:tabular-nums}
+
+.cta{padding:18px 20px;background:var(--white)}
+.wabtn{width:100%;background:var(--wa);color:#fff;padding:15px;border-radius:11px;
+  font-size:15.5px;font-weight:700;display:flex;align-items:center;justify-content:center;
+  gap:9px;transition:.15s}
+.wabtn:hover{background:#1EB855}
+.perks{display:flex;flex-wrap:wrap;gap:7px;margin-top:13px;justify-content:center}
+.perk{font-size:12px;color:var(--ok);background:var(--okbg);padding:5px 11px;
+  border-radius:99px;font-weight:500}
+
+.gate{background:linear-gradient(135deg,#5B3DF5,#8B5CF6);border-radius:16px;padding:30px;
+  color:#fff;margin-top:34px}
+.gate h3{font-size:20px;font-weight:700;margin-bottom:9px}
+.gate p{font-size:14.5px;opacity:.92;line-height:1.7;margin-bottom:18px}
+.gate ul{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:20px}
+.gate li{font-size:13.5px;padding-inline-start:22px;position:relative;opacity:.95}
+.gate li::before{content:'✓';position:absolute;inset-inline-start:0;font-weight:700}
+.gate .btn{background:#fff;color:var(--acc);padding:12px 22px;border-radius:9px;
+  font-weight:700;font-size:14.5px;display:inline-block}
+
+.note{font-size:12.5px;color:var(--faint);text-align:center;margin-top:16px}
+
+@media(max-width:620px){
+  h1{font-size:25px}
+  .gate ul{grid-template-columns:1fr}
+  .viewer{height:250px}
+}
+
+.lockwrap{position:relative}
+.lockrows{padding:16px 20px;filter:blur(5px);user-select:none;pointer-events:none}
+.lockrow{height:17px;background:linear-gradient(90deg,var(--soft) 62%,transparent);
+  border-radius:5px;margin-bottom:15px}
+.lockrow:nth-child(even){background:linear-gradient(90deg,var(--soft) 44%,transparent)}
+.lockover{position:absolute;inset:0;display:grid;place-items:center;
+  background:linear-gradient(180deg,rgba(251,251,253,.55),rgba(251,251,253,.94))}
+.lockbox{text-align:center;max-width:330px;padding:0 20px}
+.lockicon{font-size:26px;margin-bottom:7px}
+.lockbox b{display:block;font-size:16px;margin-bottom:6px}
+.lockbox span{font-size:13.5px;color:var(--dim);line-height:1.7}
+.sidenote{margin-top:18px;padding:15px 18px;border:1px solid var(--line);
+  border-inline-start:3px solid var(--acc);border-radius:11px;background:var(--white)}
+.sidenote b{display:block;font-size:13px;color:var(--acc);font-weight:600;margin-bottom:5px}
+.sidenote span{font-size:14px;color:var(--ink2);line-height:1.75}
+</style>
+</head>
+<body>
+
+<div class="dbar"><b>ديمو</b><span>الأسعار مبدئية — بتتحدث لما تجيب أسعار المتجر</span></div>
+
+<header>
+  <div class="hin">
+    <div class="logo"><i>م</i> مشاريع</div>
+    <a href="#" class="wa">تواصل واتساب</a>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="dhead">
+    <span class="lvl" style="background:#FDE8E8;color:#E02424">متقدم</span>
+    <span class="cat">إنترنت الأشياء · إدارة كوارث</span>
+  </div>
+  <h1>شبكة اتصال طوارئ بدرون فوق مناطق الكوارث</h1>
+  <p class="lead">
+    لما تنهار شبكات الاتصال بعد زلزال أو سيل، بتضل عقد حساسات موزّعة بالمنطقة شغّالة بس صوتها ما بيوصل. الدرون بيطير فوقهم كساعي بريد، بيجمع قراءاتهم — حرارة، غازات، لهب، اهتزاز، موقع، بطارية — وبينزل يفرّغهم على لوحة عمليات بتوري خريطة المنطقة كاملة.
+  </p>
+
+  <div class="viewer">
+    <svg width="360" height="220" viewBox="0 0 360 220" fill="none">
+      <path d="M0 176 q40 -18 80 -6 q46 14 88 -8 q44 -22 90 -4 q50 16 102 -6 V220 H0 Z" fill="#E6E8EE"/>
+      <!-- ركام -->
+      <path d="M40 176 l16 -18 l14 18 z M228 172 l20 -22 l18 22 z" fill="#C9CFD8"/>
+      <!-- الدرون -->
+      <g>
+        <rect x="152" y="52" width="46" height="10" rx="4" fill="#2A2F3B"/>
+        <rect x="166" y="62" width="18" height="9" rx="3" fill="#5B3DF5"/>
+        <line x1="140" y1="46" x2="210" y2="46" stroke="#3D4354" stroke-width="3"/>
+        <ellipse cx="140" cy="44" rx="16" ry="2.6" fill="#9AA1AF" opacity=".8"/>
+        <ellipse cx="210" cy="44" rx="16" ry="2.6" fill="#9AA1AF" opacity=".8"/>
+        <line x1="152" y1="52" x2="140" y2="46" stroke="#3D4354" stroke-width="2.4"/>
+        <line x1="198" y1="52" x2="210" y2="46" stroke="#3D4354" stroke-width="2.4"/>
+      </g>
+      <!-- روابط الجمع -->
+      <path d="M170 72 L84 152" stroke="#5B3DF5" stroke-width="1.8" stroke-dasharray="5 5" opacity=".6"/>
+      <path d="M180 72 L184 148" stroke="#5B3DF5" stroke-width="1.8" stroke-dasharray="5 5" opacity=".6"/>
+      <path d="M190 72 L282 146" stroke="#5B3DF5" stroke-width="1.8" stroke-dasharray="5 5" opacity=".35"/>
+      <!-- العقد -->
+      <g>
+        <rect x="70" y="150" width="28" height="18" rx="4" fill="#2F7D5C" stroke="#141824" stroke-width="1.6"/>
+        <circle cx="78" cy="159" r="2.6" fill="#2BE07A"/>
+        <line x1="94" y1="150" x2="94" y2="136" stroke="#141824" stroke-width="1.8"/>
+        <circle cx="94" cy="133" r="3" fill="#5B3DF5"/>
+      </g>
+      <g>
+        <rect x="170" y="146" width="28" height="18" rx="4" fill="#2F7D5C" stroke="#141824" stroke-width="1.6"/>
+        <circle cx="178" cy="155" r="2.6" fill="#2BE07A"/>
+        <line x1="194" y1="146" x2="194" y2="132" stroke="#141824" stroke-width="1.8"/>
+        <circle cx="194" cy="129" r="3" fill="#5B3DF5"/>
+      </g>
+      <g>
+        <rect x="268" y="144" width="28" height="18" rx="4" fill="#2F7D5C" stroke="#141824" stroke-width="1.6"/>
+        <circle cx="276" cy="153" r="2.6" fill="#E02424"/>
+        <line x1="292" y1="144" x2="292" y2="130" stroke="#141824" stroke-width="1.8"/>
+        <circle cx="292" cy="127" r="3" fill="#5B3DF5"/>
+      </g>
+      <!-- برج اتصال معطّل -->
+      <path d="M320 176 L330 116 L340 176" stroke="#A8ADBA" stroke-width="2.4" fill="none"/>
+      <path d="M324 152 h12 M322 164 h16" stroke="#A8ADBA" stroke-width="2"/>
+      <path d="M320 108 l20 20 M340 108 l-20 20" stroke="#E02424" stroke-width="2.4" stroke-linecap="round"/>
+      <text x="180" y="200" font-size="8.5" fill="#767C8C" text-anchor="middle" font-family="sans-serif">الدرون بيجمع من العقد لما تنهار الشبكة</text>
+    </svg>
+    <div class="cap">رسم توضيحي — المجسم ثلاثي الأبعاد قيد الإعداد</div>
+  </div>
+
+  <div class="sec">
+    <h2>المشكلة</h2>
+    <p>بأول ساعات الكارثة، أخطر شي إنك ما بتعرف وين توجّه الفرق. الشبكات الأرضية بتكون أول اللي بتنهار، والمنطقة بتصير صندوق أسود بالضبط لما تحتاج المعلومة أكثر شي. الفكرة إنك ما تحاول تصلّح الشبكة — تتجاوزها. العقد بتخزّن قراءاتها محلياً، والدرون بيمر فوقها ويجمعها. اتصال متقطع أفضل من لا اتصال.</p>
+  </div>
+
+  <div class="sec">
+    <h2>كيف يشتغل</h2>
+    <div class="how">
+      <div class="step"><b>١ · النشر</b><span>عقد ESP32 صغيرة بتتوزّع على المنطقة، كل وحدة بحساساتها وبطاريتها.</span></div>
+      <div class="step"><b>٢ · القياس</b><span>كل عقدة بتقرأ الحرارة والرطوبة وجودة الهواء واللهب والاهتزاز وموقعها.</span></div>
+      <div class="step"><b>٣ · التخزين</b><span>العقدة بتخزّن قراءاتها محلياً مع ختم زمني لحد ما يوصلها الدرون.</span></div>
+      <div class="step"><b>٤ · الجمع</b><span>الدرون بيطير فوق المنطقة ويتصل بكل عقدة لاسلكياً ويسحب بياناتها.</span></div>
+      <div class="step"><b>٥ · التفريغ</b><span>بعد الهبوط، الدرون بيرفع كل شي على الخادم دفعة وحدة.</span></div>
+      <div class="step"><b>٦ · العرض</b><span>لوحة عمليات بتوري خريطة العقد وقراءاتها وحالات الطوارئ.</span></div>
+    </div>
+  </div>
+
+
+  <div class="sec" id="vidSec" style="display:none">
+    <h2>شوف الفكرة على أرض الواقع</h2>
+    <div class="vid" id="vid" onclick="playVid()"></div>
+    <div class="vidnote">
+      <span>▸</span>
+      <span>الفيديو يوضّح الفكرة والنتيجة — تفاصيل التنفيذ التقني ضمن الاستشارة</span>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h2>مميزات المشروع</h2>
+    <ul>
+      <li>بيشتغل بالضبط لما كل شي تاني بيوقف — هاي أقوى نقطة بالفكرة</li>
+      <li>العقد رخيصة، فبتقدر تنشر عشرات منها على مساحة واسعة</li>
+      <li>يجمع الشبكات اللاسلكية والطيران وتحليل البيانات بمشروع واحد</li>
+      <li>فكرة نادرة بمشاريع التخرج المحلية — بتميّزك فوراً</li>
+      <li>قابل للتوسع: تضيف كاميرا حرارية أو مكبّر صوت للنداء</li>
+    </ul>
+  </div>
+
+  <div class="sec">
+    <h2>التحديات المتوقعة</h2>
+    <p style="margin-bottom:10px">هاي العقبات اللي رح تواجهك وقت التنفيذ، حكيناها من
+    الآخر عشان تكون على بيّنة قبل ما تبلّش.</p>
+    <ul>
+      <li>عمر بطارية العقدة — لازم تعيش أيام مش ساعات، وهاد أصعب جزء</li>
+      <li>مدى الاتصال بين الدرون والعقدة محدود، فمسار الطيران لازم يكون محسوب</li>
+      <li>زمن طيران الدرون قصير، والمنطقة واسعة — بدها تخطيط مسار ذكي</li>
+      <li>مزامنة الوقت بين العقد بدون إنترنت</li>
+      <li>تحمّل العقد لظروف الكارثة نفسها: غبار، مطر، ركام</li>
+    </ul>
+    <p style="margin-top:12px;font-size:13.5px;color:var(--dim)">طريقة التعامل مع كل
+    وحدة فيهن مشروحة ضمن الاستشارة.</p>
+  </div>
+
+  <!-- ═══ السلة ═══ -->
+  <div class="sec">
+    <h2>سلة المشروع</h2>
+    <p style="margin-bottom:16px">كل القطع المطلوبة بمكان واحد. شيّل اللي عندك، وبدّل حسب ميزانيتك.</p>
+
+    <div class="box">
+      <div class="boxhead">
+        <h2>القطع الأساسية</h2>
+        <span class="n" id="cnt"></span>
+      </div>
+      <div id="items"></div>
+
+      <div class="add">
+        <div class="lbl">إضافات اختيارية</div>
+        <div id="extras"></div>
+      </div>
+
+      <div class="total">
+        <div class="trow"><span>عدد القطع</span><span class="tnum" id="tq">0</span></div>
+        <div class="trow"><span>التوصيل داخل عمّان</span><span>مجاني</span></div>
+        <div class="trow big"><span>المجموع</span><span class="tnum" id="tp">0 د.أ</span></div>
+      </div>
+
+      <div class="cta">
+        <button class="wabtn" onclick="order()">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M17.5 14.4c-.3-.2-1.7-.8-2-.9-.3-.1-.5-.2-.7.1-.2.3-.7.9-.9 1.1-.2.2-.3.2-.6.1-1.7-.9-2.9-1.6-4-3.5-.3-.5.3-.5.9-1.6.1-.2 0-.4 0-.5 0-.2-.7-1.6-.9-2.2-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.5s1.1 2.9 1.2 3.1c.1.2 2.1 3.2 5.1 4.5 1.9.8 2.6.9 3.5.7.6-.1 1.7-.7 1.9-1.4.2-.7.2-1.2.2-1.4-.1-.2-.3-.3-.6-.5M12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2"/>
+          </svg>
+          أكّد الطلب على واتساب
+        </button>
+        <div class="perks">
+          <span class="perk">✓ قطع مفحوصة</span>
+          <span class="perk">✓ تجهيز ٣-٥ أيام</span>
+          <span class="perk">✓ ضمان استبدال ٧ أيام</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="gate">
+    <h3>محتاج الطريق التقني كامل؟</h3>
+    <p>الاستشارة تعطيك خطة تنفيذ حقيقية تمشي عليها من أول خطوة لآخر وحدة.</p>
+    <ul>
+      <li>طريقة التعامل مع التحديات المذكورة فوق — وحدة وحدة</li>
+      <li>تصميم العقدة وإدارة طاقتها للتعمير أطول</li>
+      <li>بروتوكول الاتصال بين الدرون والعقد</li>
+      <li>تخطيط مسار الطيران حسب مواقع العقد</li>
+      <li>مزامنة الوقت والتخزين المحلي</li>
+      <li>بناء لوحة العمليات والخريطة</li>
+      <li>خطة زمنية بمراحل + نصائح المناقشة</li>
+      <li>المكتبات والأدوات المطلوبة</li>
+      <li>مخطط التوصيل الكامل</li>
+      <li>المصادر والمراجع</li>
+    </ul>
+    <a href="#" class="btn">احجز استشارة على واتساب</a>
+  </div>
+
+  <div class="note">
+    الأسعار من كتالوج متجر معتمد وقابلة للتحديث · القطع المعلّمة "مورّد آخر" تُطلب خارجه
+  </div>
+
+</div>
+
+<script>
+/* ══════════════════════════════════
+   عدّل من هون
+   ══════════════════════════════════ */
+const WHATSAPP  = '962790000000';   // رقمك بصيغة دولية بدون +
+const INSTAGRAM = 'your_page';
+const PROJECT   = 'شبكة اتصال طوارئ بدرون فوق مناطق الكوارث';
+
+// ═══ الفيديو ═══
+// حط اسم ملف الفيديو (يكون بنفس مجلد الصفحة أو بمجلد videos)
+// اتركه فاضي وما بيظهر القسم إطلاقاً
+const VIDEO  = '';                    // مثال: 'videos/dnet.mp4'
+const POSTER = '';                    // صورة الغلاف — اختيارية
+/* ══════════════════════════════════ */
+
+/* ═══ تهيئة الفيديو ═══ */
+if(VIDEO){
+  document.getElementById('vidSec').style.display='';
+  const v=document.getElementById('vid');
+  v.innerHTML=
+    '<video id="player" '+(POSTER?'poster="'+POSTER+'" ':'')+
+    'preload="metadata" playsinline controlsList="nodownload" '+
+    'oncontextmenu="return false" onended="resetVid()">'+
+    '<source src="'+VIDEO+'" type="video/mp4">'+
+    'متصفحك ما بيدعم تشغيل الفيديو.'+
+    '</video>'+
+    '<div class="play" id="playBtn"><i>'+
+    '<svg width="24" height="24" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg>'+
+    '</i></div>'+
+    '<div class="wm">مشاريع</div>';
+}
+
+function playVid(){
+  const p=document.getElementById('player');
+  if(!p) return;
+  const btn=document.getElementById('playBtn');
+  if(p.paused){
+    p.controls=true;
+    p.play();
+    if(btn) btn.style.display='none';
+  }
+}
+function resetVid(){
+  const btn=document.getElementById('playBtn');
+  if(btn) btn.style.display='';
+}
+
+const PARTS=[
+ {id:'mcu', nm:'لوحة العقدة', req:true, qty:3,
+  opts:[
+   {k:'esp32', nm:'ESP32 DevKit', d:'واي فاي وبلوتوث · الأساس لكل عقدة', p:7.5, def:true},
+   {k:'esp32m', nm:'ESP32E DevKitC', d:'نسخة أثبت اتصالاً', p:8}
+  ]},
+ {id:'env', nm:'حساس الحرارة والرطوبة', req:true, qty:3,
+  opts:[
+   {k:'dht11', nm:'DHT11', d:'الأوفر · كافي للغرض', p:2, def:true},
+   {k:'dht22', nm:'DHT22', d:'دقة ومدى أوسع', p:4},
+   {k:'bme280', nm:'BME280', d:'حرارة ورطوبة وضغط معاً', p:6.75}
+  ]},
+ {id:'gas', nm:'حساس جودة الهواء', req:true, qty:3,
+  opts:[
+   {k:'mq135', nm:'MQ-135 جودة هواء', d:'بيكشف الغازات العامة', p:2.5, def:true},
+   {k:'mq7', nm:'MQ-7 أول أكسيد الكربون', d:'الغاز الأخطر بعد الحرائق', p:2.5}
+  ]},
+ {id:'flame', nm:'حساس اللهب', req:true, qty:3,
+  opts:[
+   {k:'flame', nm:'وحدة حساس لهب ٥ قنوات', d:'تغطية زاوية واسعة', p:5.5, def:true}
+  ]},
+ {id:'vib', nm:'حساس الاهتزاز', req:true, qty:3,
+  opts:[
+   {k:'sw420', nm:'وحدة اهتزاز SW-420', d:'بتكشف الهزات الارتدادية', p:2.75, def:true}
+  ]},
+ {id:'gps', nm:'تحديد موقع العقدة', req:true, qty:3,
+  opts:[
+   {k:'gtu7', nm:'وحدة GPS GT-U7', d:'بتحدد إحداثيات كل عقدة', p:19.5, def:true},
+   {k:'neo6', nm:'وحدة GPS NEO-6M', d:'أوفر · التقاط أبطأ', p:13}
+  ]},
+ {id:'alt', nm:'حساس ارتفاع الدرون', req:true, qty:1,
+  opts:[
+   {k:'spl06', nm:'حساس ضغط وارتفاع SPL06-001', d:'بيحدد ارتفاع الطيران', p:10, def:true},
+   {k:'bme280', nm:'BME280', d:'ضغط وحرارة معاً · دقة أقل بالارتفاع', p:6.75}
+  ]},
+ {id:'link', nm:'وحدة الاتصال بعيد المدى', req:true, qty:2,
+  opts:[
+   {k:'lora', nm:'وحدة LoRa RA-01H', d:'مدى طويل بين الدرون والعقد', p:8, def:true},
+   {k:'nrf', nm:'NRF24L01+ مع هوائي', d:'أوفر · مدى أقصر', p:3.5}
+  ]},
+ {id:'mem', nm:'تخزين محلي بالعقدة', req:true, qty:3,
+  opts:[
+   {k:'sd', nm:'وحدة بطاقة ذاكرة', d:'بتخزّن القراءات لحد ما يمر الدرون', p:0.9, def:true}
+  ]},
+ {id:'batt', nm:'بطارية العقدة', req:true, qty:3,
+  opts:[
+   {k:'li18', nm:'بطارية ليثيوم ٣.٧ فولت + شاحن', d:'تشغيل مستقل', p:4.25, def:true},
+   {k:'lipo', nm:'بطارية ليثيوم بوليمر ٥٢٠٠', d:'عمر أطول بكثير', p:10}
+  ]},
+ {id:'drone', nm:'هيكل الدرون ومجموعة الطيران', req:true, qty:1,
+  opts:[
+   {k:'kitdrone', nm:'درون جاهز بحمولة قابلة للتركيب', d:'من مورّد طيران · الأوفر وقتاً · يُطلب من مورّد آخر', p:180, def:true},
+   {k:'diydrone', nm:'هيكل + محركات + متحكم طيران', d:'تصنّعه بنفسك · أوفر وأصعب · يُطلب من مورّد آخر', p:140}
+  ]},
+ {id:'wires', nm:'أسلاك وعلب ولوحات تجارب', req:true, qty:1,
+  opts:[
+   {k:'kit', nm:'أسلاك + لوحات تجارب + علب', d:'لكل العقد', p:3, def:true}
+  ]}
+];
+
+const EXTRAS=[
+  {k:'solar', nm:'لوح شمسي للعقد', d:'يخلي العقدة تعيش أسابيع بدل أيام', p:10},
+  {k:'sound', nm:'حساس صوت', d:'التقاط نداء استغاثة من تحت الركام', p:2.25},
+  {k:'cam', nm:'كاميرا ESP32-CAM على الدرون', d:'صور جوية للمنطقة', p:11},
+  {k:'rtc', nm:'وحدة توقيت RTC لكل عقدة', d:'مزامنة زمنية بدون إنترنت', p:3.5},
+  {k:'buzz', nm:'جرس على العقدة', d:'تحديد موقعها صوتياً وقت البحث', p:0.4},
+  {k:'case', nm:'علب حماية للعقد', d:'ضرورية بظروف الكارثة · مورّد آخر', p:10}
+];
+
+const state={};
+PARTS.forEach(p=>{state[p.id]={on:true,qty:p.qty,pick:(p.opts.find(o=>o.def)||p.opts[0]).k}});
+const extraOn={};EXTRAS.forEach(e=>extraOn[e.k]=false);
+
+const AR=n=>n.toLocaleString('ar-EG');
+const check=`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+
+function render(){
+  document.getElementById('items').innerHTML=PARTS.map(p=>{
+    const st=state[p.id], sel=p.opts.find(o=>o.k===st.pick), multi=p.opts.length>1;
+    return `
+<div class="item ${st.on?'':'off'}">
+  <div class="row1">
+    <div class="chk ${st.on?'on':''}" onclick="tog('${p.id}')">${check}</div>
+    <div class="mid">
+      <div class="nm">${sel.nm}${p.req?'<span class="req">أساسي</span>':''}</div>
+      <div class="dsc">${sel.d}</div>
+      ${st.on?`<div class="qty">
+        <button onclick="q('${p.id}',-1)">−</button>
+        <span>${AR(st.qty)}</span>
+        <button onclick="q('${p.id}',1)">+</button></div>`:''}
+    </div>
+    <div class="pr">${AR(sel.p*st.qty)} د.أ<small>${AR(sel.p)} للقطعة</small></div>
+  </div>
+  ${st.on&&multi?`<div class="alts">
+    <div class="altlbl">بدائل متاحة</div>
+    ${p.opts.map(o=>`<div class="alt ${o.k===st.pick?'on':''}" onclick="pick('${p.id}','${o.k}')">
+      <div class="rad"></div>
+      <div class="an">${o.nm}<div class="ad">${o.d}</div></div>
+      <div class="ap">${AR(o.p)} د.أ</div></div>`).join('')}
+  </div>`:''}
+</div>`}).join('');
+
+  document.getElementById('extras').innerHTML=EXTRAS.map(e=>`
+    <div class="addrow ${extraOn[e.k]?'on':''}" onclick="tex('${e.k}')">
+      <div class="rad" style="border-radius:5px"></div>
+      <div class="an">${e.nm}<div class="ad">${e.d}</div></div>
+      <div class="ap">+${AR(e.p)} د.أ</div></div>`).join('');
+
+  let total=0,count=0,active=0;
+  PARTS.forEach(p=>{const st=state[p.id];if(!st.on)return;
+    const sel=p.opts.find(o=>o.k===st.pick);
+    total+=sel.p*st.qty;count+=st.qty;active++});
+  EXTRAS.forEach(e=>{if(extraOn[e.k]){total+=e.p;count++}});
+
+  document.getElementById('tq').textContent=AR(count)+' قطعة';
+  document.getElementById('tp').textContent=AR(total)+' د.أ';
+  document.getElementById('cnt').textContent=AR(active)+' من '+AR(PARTS.length)+' مفعّلة';
+}
+
+function tog(id){
+  const p=PARTS.find(x=>x.id===id);
+  if(p.req&&state[id].on&&!confirm('هاي قطعة أساسية للمشروع. متأكد بدك تشيلها؟'))return;
+  state[id].on=!state[id].on;render();
+}
+function pick(id,k){state[id].pick=k;render()}
+function q(id,d){state[id].qty=Math.max(1,Math.min(9,state[id].qty+d));render()}
+function tex(k){extraOn[k]=!extraOn[k];render()}
+
+function order(){
+  let lines=[],total=0;
+  PARTS.forEach(p=>{const st=state[p.id];if(!st.on)return;
+    const sel=p.opts.find(o=>o.k===st.pick);
+    lines.push(`• ${sel.nm} × ${st.qty} — ${sel.p*st.qty} د.أ`);
+    total+=sel.p*st.qty});
+  const ex=EXTRAS.filter(e=>extraOn[e.k]);
+  if(ex.length){lines.push('');lines.push('إضافات:');
+    ex.forEach(e=>{lines.push(`• ${e.nm} — ${e.p} د.أ`);total+=e.p})}
+
+  const msg=`مرحبا 👋
+بدي أطلب سلة مشروع:
+*${PROJECT}*
+
+${lines.join('\n')}
+
+المجموع: *${total} د.أ*
+
+الاسم:
+الجامعة:
+العنوان:`;
+  window.open(`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(msg)}`,'_blank');
+}
+
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,174 @@
+---
+import { svg } from '../data/icons';
+
+const groups = [
+  { title: 'تصفّح', items: [
+    { href: '/', icon: 'home', label: 'الرئيسية' },
+    { href: '/#projects', icon: 'box', label: 'المشاريع' },
+    { href: '/store', icon: 'store', label: 'المتجر' },
+    { href: '/city', icon: 'compass', label: 'المدينة الذكية' },
+  ] },
+  { title: 'المجتمع', items: [
+    { href: '/communities', icon: 'chat', label: 'مجتمعات الجامعات' },
+    { href: '/about', icon: 'building', label: 'من نحن' },
+    { href: '/ambassador', icon: 'medal', label: 'كن سفيراً' },
+  ] },
+];
+---
+
+<header id="hdr">
+  <a class="logo" href="/">مشاريع</a>
+
+  <div class="right">
+    <button type="button" class="burger" id="burger" aria-label="القائمة" aria-expanded="false" aria-controls="drawer"><span></span><span></span><span></span></button>
+  </div>
+</header>
+
+<div class="scrim" id="scrim" hidden></div>
+
+<aside class="drawer" id="drawer" hidden aria-label="القائمة">
+  <div class="dtop">
+    <b>القائمة</b>
+    <button type="button" class="x" id="dclose" aria-label="إغلاق">×</button>
+  </div>
+
+  <a class="me" href="/profile" id="d-me">
+    <span class="av" id="d-av">؟</span>
+    <span class="txt"><b id="d-name">حسابي</b><small id="d-sub">سجّل دخولك</small></span>
+    <span class="chev">←</span>
+  </a>
+
+  <nav id="d-nav">
+    {groups.map((g) => (
+      <div class="grp">
+        <span class="gt">{g.title}</span>
+        {g.items.map((i) => <a href={i.href} {...(i.ext ? { target: '_blank', rel: 'noopener' } : {})}><Fragment set:html={svg(i.icon, 17)} /> {i.label}{i.ext && <span class="ext">↗</span>}</a>)}
+      </div>
+    ))}
+    <div class="grp" id="d-acct"></div>
+  </nav>
+
+  <div class="dfoot" id="d-foot"></div>
+</aside>
+
+<script>
+  import { getBackend } from '../community/backend';
+  import { levelOf } from '../community/rules';
+  import { svg } from '../data/icons';
+
+  const burger = document.getElementById('burger')!, drawer = document.getElementById('drawer')!, scrim = document.getElementById('scrim')!;
+  const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
+  const ar = (n: number) => n.toLocaleString('ar-EG');
+  let last: HTMLElement | null = null;
+
+  const open = () => {
+    last = document.activeElement as HTMLElement;
+    drawer.hidden = false; scrim.hidden = false;
+    requestAnimationFrame(() => { drawer.style.transform = 'translateX(0)'; drawer.classList.add('on'); scrim.classList.add('on'); });
+    burger.setAttribute('aria-expanded', 'true'); document.body.style.overflow = 'hidden';
+    drawer.querySelector<HTMLElement>('a, button')?.focus();
+  };
+  const close = () => {
+    drawer.style.transform = ''; drawer.classList.remove('on'); scrim.classList.remove('on');
+    burger.setAttribute('aria-expanded', 'false'); document.body.style.overflow = '';
+    setTimeout(() => { drawer.hidden = true; scrim.hidden = true; }, 250);
+    last?.focus();
+  };
+  burger.addEventListener('click', () => (drawer.hidden ? open() : close()));
+  document.getElementById('dclose')!.addEventListener('click', close);
+  scrim.addEventListener('click', close);
+  addEventListener('keydown', (e) => { if (e.key === 'Escape' && !drawer.hidden) close(); });
+  drawer.addEventListener('click', (e) => { if ((e.target as HTMLElement).closest('a')) close(); });
+
+  // علّم الصفحة الحالية
+  const path = location.pathname.replace(/\/$/, '') || '/';
+  drawer.querySelectorAll<HTMLAnchorElement>('nav a').forEach((a) => {
+    const h = a.getAttribute('href')!.split('#')[0].replace(/\/$/, '') || '/';
+    if (h === path) a.classList.add('on');
+  });
+
+  // خلفية الهيدر عند النزول
+  const hdr = document.getElementById('hdr')!;
+  const onScroll = () => hdr.classList.toggle('solid', scrollY > 40);
+  onScroll(); addEventListener('scroll', onScroll, { passive: true });
+
+  (async () => {
+    const be = await getBackend();
+    const [s, p, admin] = await Promise.all([be.session(), be.profile().catch(() => null), be.isAdmin().catch(() => false)]);
+    const acct = document.getElementById('d-acct')!, foot = document.getElementById('d-foot')!;
+    const item = (href: string, icon: string, label: string) => `<a href="${href}">${svg(icon, 17)} ${label}</a>`;
+
+    if (!s || !p) {
+      acct.innerHTML = `<span class="gt">حسابي</span>${item('/join', 'lock', 'تسجيل الدخول أو حساب جديد')}`;
+      document.getElementById('d-me')!.setAttribute('href', '/join');
+      foot.innerHTML = '<p>سجّل دخولك لتجمع نقاط، تبني مبناك، وتنضم لمجتمع جامعتك.</p>';
+      return;
+    }
+    const lvl = levelOf(p.points), first = p.display_name.slice(0, 1);
+    document.getElementById('d-av')!.textContent = first;
+    document.getElementById('burger')!.classList.add('has');
+    document.getElementById('d-name')!.textContent = p.display_name;
+    document.getElementById('d-sub')!.innerHTML = `${svg('level', 12, lvl.n)} ${lvl.name} · ${ar(p.points)} نقطة`;
+
+    acct.innerHTML = `<span class="gt">حسابي</span>
+      ${item('/profile', 'medal', 'نقاطي وتجاربي')}
+      ${item('/u?id=' + encodeURIComponent(p.id), 'eye', 'ملفي العام')}
+      ${item('/settings', 'flask', 'الإعدادات')}
+      ${admin ? item('/admin', 'building', 'لوحة الأدمن') : ''}`;
+    foot.innerHTML = be.mode === 'cloud' ? `<button type="button" id="d-out">${svg('send', 16)} تسجيل الخروج</button>` : '<p>وضع تجريبي: بياناتك بمتصفحك فقط.</p>';
+    foot.querySelector('#d-out')?.addEventListener('click', async () => { await be.signOut(); location.reload(); });
+  })();
+</script>
+
+<style is:global>
+  #hdr { position: fixed; inset: 0 0 auto 0; z-index: 50; display: flex; justify-content: space-between; align-items: center; gap: 14px; padding: 14px var(--gutter); pointer-events: none; transition: background .3s, box-shadow .3s, padding .3s; }
+  #hdr > * { pointer-events: auto; }
+  #hdr.solid { background: color-mix(in srgb, var(--hdr-bg) 84%, transparent); backdrop-filter: blur(16px); box-shadow: 0 1px 0 rgba(127,127,127,.16); padding-block: 9px; }
+  #hdr .logo { font-weight: 700; font-size: 21px; text-decoration: none; color: var(--hdr-fg); }
+  #hdr .right { display: flex; align-items: center; gap: 8px; }
+
+  #hdr .burger.has::after { content: ''; position: absolute; top: 7px; inset-inline-end: 7px; width: 8px; height: 8px; border-radius: 50%; background: var(--orange); box-shadow: 0 0 8px var(--orange); }
+  #hdr .quick { display: flex; align-items: center; gap: 7px; text-decoration: none; padding: 5px 12px 5px 5px; border-radius: 999px; background: rgba(255,255,255,.14); backdrop-filter: blur(14px); border: 1px solid rgba(127,127,127,.18); transition: border-color .25s; }
+  #hdr .quick:hover { border-color: var(--orange); }
+  #hdr .av { width: 30px; height: 30px; flex: none; border-radius: 50%; background: var(--orange); color: #fff; display: grid; place-items: center; font-weight: 700; font-size: 14px; }
+  #hdr .pt { font-size: 12.5px; font-weight: 700; color: var(--orange); }
+  #hdr .pt[hidden] { display: none; }
+
+  #hdr .burger { width: 44px; height: 44px; flex: none; border-radius: 50%; background: rgba(255,255,255,.14); backdrop-filter: blur(14px); border: 1px solid rgba(127,127,127,.18); cursor: pointer; position: relative; transition: border-color .25s; }
+  #hdr .burger:hover { border-color: var(--orange); }
+  #hdr .burger span { position: absolute; inset-inline: 13px; height: 2px; border-radius: 2px; background: var(--hdr-fg); transition: transform .25s, opacity .25s; }
+  #hdr .burger span:nth-child(1) { top: 15px; } #hdr .burger span:nth-child(2) { top: 21px; } #hdr .burger span:nth-child(3) { top: 27px; }
+  #hdr .burger[aria-expanded='true'] span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+  #hdr .burger[aria-expanded='true'] span:nth-child(2) { opacity: 0; }
+  #hdr .burger[aria-expanded='true'] span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+
+  .scrim { position: fixed; inset: 0; z-index: 70; touch-action: none; background: rgba(6,18,20,.55); backdrop-filter: blur(3px); opacity: 0; transition: opacity .25s; }
+  .scrim.on { opacity: 1; } .scrim[hidden] { display: none; }
+
+  .drawer { position: fixed; z-index: 71; top: 0; bottom: 0; left: 0; right: auto; width: min(330px, 88vw); display: flex; flex-direction: column; background: var(--cream); color: var(--green); box-shadow: 20px 0 60px -20px rgba(10,46,48,.5); transform: translateX(-100%); transition: transform .25s ease; overflow-y: auto; overscroll-behavior: contain; }
+  .drawer[hidden] { display: none; }
+  .dtop { display: flex; justify-content: space-between; align-items: center; padding: 18px 20px 12px; }
+  .dtop b { font-size: 17px; }
+  .dtop .x { width: 34px; height: 34px; border: 0; border-radius: 50%; background: var(--cream-2); color: var(--green); font-size: 20px; cursor: pointer; }
+
+  .drawer .me { display: flex; align-items: center; gap: 12px; margin: 0 14px 12px; padding: 14px; border-radius: 20px; background: var(--green); color: var(--cream); text-decoration: none; }
+  .drawer .me .av { width: 44px; height: 44px; flex: none; border-radius: 50%; background: var(--orange); color: #fff; display: grid; place-items: center; font-weight: 700; font-size: 19px; }
+  .drawer .me .txt { flex: 1; display: grid; gap: 2px; min-width: 0; }
+  .drawer .me b { font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .drawer .me small { opacity: .72; font-size: 12.5px; display: inline-flex; align-items: center; gap: 5px; }
+  .drawer .me .chev { opacity: .5; }
+
+  .drawer nav { padding: 0 10px 8px; display: grid; gap: 14px; }
+  .drawer .grp { display: grid; gap: 2px; }
+  .drawer .gt { font-size: 11.5px; font-weight: 500; color: var(--fg-2); padding: 0 12px 4px; letter-spacing: .04em; }
+  .drawer nav a { display: flex; align-items: center; gap: 12px; font-size: 14.5px; color: var(--green); text-decoration: none; padding: 11px 12px; border-radius: 13px; transition: background .2s, color .2s; }
+  .drawer nav a:hover { background: var(--cream-2); color: var(--orange); }
+  .drawer nav a.on { background: var(--mint); font-weight: 500; }
+  .drawer nav a svg { flex: none; opacity: .75; }
+  .drawer nav a .ext { margin-inline-start: auto; opacity: .45; font-size: 12px; }
+
+  .dfoot { margin-top: auto; padding: 14px 20px 22px; border-top: 1px solid rgba(15,61,62,.1); }
+  .dfoot p { font-size: 12.5px; color: var(--fg-2); line-height: 1.8; }
+  .dfoot button { display: flex; align-items: center; gap: 10px; font: 500 14px var(--font); width: 100%; background: none; border: 0; color: var(--green); padding: 8px 0; cursor: pointer; }
+  .dfoot button:hover { color: var(--orange); }
+</style>

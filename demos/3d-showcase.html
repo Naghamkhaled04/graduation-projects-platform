@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>أقصى مستوى واقعية</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#141824;--dim:#767C8C;--line:#E6E8EE;--paper:#FBFBFD}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'IBM Plex Sans Arabic',sans-serif;background:var(--paper);color:var(--ink);line-height:1.6}
+.top{padding:30px 24px 20px;text-align:center;border-bottom:1px solid var(--line)}
+.top h1{font-size:20px;font-weight:700}
+.top p{font-size:13px;color:var(--dim);margin-top:4px}
+.wrap{max-width:1000px;margin:0 auto;padding:26px 24px 50px}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;
+  box-shadow:0 3px 18px rgba(20,24,36,.06)}
+#stage{height:580px;position:relative;cursor:grab;background:#07080C}
+#stage:active{cursor:grabbing}
+#stage canvas{display:block}
+.load{position:absolute;inset:0;display:grid;place-items:center;background:#07080C;
+  color:#6B7280;font-size:13px;z-index:9;transition:.6s}
+.load.gone{opacity:0;pointer-events:none}
+.bar{position:absolute;bottom:14px;inset-inline-start:50%;transform:translateX(50%);
+  display:flex;gap:5px;z-index:6;flex-wrap:wrap;justify-content:center;max-width:92%}
+.bar button{background:rgba(255,255,255,.07);backdrop-filter:blur(14px);color:#E8EAEE;
+  border:1px solid rgba(255,255,255,.13);padding:6px 13px;border-radius:7px;
+  font-size:12px;font-weight:500;font-family:inherit;cursor:pointer;transition:.15s}
+.bar button:hover{background:rgba(255,255,255,.16)}
+.bar button.on{background:#5B3DF5;border-color:#7C63F7;color:#fff}
+.hint{position:absolute;top:16px;inset-inline-start:50%;transform:translateX(50%);
+  color:rgba(255,255,255,.42);font-size:12px;pointer-events:none;transition:.7s;z-index:6}
+.hint.gone{opacity:0}
+.fps{position:absolute;top:14px;inset-inline-end:16px;color:rgba(255,255,255,.3);
+  font-size:11px;font-family:monospace;z-index:6}
+.cb{padding:18px 22px 20px;border-top:1px solid var(--line)}
+.cb h3{font-size:16.5px;font-weight:600;margin-bottom:5px}
+.cb p{font-size:13.5px;color:var(--dim)}
+.specs{max-width:1000px;margin:0 auto;padding:0 24px 50px;
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
+.spec{background:#fff;border:1px solid var(--line);border-radius:11px;padding:13px 15px}
+.spec b{display:block;font-size:13px;font-weight:600;margin-bottom:3px}
+.spec span{font-size:12.5px;color:var(--dim);line-height:1.55}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <h1>أقصى مستوى واقعية في المتصفح</h1>
+  <p>خامات إجرائية · عمق ميدان · إضاءة سينمائية · انعكاسات متعددة الطبقات</p>
+</div>
+
+<div class="wrap">
+  <div class="card">
+    <div id="stage">
+      <div class="load" id="load">جاري توليد الخامات والإضاءة…</div>
+      <div class="hint" id="hint">اسحب للتدوير · عجلة الماوس للتقريب</div>
+      <div class="fps" id="fps"></div>
+      <div class="bar">
+        <button class="on" onclick="LIGHT(0,this)">استوديو</button>
+        <button onclick="LIGHT(1,this)">مختبر</button>
+        <button onclick="LIGHT(2,this)">غروب</button>
+        <button onclick="LIGHT(3,this)">تقني</button>
+        <button onclick="DOF(this)">عمق الميدان: تشغيل</button>
+      </div>
+    </div>
+    <div class="cb">
+      <h3>ESP32 مع حساس الغاز MQ-5 والصمام الكهربائي</h3>
+      <p>كل خامة مولّدة إجرائياً — نسيج الألياف الزجاجية، خدوش المعدن، مسام السيليكون، وأكسدة النحاس.</p>
+    </div>
+  </div>
+</div>
+
+<div class="specs">
+  <div class="spec"><b>خامات إجرائية</b><span>نسيج PCB، خدوش المعدن، حبيبات اللحام — كلها مولّدة بالكود</span></div>
+  <div class="spec"><b>خرائط النتوء</b><span>تفاصيل سطحية دقيقة بدون زيادة المضلعات</span></div>
+  <div class="spec"><b>عمق الميدان</b><span>تمويه واقعي للخلفية زي عدسة الكاميرا</span></div>
+  <div class="spec"><b>إضاءة ثلاثية النقاط</b><span>مفتاح، ملء، حافة — نظام استوديو محترف</span></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const stage=document.getElementById('stage');
+const W=()=>stage.clientWidth,H=()=>stage.clientHeight;
+
+const rnd=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
+rnd.setSize(W(),H());
+rnd.setPixelRatio(Math.min(devicePixelRatio,2));
+rnd.shadowMap.enabled=true;
+rnd.shadowMap.type=THREE.PCFSoftShadowMap;
+rnd.outputEncoding=THREE.sRGBEncoding;
+rnd.toneMapping=THREE.ACESFilmicToneMapping;
+rnd.toneMappingExposure=1.05;
+rnd.physicallyCorrectLights=true;
+stage.insertBefore(rnd.domElement,stage.firstChild);
+
+const scene=new THREE.Scene();
+const cam=new THREE.PerspectiveCamera(32,W()/H(),.1,300);
+
+/* ══════ مولّدات الخامات الإجرائية ══════ */
+function cv(w,h){const c=document.createElement('canvas');c.width=w;c.height=h;return c}
+function tex(c,rep=1){
+  const t=new THREE.CanvasTexture(c);
+  t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rep,rep);
+  t.anisotropy=rnd.capabilities.getMaxAnisotropy();
+  return t;
+}
+
+// نسيج لوحة PCB — ألياف زجاجية + مسارات نحاسية
+function pcbTexture(base){
+  const c=cv(512,512),x=c.getContext('2d');
+  x.fillStyle=base;x.fillRect(0,0,512,512);
+  // نسيج الألياف
+  for(let i=0;i<512;i+=4){
+    x.strokeStyle=`rgba(255,255,255,${.012+Math.random()*.02})`;
+    x.lineWidth=1.5;
+    x.beginPath();x.moveTo(0,i);x.lineTo(512,i+Math.random()*2-1);x.stroke();
+    x.beginPath();x.moveTo(i,0);x.lineTo(i+Math.random()*2-1,512);x.stroke();
+  }
+  // مسارات نحاسية تحت الطلاء
+  x.strokeStyle='rgba(190,220,190,.055)';x.lineWidth=3;
+  for(let i=0;i<40;i++){
+    x.beginPath();
+    let px=Math.random()*512,py=Math.random()*512;
+    x.moveTo(px,py);
+    for(let s=0;s<4;s++){
+      px+=(Math.random()-.5)*160;py+=(Math.random()-.5)*160;
+      x.lineTo(px,py);
+    }
+    x.stroke();
+  }
+  // نقاط لحام (vias)
+  for(let i=0;i<90;i++){
+    const px=Math.random()*512,py=Math.random()*512;
+    const g=x.createRadialGradient(px,py,0,px,py,4);
+    g.addColorStop(0,'rgba(215,180,90,.5)');g.addColorStop(1,'rgba(215,180,90,0)');
+    x.fillStyle=g;x.beginPath();x.arc(px,py,4,0,6.3);x.fill();
+  }
+  // بقع تصنيع
+  for(let i=0;i<160;i++){
+    x.fillStyle=`rgba(0,0,0,${Math.random()*.05})`;
+    x.beginPath();x.arc(Math.random()*512,Math.random()*512,Math.random()*3.5,0,6.3);x.fill();
+  }
+  return tex(c);
+}
+
+// خريطة نتوء عامة (خشونة سطحية)
+function bumpNoise(scale,amount){
+  const c=cv(256,256),x=c.getContext('2d');
+  const d=x.createImageData(256,256);
+  for(let i=0;i<d.data.length;i+=4){
+    const v=128+(Math.random()-.5)*amount;
+    d.data[i]=d.data[i+1]=d.data[i+2]=v;d.data[i+3]=255;
+  }
+  x.putImageData(d,0,0);
+  return tex(c,scale);
+}
+
+// خدوش المعدن
+function scratchTexture(){
+  const c=cv(512,512),x=c.getContext('2d');
+  x.fillStyle='#808080';x.fillRect(0,0,512,512);
+  for(let i=0;i<300;i++){
+    const px=Math.random()*512,py=Math.random()*512;
+    const len=8+Math.random()*70,ang=Math.random()*6.3;
+    x.strokeStyle=`rgba(255,255,255,${.03+Math.random()*.1})`;
+    x.lineWidth=.5+Math.random()*1.2;
+    x.beginPath();x.moveTo(px,py);
+    x.lineTo(px+Math.cos(ang)*len,py+Math.sin(ang)*len);x.stroke();
+  }
+  for(let i=0;i<120;i++){
+    x.fillStyle=`rgba(0,0,0,${Math.random()*.08})`;
+    x.beginPath();x.arc(Math.random()*512,Math.random()*512,Math.random()*5,0,6.3);x.fill();
+  }
+  return tex(c,2);
+}
+
+// مسام السيليكون (للأسلاك)
+function siliconeBump(){
+  const c=cv(128,128),x=c.getContext('2d');
+  x.fillStyle='#808080';x.fillRect(0,0,128,128);
+  for(let i=0;i<900;i++){
+    const v=Math.random()<.5?255:0;
+    x.fillStyle=`rgba(${v},${v},${v},.09)`;
+    x.beginPath();x.arc(Math.random()*128,Math.random()*128,.6+Math.random()*1.2,0,6.3);x.fill();
+  }
+  return tex(c,6);
+}
+
+const TX={
+  pcbGreen: pcbTexture('#12482F'),
+  pcbBlue:  pcbTexture('#153E75'),
+  bump:     bumpNoise(4,26),
+  bumpFine: bumpNoise(8,14),
+  scratch:  scratchTexture(),
+  silicone: siliconeBump(),
+};
+
+/* ══════ بيئات الإضاءة ══════ */
+function envMap(mode){
+  const c=cv(1024,512),x=c.getContext('2d');
+  const cfg=[
+    {sky:['#4a5568','#1a1f2b','#080a0f'],box:'rgba(255,255,255,.98)',
+     side:'rgba(150,185,255,.5)',back:'rgba(255,190,140,.3)'},
+    {sky:['#e8eef7','#c8d4e4','#93a2b8'],box:'rgba(255,255,255,1)',
+     side:'rgba(230,240,255,.8)',back:'rgba(200,220,245,.55)'},
+    {sky:['#ff9a56','#c85a3a','#3d1f24'],box:'rgba(255,215,160,.95)',
+     side:'rgba(255,140,80,.6)',back:'rgba(120,60,90,.4)'},
+    {sky:['#2d1f6e','#150f30','#060412'],box:'rgba(200,180,255,.9)',
+     side:'rgba(80,220,255,.55)',back:'rgba(255,90,190,.4)'}
+  ][mode];
+
+  const g=x.createLinearGradient(0,0,0,512);
+  g.addColorStop(0,cfg.sky[0]);g.addColorStop(.5,cfg.sky[1]);g.addColorStop(1,cfg.sky[2]);
+  x.fillStyle=g;x.fillRect(0,0,1024,512);
+
+  // softbox رئيسي مع تدرج
+  const bg=x.createRadialGradient(430,60,10,430,60,200);
+  bg.addColorStop(0,cfg.box);bg.addColorStop(1,'rgba(255,255,255,0)');
+  x.fillStyle=bg;x.fillRect(230,0,400,220);
+  x.fillStyle=cfg.box;x.fillRect(330,14,200,72);
+
+  // مصدر جانبي
+  const sg=x.createRadialGradient(60,180,5,60,180,150);
+  sg.addColorStop(0,cfg.side);sg.addColorStop(1,'rgba(0,0,0,0)');
+  x.fillStyle=sg;x.fillRect(0,60,220,300);
+
+  // مصدر خلفي
+  const bkg=x.createRadialGradient(900,160,5,900,160,140);
+  bkg.addColorStop(0,cfg.back);bkg.addColorStop(1,'rgba(0,0,0,0)');
+  x.fillStyle=bkg;x.fillRect(760,40,264,280);
+
+  const t=new THREE.CanvasTexture(c);
+  t.mapping=THREE.EquirectangularReflectionMapping;
+  t.encoding=THREE.sRGBEncoding;
+  return t;
+}
+
+const BG=[0x07080C,0xDDE3EC,0x1A0E10,0x06040E];
+const KEY=[0xffffff,0xffffff,0xFFB070,0xC8B4FF];
+const RIM=[0x88AEFF,0xB8CCEA,0xFF8A50,0x4DD8FF];
+const WARM=[0xFFB877,0xFFF0DC,0xFF6A30,0xFF5AC0];
+
+let env=null,mode=0;
+function LIGHT(m,btn){
+  mode=m;
+  if(btn){[...document.querySelectorAll('.bar button')].slice(0,4)
+    .forEach(b=>b.classList.remove('on'));btn.classList.add('on')}
+  if(env)env.dispose();
+  env=envMap(m);
+  scene.environment=env;
+  scene.background=new THREE.Color(BG[m]);
+  scene.fog=new THREE.FogExp2(BG[m],.014);
+  stage.style.background='#'+BG[m].toString(16).padStart(6,'0');
+  key.color.setHex(KEY[m]);
+  rim.color.setHex(RIM[m]);
+  warm.color.setHex(WARM[m]);
+  rnd.toneMappingExposure = m===1?1.25:m===2?1.0:1.05;
+}
+
+/* ══════ إضاءة ثلاثية النقاط ══════ */
+const key=new THREE.DirectionalLight(0xffffff,3.2);
+key.position.set(12,20,10);key.castShadow=true;
+key.shadow.mapSize.set(2048,2048);
+Object.assign(key.shadow.camera,{left:-18,right:18,top:18,bottom:-18,near:.5,far:70});
+key.shadow.bias=-.0006;key.shadow.normalBias=.02;key.shadow.radius=4;
+scene.add(key);
+
+const rim=new THREE.DirectionalLight(0x88AEFF,1.6);
+rim.position.set(-12,8,-13);scene.add(rim);
+
+const fill=new THREE.DirectionalLight(0xffffff,.5);
+fill.position.set(-6,4,10);scene.add(fill);
+
+const warm=new THREE.PointLight(0xFFB877,22,30,2);
+warm.position.set(8,5,-9);scene.add(warm);
+
+scene.add(new THREE.HemisphereLight(0x9FB4D8,0x1A1D24,.42));
+
+LIGHT(0);   // تفعيل البيئة والخلفية — لازم بعد تعريف الأضواء
+
+/* ══════ أرضية ══════ */
+const floor=new THREE.Mesh(
+  new THREE.PlaneGeometry(120,120),
+  new THREE.MeshStandardMaterial({
+    color:0x0E1117,roughness:.26,metalness:.62,
+    bumpMap:TX.bumpFine,bumpScale:.012
+  })
+);
+floor.rotation.x=-Math.PI/2;floor.position.y=-.02;floor.receiveShadow=true;
+scene.add(floor);
+
+const root=new THREE.Group();scene.add(root);
+
+/* ══════ خامات ══════ */
+const M={
+  pcb: new THREE.MeshStandardMaterial({map:TX.pcbGreen,roughness:.46,metalness:.06,
+        bumpMap:TX.bump,bumpScale:.008}),
+  pcbB:new THREE.MeshStandardMaterial({map:TX.pcbBlue,roughness:.44,metalness:.06,
+        bumpMap:TX.bump,bumpScale:.008}),
+  gold:new THREE.MeshStandardMaterial({color:0xD4A438,roughness:.19,metalness:1,
+        roughnessMap:TX.scratch}),
+  steel:new THREE.MeshStandardMaterial({color:0xC2C8D2,roughness:.2,metalness:.96,
+        roughnessMap:TX.scratch,bumpMap:TX.bumpFine,bumpScale:.006}),
+  brass:new THREE.MeshStandardMaterial({color:0xBF8A2C,roughness:.24,metalness:.96,
+        roughnessMap:TX.scratch,bumpMap:TX.bumpFine,bumpScale:.008}),
+  blk: new THREE.MeshStandardMaterial({color:0x12141A,roughness:.52,metalness:.18,
+        bumpMap:TX.bumpFine,bumpScale:.01}),
+  gry: new THREE.MeshStandardMaterial({color:0xB0B6C0,roughness:.34,metalness:.62,
+        roughnessMap:TX.scratch}),
+  dark:new THREE.MeshStandardMaterial({color:0x343A44,roughness:.4,metalness:.72,
+        roughnessMap:TX.scratch}),
+  bb:  new THREE.MeshStandardMaterial({color:0xE9EBEF,roughness:.74,metalness:.02,
+        bumpMap:TX.bumpFine,bumpScale:.014}),
+  wht: new THREE.MeshStandardMaterial({color:0xEFF1F4,roughness:.62,metalness:.04}),
+  sol: new THREE.MeshStandardMaterial({color:0xCED3DA,roughness:.16,metalness:.97,
+        roughnessMap:TX.scratch}),
+};
+function siliconeMat(c){
+  return new THREE.MeshStandardMaterial({color:c,roughness:.86,metalness:.02,
+    bumpMap:TX.silicone,bumpScale:.02});
+}
+
+function B(w,h,d,m,x,y,z){const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);
+  o.position.set(x,y,z);o.castShadow=o.receiveShadow=true;root.add(o);return o}
+function C(rt,rb,h,m,x,y,z,s=36){const o=new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,s),m);
+  o.position.set(x,y,z);o.castShadow=o.receiveShadow=true;root.add(o);return o}
+function wire(pts,c,rad=.062){
+  const cv=new THREE.CatmullRomCurve3(pts.map(p=>new THREE.Vector3(...p)));
+  const o=new THREE.Mesh(new THREE.TubeGeometry(cv,90,rad,14,false),siliconeMat(c));
+  o.castShadow=true;root.add(o);return o;
+}
+
+/* ══════ لوحة التجارب ══════ */
+(function(){
+  B(13,.55,8.5,M.bb,0,.27,0);
+  const hm=new THREE.MeshStandardMaterial({color:0x8B919B,roughness:.85});
+  const hg=new THREE.BoxGeometry(.11,.07,.11);
+  const inst=new THREE.InstancedMesh(hg,hm,29*8);
+  let i=0;const mtx=new THREE.Matrix4();
+  for(let r=-4;r<=4;r++){
+    if(r===0)continue;
+    for(let c=-14;c<=14;c++){
+      mtx.setPosition(c*.42,.55,r*.42+(r>0?.5:-.5));
+      inst.setMatrixAt(i++,mtx);
+    }
+  }
+  inst.castShadow=true;root.add(inst);
+  B(12.4,.12,.75,new THREE.MeshStandardMaterial({color:0xD2D6DC,roughness:.78}),0,.53,0);
+  B(12.4,.035,.07,new THREE.MeshStandardMaterial({color:0xB03028,roughness:.72}),0,.565,3.7);
+  B(12.4,.035,.07,new THREE.MeshStandardMaterial({color:0x24689B,roughness:.72}),0,.565,-3.7);
+})();
+
+/* ══════ ESP32 ══════ */
+const eX=-3.2,eY=1.02;
+(function(){
+  B(6.2,.22,2.9,M.pcb,eX,eY,0);
+  B(6.24,.018,2.94,M.sol,eX,eY+.117,0);
+  // درع المعالج
+  B(1.78,.32,1.78,M.steel,eX-.5,eY+.27,0);
+  B(1.5,.015,1.5,M.gry,eX-.5,eY+.44,0);
+  // هوائي
+  B(1.5,.055,.95,M.sol,eX+2.45,eY+.14,0);
+  for(let i=0;i<5;i++) B(.055,.075,.9,M.pcb,eX+1.85+i*.3,eY+.16,0);
+  // USB-C
+  B(.68,.52,1.28,M.steel,eX-3.05,eY+.25,0);
+  B(.14,.26,.92,M.blk,eX-3.36,eY+.25,0);
+  // مكونات
+  C(.16,.16,.44,M.blk,eX-2.1,eY+.32,.85,20);
+  C(.16,.16,.44,M.blk,eX-2.1,eY+.32,-.85,20);
+  for(let i=0;i<6;i++){
+    B(.17,.075,.3,M.blk,eX-1.4+i*.34,eY+.15,1.05);
+    B(.17,.075,.3,M.blk,eX-1.4+i*.34,eY+.15,-1.05);
+  }
+  B(.44,.21,.44,M.gry,eX+1.1,eY+.22,1.0);
+  B(.44,.21,.44,M.gry,eX+1.1,eY+.22,-1.0);
+  B(.21,.1,.21,M.blk,eX+1.1,eY+.36,1.0);
+  B(.21,.1,.21,M.blk,eX+1.1,eY+.36,-1.0);
+  // دبابيس
+  for(const z of [1.42,-1.42]){
+    B(5.6,.17,.3,M.blk,eX,eY+.19,z);
+    const pg=new THREE.BoxGeometry(.075,.64,.075);
+    const pi=new THREE.InstancedMesh(pg,M.gold,16);
+    const mt=new THREE.Matrix4();
+    for(let i=0;i<16;i++){mt.setPosition(eX-2.6+i*.35,eY-.12,z);pi.setMatrixAt(i,mt)}
+    pi.castShadow=true;root.add(pi);
+  }
+})();
+
+const ledM=new THREE.MeshStandardMaterial({color:0x2BE07A,emissive:0x22D46E,
+  emissiveIntensity:2,roughness:.2,metalness:.1});
+const led=new THREE.Mesh(new THREE.SphereGeometry(.13,24,24),ledM);
+led.position.set(eX+1.7,eY+.2,.95);root.add(led);
+const ledL=new THREE.PointLight(0x2BE07A,3,4,2);
+ledL.position.copy(led.position);root.add(ledL);
+
+/* ══════ MQ-5 ══════ */
+const gx=4.4;
+(function(){
+  B(2.9,.22,2.9,M.pcbB,gx,.98,0);
+  B(2.94,.018,2.94,M.sol,gx,1.09,0);
+  B(.58,.42,.58,new THREE.MeshStandardMaterial({color:0x2A5A9E,roughness:.48}),gx+.95,1.3,.95);
+  C(.15,.15,.15,M.gry,gx+.95,1.54,.95,18);
+  B(.88,.24,.58,M.blk,gx-.9,1.21,.85);
+  const l1=new THREE.Mesh(new THREE.BoxGeometry(.22,.15,.15),
+    new THREE.MeshStandardMaterial({color:0xE03030,emissive:0xCC2020,emissiveIntensity:1.8}));
+  l1.position.set(gx-.9,1.18,-.9);root.add(l1);
+
+  C(.94,.94,.36,M.blk,gx,1.29,0);
+  C(.88,.88,1.06,M.steel,gx,1.96,0);
+  // شبكة أفقية
+  const tg=new THREE.TorusGeometry(.9,.027,10,48);
+  const ti=new THREE.InstancedMesh(tg,M.steel,7);
+  const m4=new THREE.Matrix4(),q=new THREE.Quaternion()
+    .setFromEuler(new THREE.Euler(Math.PI/2,0,0)),sc=new THREE.Vector3(1,1,1);
+  for(let i=0;i<7;i++){
+    m4.compose(new THREE.Vector3(gx,1.5+i*.16,0),q,sc);ti.setMatrixAt(i,m4);
+  }
+  ti.castShadow=true;root.add(ti);
+  // شبكة عمودية
+  const vg=new THREE.CylinderGeometry(.021,.021,1.06,6);
+  const vi=new THREE.InstancedMesh(vg,M.steel,22);
+  const mv=new THREE.Matrix4();
+  for(let i=0;i<22;i++){
+    const a=i/22*Math.PI*2;
+    mv.setPosition(gx+Math.cos(a)*.9,1.96,Math.sin(a)*.9);vi.setMatrixAt(i,mv);
+  }
+  vi.castShadow=true;root.add(vi);
+
+  C(.94,.86,.19,M.steel,gx,2.58,0);
+  C(.3,.3,.11,M.dark,gx,2.7,0,22);
+  for(let i=0;i<4;i++){
+    const a=i*Math.PI/2+.785;
+    C(.05,.05,.78,M.gold,gx+Math.cos(a)*.6,.85,Math.sin(a)*.6,12);
+  }
+})();
+
+/* ══════ الصمام ══════ */
+const vz=-5.6;
+(function(){
+  C(.86,.86,3.2,M.brass,0,1.0,vz).rotation.z=Math.PI/2;
+  C(1.02,1.02,.36,M.brass,-1.5,1.0,vz).rotation.z=Math.PI/2;
+  C(1.02,1.02,.36,M.brass,1.5,1.0,vz).rotation.z=Math.PI/2;
+  B(1.78,1.78,1.78,M.dark,0,2.52,vz);
+  for(let i=0;i<4;i++) B(1.88,.11,.15,M.blk,0,2.0+i*.36,vz);
+  C(.66,.74,.52,M.gry,0,3.58,vz,26);
+  C(.11,.11,.72,M.gold,-.38,4.02,vz,14);
+  C(.11,.11,.72,M.gold,.38,4.02,vz,14);
+  B(1.32,.52,.025,M.wht,0,2.52,vz+.9);
+})();
+
+/* ══════ أسلاك ══════ */
+wire([[gx-.6,.92,.6],[3,1.95,1.35],[1.2,1.95,1.25],[-.6,1.32,1.05],[eX+1.5,1.2,1.05]],0xB82828);
+wire([[gx-.6,.92,-.6],[3,1.85,-1.35],[1.2,1.85,-1.25],[-.6,1.27,-1.05],[eX+1.5,1.2,-1.05]],0x15181E);
+wire([[gx-.75,.92,0],[3.2,1.7,.35],[1.4,1.75,.4],[-.4,1.22,.5],[eX+1.15,1.2,.35]],0xD4A828);
+wire([[eX-1.2,1.2,-1.3],[-2.6,2.55,-3.2],[-1.4,3.65,-4.6],[-.38,4.12,vz]],0xB82828);
+wire([[eX-1.9,1.2,-1.3],[-3.2,2.45,-3.4],[-1.8,3.55,-4.8],[.38,4.12,vz]],0x15181E);
+
+/* ══════ جزيئات الغاز ══════ */
+const gas=[];
+for(let i=0;i<26;i++){
+  const s=new THREE.Mesh(
+    new THREE.SphereGeometry(.09+Math.random()*.12,14,14),
+    new THREE.MeshStandardMaterial({color:0xFF7A2E,transparent:true,opacity:.3,
+      emissive:0xC44E10,emissiveIntensity:.6,roughness:.92})
+  );
+  s.position.set(gx+(Math.random()-.5)*2.8,2.9+Math.random()*5.5,(Math.random()-.5)*2.8);
+  s.userData={sp:.006+Math.random()*.015,base:2.9,
+    dx:(Math.random()-.5)*.005,dz:(Math.random()-.5)*.005,ph:Math.random()*6.3};
+  root.add(s);gas.push(s);
+}
+
+/* ══════ عمق الميدان ══════ */
+let dofOn=true;
+const dofPass={enabled:true};
+function DOF(btn){
+  dofOn=!dofOn;
+  btn.textContent='عمق الميدان: '+(dofOn?'تشغيل':'إيقاف');
+  btn.classList.toggle('on',dofOn);
+  applyDOF();
+}
+function applyDOF(){
+  if(!scene.fog) return;
+  scene.fog.density = dofOn ? .014 : .004;
+}
+
+/* ══════ تحكم ══════ */
+let rY=.66,rX=.28,tY=.66,tX=.28,d=25,tD=25,drag=false,px=0,py=0;
+stage.addEventListener('pointerdown',e=>{drag=true;px=e.clientX;py=e.clientY;
+  document.getElementById('hint').classList.add('gone')});
+addEventListener('pointerup',()=>drag=false);
+addEventListener('pointermove',e=>{
+  if(!drag)return;
+  tY+=(e.clientX-px)*.0058;
+  tX=Math.max(.04,Math.min(1.3,tX+(e.clientY-py)*.0042));
+  px=e.clientX;py=e.clientY;
+});
+stage.addEventListener('wheel',e=>{e.preventDefault();
+  tD=Math.max(13,Math.min(45,tD+e.deltaY*.017))},{passive:false});
+
+let t=0,fc=0,ft=performance.now();
+const fpsEl=document.getElementById('fps');
+setTimeout(()=>document.getElementById('load').classList.add('gone'),700);
+applyDOF();
+
+(function loop(){
+  requestAnimationFrame(loop);
+  t+=.016;
+  if(!drag) tY+=.0016;
+  rY+=(tY-rY)*.08;rX+=(tX-rX)*.08;d+=(tD-d)*.08;
+  cam.position.set(Math.sin(rY)*Math.cos(rX)*d,Math.sin(rX)*d+2.3,Math.cos(rY)*Math.cos(rX)*d);
+  cam.lookAt(0,1.6,0);
+
+  const p=1.5+Math.sin(t*3.1)*1.0;
+  ledM.emissiveIntensity=p;ledL.intensity=p*1.5;
+
+  gas.forEach(s=>{
+    s.position.y+=s.userData.sp;
+    s.position.x+=s.userData.dx+Math.sin(t*1.4+s.userData.ph)*.0022;
+    s.position.z+=s.userData.dz;
+    const pr=(s.position.y-s.userData.base)/6.5;
+    s.material.opacity=.3*(1-pr);
+    if(pr>1){s.position.y=s.userData.base;s.material.opacity=.3}
+  });
+
+  rnd.render(scene,cam);
+
+  fc++;
+  const now=performance.now();
+  if(now-ft>1000){fpsEl.textContent=fc+' fps';fc=0;ft=now}
+})();
+
+addEventListener('resize',()=>{
+  cam.aspect=W()/H();cam.updateProjectionMatrix();rnd.setSize(W(),H());
+});
+</script>
+</body>
+</html>

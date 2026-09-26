@@ -1,0 +1,173 @@
+---
+import Base from '../layouts/Base.astro';
+import '../styles/auth.css';
+import { UNIVERSITIES } from '../data/universities';
+---
+
+<Base title="حساب جديد — مشاريع" description="أنشئ حسابك بخطوتين: طالب جامعي ببريد جامعتك، أو ضيف.">
+  <main class="auth">
+    <div class="box" id="j"><p class="c-note">جارٍ التحميل…</p></div>
+  </main>
+</Base>
+
+<script define:vars={{ UNIVERSITIES }}>window.__UNIS = UNIVERSITIES;</script>
+
+<script>
+  import { getBackend } from '../community/backend';
+  import { POINTS } from '../community/rules';
+  import { hintFor, emailMatchesUni, uniFromEmail } from '../data/unimail';
+  import { svg } from '../data/icons';
+
+  const UNIS = (window as any).__UNIS as { slug: string; name: string }[];
+  const root = document.getElementById('j')!;
+  const params = new URLSearchParams(location.search);
+  const next = params.get('next') || '/profile';
+  const ref = (params.get('ref') || '').slice(0, 64);
+  const fromWall = params.get('wall') === '1';
+  const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
+  const ar = (n: number) => n.toLocaleString('ar-EG');
+
+  const MODE = 'join';
+  let kind: 'student' | 'guest' = 'student';
+  let be: any;
+
+  (async () => {
+    be = await getBackend();
+    if (await be.session()) { const p = await be.profile().catch(() => null); if (p?.display_name && p.display_name !== 'أنت (تجريبي)') { location.replace(next); return; } }
+    step1();
+  })();
+
+  const shell = (stepOn: number, inner: string) => `
+    <div class="brand"><b>مشاريع</b><span>حساب جديد بخطوتين</span></div>
+      <nav class="tabs">
+        <a href="/login${location.search}" class="${MODE === 'login' ? 'on' : ''}">تسجيل الدخول</a>
+        <a href="/join${location.search}" class="${MODE === 'join' ? 'on' : ''}">إنشاء حساب جديد</a>
+        <a href="#" id="tab-forgot">استعادة كلمة المرور</a>
+      </nav>
+    <div class="card">
+      <div class="steps"><i class="${stepOn >= 1 ? 'on' : ''}"></i><i class="${stepOn >= 2 ? 'on' : ''}"></i></div>
+      ${ref && stepOn === 1 ? `<div class="refbox">${svg('medal', 18)}<span>صديقك دعاك! بتاخد <b>${ar(POINTS.welcome)} نقاط ترحيب</b> أول ما ننشرلك أول تعليق.</span></div>` : ''}
+      ${fromWall && !ref && stepOn === 1 ? `<div class="hintbox">شفت مشروعين مجاناً. أنشئ حسابك (مجاني) وشوف الـ٥١ مشروع كلهم بقطعهم وأسعارهم.</div>` : ''}
+      ${inner}
+    </div>
+`;
+
+  /* ---------- الخطوة ١: مين أنت ---------- */
+  function step1() {
+    root.innerHTML = shell(1, `
+      <h1>مين أنت؟</h1>
+      <p class="sub">خطوتين بس وبتكون جاهز.</p>
+      <div class="pick">
+        <button type="button" class="opt ${kind === 'student' ? 'on' : ''}" data-k="student">
+          <span class="ic">${svg('building', 22)}</span>
+          <span class="tx"><b>طالب جامعي</b><small>ببريد جامعتك — بتنضم لمجتمع جامعتك وبتجمع نقاط</small></span>
+        </button>
+        <button type="button" class="opt ${kind === 'guest' ? 'on' : ''}" data-k="guest">
+          <span class="ic">${svg('eye', 22)}</span>
+          <span class="tx"><b>ضيف</b><small>ببريدك أو رقم موبايلك — بتتصفح وبتعلّق</small></span>
+        </button>
+      </div>
+      <button type="button" class="c-btn go" id="n1">التالي ←</button>`);
+    root.querySelector('.pick')!.addEventListener('click', (e) => {
+      const b = (e.target as HTMLElement).closest<HTMLElement>('.opt'); if (!b) return;
+      kind = b.dataset.k as typeof kind;
+      root.querySelectorAll('.opt').forEach((x) => x.classList.toggle('on', x === b));
+    });
+    root.querySelector('#n1')!.addEventListener('click', step2);
+  }
+
+  /* ---------- الخطوة ٢: بياناتك ---------- */
+  function step2() {
+    const student = kind === 'student';
+    root.innerHTML = shell(2, `
+      <h1>${student ? 'بيانات الطالب' : 'بياناتك'}</h1>
+      <p class="sub">${student ? 'بنبعت رابط تأكيد على بريد جامعتك — هيك بنتأكد إنك فعلاً من هالجامعة.' : 'بتدخل فوراً، بلا تأكيد.'}</p>
+
+      <label>اسمك<input id="nm" maxlength="40" autocomplete="name" placeholder="مثلاً: نغم أحمد" /></label>
+
+      ${student ? `
+        <label>الجامعة
+          <select id="uni"><option value="">— اختر جامعتك —</option>${UNIS.map((u) => `<option value="${u.slug}">${esc(u.name)}</option>`).join('')}<option value="__other">جامعة أخرى…</option></select>
+        </label>
+        <label id="ow" hidden>اسم جامعتك<input id="other" maxlength="60" /></label>
+        <label>بريدك الجامعي
+          <input id="h" type="email" dir="ltr" autocomplete="email" placeholder="بريد جامعتك" />
+        </label>
+        <div class="hintbox" id="hint" hidden></div>
+        <div class="two">
+          <label>التخصص<input id="mj" maxlength="60" placeholder="هندسة حاسوب" /></label>
+          <label>السنة<select id="yr"><option value="">—</option>${[1, 2, 3, 4, 5].map((y) => `<option value="${y}">السنة ${y}</option>`).join('')}</select></label>
+        </div>`
+      : `<label>البريد أو رقم الموبايل<input id="h" dir="ltr" autocomplete="username" placeholder="you@example.com أو 0790000000" /></label>`}
+
+      <label>كلمة السر <small>(٦ أحرف على الأقل)</small>
+        <span class="pw"><input id="pw" type="password" autocomplete="new-password" placeholder="••••••••" /><button type="button" id="eye" aria-label="إظهار">${svg('eye', 18)}</button></span>
+      </label>
+
+      <p class="err" id="e"></p>
+      <button type="button" class="c-btn go" id="go">إنشاء حسابي</button>
+      <button type="button" class="back" id="bk">← رجوع</button>
+      <p class="fine">بإنشاء حسابك بتوافق على <a href="/terms">الشروط والأحكام</a>. بريدك ورقمك ما بيظهروا لأحد.</p>`);
+
+    const $ = (id: string) => root.querySelector(id) as HTMLInputElement;
+    const err = root.querySelector('#e')!;
+    root.querySelector('#eye')!.addEventListener('click', () => { const p = $('#pw'); p.type = p.type === 'password' ? 'text' : 'password'; });
+    root.querySelector('#bk')!.addEventListener('click', step1);
+
+    if (student) {
+      const hint = root.querySelector<HTMLElement>('#hint')!;
+      const showHint = () => {
+        const slug = $('#uni').value;
+        root.querySelector('#ow')!.toggleAttribute('hidden', slug !== '__other');
+        if (!slug || slug === '__other') { hint.hidden = true; $('#h').placeholder = 'بريدك الجامعي'; return; }
+        hint.hidden = false; hint.textContent = `استعمل بريد جامعتك، شكله: ${hintFor(slug)}`;
+        $('#h').placeholder = hintFor(slug);
+      };
+      root.querySelector('#uni')!.addEventListener('change', showHint);
+      $('#h').addEventListener('blur', () => {
+        const g = uniFromEmail($('#h').value);
+        if (g && !$('#uni').value) { $('#uni').value = g; showHint(); }
+      });
+    }
+
+    root.querySelector('#go')!.addEventListener('click', async () => {
+      err.textContent = ''; err.className = 'err';
+      const name = $('#nm').value.trim(), handle = $('#h').value.trim(), pw = $('#pw').value;
+      if (name.length < 2) { err.textContent = 'اكتب اسمك'; return; }
+      if (pw.length < 6) { err.textContent = 'كلمة السر ٦ أحرف على الأقل'; return; }
+
+      const profile: any = { display_name: name, bio: '', referred_by: ref || null };
+
+      if (student) {
+        const slug = $('#uni').value;
+        if (!slug) { err.textContent = 'اختر جامعتك'; return; }
+        profile.university = slug === '__other' ? $('#other').value.trim() : (UNIS.find((u) => u.slug === slug)?.name ?? '');
+        if (!profile.university) { err.textContent = 'اكتب اسم جامعتك'; return; }
+        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(handle)) { err.textContent = 'اكتب بريدك الجامعي'; return; }
+        if (slug !== '__other' && !emailMatchesUni(handle, slug)) { err.textContent = `هاد مش بريد ${profile.university}. المفروض يكون مثل: ${hintFor(slug)}`; return; }
+        profile.major = $('#mj').value.trim();
+        profile.year = $('#yr').value ? Number($('#yr').value) : null;
+      } else {
+        const isPhone = /^\+?[0-9\s-]{8,17}$/.test(handle);
+        if (!isPhone && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(handle)) { err.textContent = 'اكتب بريداً صحيحاً أو رقم موبايل'; return; }
+      }
+
+      const btn = root.querySelector('#go') as HTMLButtonElement;
+      btn.disabled = true; btn.textContent = 'جارٍ الإنشاء…';
+      try {
+        const { needsConfirm } = await be.signUp(handle, pw, profile);
+        if (needsConfirm) { sent(handle); return; }
+        location.href = next;
+      } catch (x: any) { err.textContent = x.message; btn.disabled = false; btn.textContent = 'إنشاء حسابي'; }
+    });
+  }
+
+  function sent(email: string) {
+    root.innerHTML = shell(2, `<div class="done">
+      <span class="big">${svg('send', 26)}</span>
+      <h1>أكّد بريدك</h1>
+      <p>بعتنا رابط تأكيد على <b dir="ltr">${esc(email)}</b>.<br />افتحه واضغط الرابط، وبيرجّعك هون وحسابك جاهز.</p>
+      <p class="fine">ما وصلتك الرسالة؟ شوف مجلد السبام، أو <a href="/join">جرّب ببريد ثاني</a>.</p>
+    </div>`);
+  }
+</script>

@@ -1,0 +1,147 @@
+---
+import { projects, levels } from '../data/projects';
+import { DOMAINS, tagsOf } from '../data/taxonomy';
+import { svg } from '../data/icons';
+---
+
+<section class="pj" id="projects">
+  <div class="container">
+    <h2>مشاريع جاهزة لتبدأ فيها</h2>
+    <p class="sub">الوصف والمكونات والتكلفة مجاناً. المسار التفصيلي بالاستشارة.</p>
+
+    <div class="filterbar">
+      <label>المجال
+        <select id="f-dom">
+          <option value="">كل المجالات ({projects.length})</option>
+          {DOMAINS.map((d) => <option value={d.k}>{d.k} ({projects.filter((p) => tagsOf(p.id).includes(d.k)).length})</option>)}
+        </select>
+      </label>
+      <label>المستوى
+        <select id="f-lvl">
+          <option value="">كل المستويات</option>
+          {levels.map((l) => <option value={l}>{l} ({projects.filter((p) => p.ln === l).length})</option>)}
+        </select>
+      </label>
+      <span class="count" id="f-count" aria-live="polite"></span>
+    </div>
+
+    <div class="grid">
+      {projects.map((p) => (
+        <a class="card" href={`/projects/${p.id}`} data-lvl={p.ln} data-tags={tagsOf(p.id).join('|')}>
+          <div class="thumb">
+            <canvas data-id={p.id} aria-hidden="true"></canvas>
+            <span class={`lvl ${p.l}`}>{p.ln}</span>
+            {p.x && <span class="lock"><Fragment set:html={svg('lock', 13)} /> حصرية</span>}
+          </div>
+          <div class="cbody">
+            <h3>{p.t}</h3>
+            <p>{p.d}</p>
+            <div class="tags">{p.p.map((t) => <span>{t}</span>)}</div>
+  <div class="foot"><span class="go">التفاصيل ←</span></div>
+          </div>
+        </a>
+      ))}
+    </div>
+
+    <div class="split">
+      <div class="l"><small>مجاني</small>الفكرة، المشكلة، المكونات، التكلفة.</div>
+      <div class="r"><small>٥ د.أ</small>المسار، المكتبات، مخطط التوصيل، وحلول التحديات.</div>
+    </div>
+  </div>
+</section>
+
+<script>
+  import { initThumbs } from '../scripts/thumbs';
+  import { loadRuntime, toCard } from '../projects/store';
+
+  // مشاريع الأدمن (قاعدة البيانات) فوق المشاريع الثابتة: تعديل / إضافة / إخفاء، بدون إعادة بناء الموقع
+  (async () => {
+    const grid = document.querySelector<HTMLElement>('.pj .grid');
+    const first = grid?.querySelector<HTMLElement>('.card');
+    try {
+      const rt = await loadRuntime();
+      const fill = (card: HTMLElement, p: ReturnType<typeof toCard>) => {
+        card.setAttribute('href', `/p?id=${encodeURIComponent(p.id)}`); card.dataset.lvl = p.ln; card.dataset.tags = (p.tags ?? [p.c]).join('|');
+        const lvl = card.querySelector<HTMLElement>('.lvl')!; lvl.textContent = p.ln; lvl.className = `lvl ${p.l}`;
+        card.querySelector('h3')!.textContent = p.t; card.querySelector('.cbody p')!.textContent = p.d;
+        const tags = card.querySelector('.tags')!; tags.textContent = ''; p.p.forEach((t) => { const s = document.createElement('span'); s.textContent = t; tags.appendChild(s); });
+        card.querySelector<HTMLCanvasElement>('canvas')!.dataset.id = p.id;
+      };
+      rt.hidden.forEach((id) => grid?.querySelector<HTMLElement>(`.card canvas[data-id="${id}"]`)?.closest('.card')?.remove());
+      rt.changed.forEach((d) => { const c = grid?.querySelector<HTMLElement>(`.card canvas[data-id="${d.id}"]`)?.closest<HTMLElement>('.card'); if (c) fill(c, toCard(d)); });
+      if (first && grid) rt.added.forEach((d) => { const c = first.cloneNode(true) as HTMLElement; c.classList.remove('in'); c.hidden = false; fill(c, toCard(d)); const cv = c.querySelector('canvas')!; cv.classList.remove('ready'); grid.prepend(c); });
+    } catch (e) { console.warn(e); }
+    initThumbs([...document.querySelectorAll<HTMLCanvasElement>('.pj .thumb canvas')]);
+    document.querySelectorAll<HTMLElement>('.pj .card').forEach((c) => setTimeout(() => c.classList.add('in'), 400));
+  })();
+  // فلترة مركّبة بقائمتين: المجال + المستوى
+  const selDom = document.getElementById('f-dom') as HTMLSelectElement, selLvl = document.getElementById('f-lvl') as HTMLSelectElement;
+  const applyFilter = () => {
+    let shown = 0; const total = document.querySelectorAll('.pj .card').length;
+    document.querySelectorAll<HTMLElement>('.pj .card').forEach((k) => {
+      const tags = (k.dataset.tags ?? '').split('|');
+      k.hidden = (!!selDom.value && !tags.includes(selDom.value)) || (!!selLvl.value && k.dataset.lvl !== selLvl.value);
+      if (!k.hidden) shown++;
+    });
+    const c = document.getElementById('f-count'); if (c) c.textContent = selDom.value || selLvl.value ? `${shown.toLocaleString('ar-EG')} من ${total.toLocaleString('ar-EG')} مشروع` : '';
+  };
+  selDom.addEventListener('change', applyFilter); selLvl.addEventListener('change', applyFilter);
+  // من المستشار: افتح المجال المطلوب
+  addEventListener('projects:filter', (e) => { const d = (e as CustomEvent).detail ?? {}; selDom.value = d.dom ?? ''; selLvl.value = d.lvl ?? ''; applyFilter(); });
+  const io = new IntersectionObserver(
+    (es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }),
+    { threshold: 0.1 },
+  );
+  const cards = document.querySelectorAll<HTMLElement>('.pj .card');
+  cards.forEach((c) => io.observe(c));
+  setTimeout(() => cards.forEach((c) => c.classList.add('in')), 3000);
+</script>
+
+<style>
+  .pj { background: var(--cream); padding: 110px 0; position: relative; z-index: 1; }
+  h2 { font-size: clamp(28px, 4vw, 48px); text-align: center; margin-bottom: 8px; }
+  .sub { text-align: center; color: var(--fg-2); margin-bottom: 34px; }
+  .filters { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 40px; }
+  .filterbar { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end; justify-content: center; margin-bottom: 38px; }
+  .filterbar label { display: grid; gap: 6px; font-size: 13px; color: var(--fg-2); }
+  .filterbar select { font: 500 15px var(--font); min-width: 210px; padding: 12px 40px 12px 16px; border-radius: 16px; border: 1px solid rgba(15,61,62,.2); background: #fff; color: var(--green); cursor: pointer; outline: none; appearance: none; -webkit-appearance: none; background-image: linear-gradient(45deg, transparent 50%, var(--green) 50%), linear-gradient(135deg, var(--green) 50%, transparent 50%); background-position: calc(100% - 22px) 55%, calc(100% - 16px) 55%; background-size: 6px 6px; background-repeat: no-repeat; }
+  [dir='rtl'] .filterbar select { background-position: 22px 55%, 16px 55%; padding: 12px 16px 12px 40px; }
+  .filterbar select:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(232,116,59,.2); }
+  .filterbar .count { font-size: 13px; color: var(--fg-2); padding-bottom: 14px; }
+  .chip { font: 500 14px var(--font); border: 1px solid rgba(15, 61, 62, 0.18); background: transparent; color: var(--green); padding: 8px 18px; border-radius: 999px; cursor: pointer; transition: all 0.25s; }
+  .chip small { opacity: 0.55; margin-inline-start: 4px; }
+  .chip.on { background: var(--green); color: var(--cream); border-color: var(--green); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 24px; }
+  .card {
+    position: relative; display: flex; flex-direction: column; text-decoration: none; padding: 0; border-radius: 28px; overflow: hidden;
+    background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(8px);
+    box-shadow: 0 0 0 1px rgba(15, 61, 62, 0.06), 0 20px 50px -20px rgba(15, 61, 62, 0.25);
+    opacity: 0; transform: translateY(36px);
+    transition: opacity 0.8s, transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.4s;
+  }
+  .card[hidden] { display: none; }
+  .card.in { opacity: 1; transform: none; }
+  .card:hover { transform: translateY(-8px); box-shadow: 0 0 0 1px rgba(232, 116, 59, 0.5), 0 0 40px rgba(232, 116, 59, 0.35), 0 24px 60px -20px rgba(232, 116, 59, 0.45); }
+  .thumb { position: relative; aspect-ratio: 3 / 2; background: radial-gradient(120% 90% at 50% 100%, #e4d8c3 0%, var(--cream-2) 55%, var(--cream) 100%); }
+  .thumb canvas { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; transition: opacity 0.6s; }
+  .thumb canvas.ready { opacity: 1; }
+  .cbody { display: flex; flex-direction: column; flex: 1; padding: 22px 26px 26px; }
+  .lvl { position: absolute; top: 16px; inset-inline-start: 16px; z-index: 2; font-size: 12px; padding: 4px 12px; border-radius: 999px; background: var(--mint); color: var(--green); }
+  .lvl.m { background: #e5dcae; }
+  .lvl.h { background: #f1c9b3; }
+  .lock { display: inline-flex; align-items: center; gap: 5px; position: absolute; top: 16px; inset-inline-end: 16px; z-index: 2; font-size: 12px; background: rgba(255,255,255,.75); padding: 3px 10px; border-radius: 999px; }
+  h3 { font-size: 20px; line-height: 1.35; margin-bottom: 10px; }
+  p { color: var(--fg-2); font-size: 14.5px; line-height: 1.8; display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+  .tags span { font-size: 12px; padding: 3px 10px; border-radius: 999px; background: var(--cream-2); }
+  .foot { display: flex; justify-content: flex-start; align-items: center; margin-top: auto; padding-top: 18px; border-top: 1px solid rgba(15, 61, 62, 0.1); }
+  .card > .tags + .foot { margin-top: 20px; }
+  .price { font-weight: 700; font-size: 19px; }
+  .go { color: var(--orange); font-size: 14px; font-weight: 500; }
+  .split { margin: 80px auto 0; max-width: 1000px; border-radius: 32px; overflow: hidden; display: grid; grid-template-columns: 1fr 1fr; }
+  .split div { padding: 34px; font-size: 18px; line-height: 1.8; }
+  .split .l { background: var(--cream-2); }
+  .split .r { background: var(--green); color: var(--cream); }
+  .split small { display: block; opacity: 0.6; margin-bottom: 6px; font-size: 13px; letter-spacing: 0.08em; }
+  @media (max-width: 640px) { .split { grid-template-columns: 1fr; } }
+</style>

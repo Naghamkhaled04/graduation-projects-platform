@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>رسومات isometric — تجربة</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#141824;--dim:#767C8C;--line:#E6E8EE;--soft:#F4F5F8;--paper:#FBFBFD;--acc:#5B3DF5}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'IBM Plex Sans Arabic',sans-serif;background:var(--paper);color:var(--ink);line-height:1.65}
+.top{padding:40px 24px 28px;text-align:center;border-bottom:1px solid var(--line)}
+.top h1{font-size:22px;font-weight:700}
+.top p{font-size:14px;color:var(--dim);margin-top:6px}
+.wrap{max-width:1000px;margin:0 auto;padding:40px 24px 70px;
+  display:grid;grid-template-columns:repeat(2,1fr);gap:22px}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.stage{height:230px;background:linear-gradient(160deg,#F8F7FF,#F1F0FA);
+  display:grid;place-items:center;border-bottom:1px solid var(--line)}
+.cb{padding:16px 18px 18px}
+.cb h3{font-size:16px;font-weight:600;margin-bottom:5px}
+.cb p{font-size:13.5px;color:var(--dim)}
+.parts{display:flex;gap:6px;flex-wrap:wrap;margin-top:11px}
+.part{font-size:11.5px;background:var(--soft);padding:3px 9px;border-radius:6px;font-weight:500}
+@media(max-width:760px){.wrap{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <h1>رسومات isometric — تجربة</h1>
+  <p>ثلاثة أمثلة تبيّن القطع الفعلية بمنظور ثلاثي الأبعاد</p>
+</div>
+
+<div class="wrap">
+
+<!-- 1. عداد المياه -->
+<div class="card">
+  <div class="stage">
+    <svg width="290" height="200" viewBox="0 0 290 200">
+      <defs>
+        <linearGradient id="pcbT" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#2F7D5C"/><stop offset="1" stop-color="#1E5A41"/>
+        </linearGradient>
+        <linearGradient id="water" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#7CB8F7"/><stop offset="1" stop-color="#3E8BD9"/>
+        </linearGradient>
+      </defs>
+
+      <!-- الأنبوب -->
+      <path d="M22 130 L86 96 L86 118 L22 152 Z" fill="url(#water)"/>
+      <path d="M22 130 L86 96 L110 108 L46 142 Z" fill="#9ECBFA"/>
+      <path d="M46 142 L110 108 L110 130 L46 164 Z" fill="#2E6FB5"/>
+
+      <!-- حساس التدفق على الأنبوب -->
+      <path d="M74 104 L104 88 L120 96 L90 112 Z" fill="#4A5568"/>
+      <path d="M74 104 L90 112 L90 128 L74 120 Z" fill="#2D3748"/>
+      <path d="M90 112 L120 96 L120 112 L90 128 Z" fill="#374151"/>
+      <ellipse cx="97" cy="100" rx="9" ry="5" fill="#1F2937"/>
+      <ellipse cx="97" cy="99" rx="5" ry="2.6" fill="#60A5FA"/>
+
+      <!-- سلك -->
+      <path d="M112 104 Q142 96 158 82" stroke="#DC2626" stroke-width="2.4" fill="none"/>
+      <path d="M114 108 Q144 100 160 86" stroke="#111827" stroke-width="2.4" fill="none"/>
+
+      <!-- لوحة ESP32 -->
+      <path d="M156 78 L232 34 L272 57 L196 101 Z" fill="url(#pcbT)"/>
+      <path d="M156 78 L196 101 L196 121 L156 98 Z" fill="#164033"/>
+      <path d="M196 101 L272 57 L272 77 L196 121 Z" fill="#1D5340"/>
+
+      <!-- شريحة -->
+      <path d="M186 76 L214 60 L230 69 L202 85 Z" fill="#E5E7EB"/>
+      <path d="M186 76 L202 85 L202 92 L186 83 Z" fill="#9CA3AF"/>
+      <path d="M202 85 L230 69 L230 76 L202 92 Z" fill="#BFC4CC"/>
+      <text x="208" y="76" font-size="6.5" fill="#4B5563" font-family="monospace"
+        text-anchor="middle" transform="rotate(-30 208 76)">ESP32</text>
+
+      <!-- هوائي -->
+      <path d="M228 46 L248 35 L254 38 L234 49 Z" fill="#D1D5DB"/>
+
+      <!-- دبابيس ذهبية -->
+      <g fill="#D4AF37">
+        <circle cx="170" cy="88" r="1.9"/><circle cx="177" cy="92" r="1.9"/>
+        <circle cx="184" cy="96" r="1.9"/><circle cx="191" cy="100" r="1.9"/>
+        <circle cx="240" cy="66" r="1.9"/><circle cx="247" cy="70" r="1.9"/>
+        <circle cx="254" cy="74" r="1.9"/><circle cx="261" cy="78" r="1.9"/>
+      </g>
+
+      <!-- مؤشر LED -->
+      <circle cx="222" cy="82" r="3.4" fill="#22C55E"/>
+      <circle cx="222" cy="82" r="6.5" fill="#22C55E" opacity=".22"/>
+
+      <!-- إشارة لاسلكية -->
+      <path d="M244 30 A16 16 0 0 1 258 22" stroke="#5B3DF5" stroke-width="2"
+        fill="none" opacity=".55" stroke-linecap="round"/>
+      <path d="M240 22 A26 26 0 0 1 262 12" stroke="#5B3DF5" stroke-width="2"
+        fill="none" opacity=".3" stroke-linecap="round"/>
+    </svg>
+  </div>
+  <div class="cb">
+    <h3>عداد مياه ذكي يكشف التسريب</h3>
+    <p>حساس التدفق مركّب على الأنبوب، متصل بلوحة ESP32 ترسل القراءات لاسلكياً.</p>
+    <div class="parts"><span class="part">حساس تدفق</span><span class="part">ESP32</span><span class="part">أنبوب ½ إنش</span></div>
+  </div>
+</div>
+
+<!-- 2. كشف الغاز -->
+<div class="card">
+  <div class="stage">
+    <svg width="290" height="200" viewBox="0 0 290 200">
+      <defs>
+        <linearGradient id="pcb2" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#2F7D5C"/><stop offset="1" stop-color="#1E5A41"/>
+        </linearGradient>
+        <linearGradient id="brass" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#D9A441"/><stop offset="1" stop-color="#A67C21"/>
+        </linearGradient>
+      </defs>
+
+      <!-- اللوحة -->
+      <path d="M40 116 L128 65 L176 93 L88 144 Z" fill="url(#pcb2)"/>
+      <path d="M40 116 L88 144 L88 162 L40 134 Z" fill="#164033"/>
+      <path d="M88 144 L176 93 L176 111 L88 162 Z" fill="#1D5340"/>
+
+      <!-- حساس الغاز MQ-5 — شبكة معدنية -->
+      <ellipse cx="86" cy="94" rx="21" ry="12" fill="#8B92A0"/>
+      <ellipse cx="86" cy="91" rx="21" ry="12" fill="#B4BAC6"/>
+      <ellipse cx="86" cy="91" rx="15" ry="8.5" fill="#6B7280"/>
+      <g stroke="#9CA3AF" stroke-width=".9" opacity=".85">
+        <line x1="72" y1="91" x2="100" y2="91"/>
+        <line x1="74" y1="87" x2="98" y2="87"/>
+        <line x1="74" y1="95" x2="98" y2="95"/>
+        <line x1="79" y1="84" x2="79" y2="98"/>
+        <line x1="86" y1="83" x2="86" y2="99"/>
+        <line x1="93" y1="84" x2="93" y2="98"/>
+      </g>
+      <path d="M70 96 L70 106 M86 100 L86 110 M102 96 L102 106"
+        stroke="#D4AF37" stroke-width="2.4" stroke-linecap="round"/>
+
+      <!-- الصمام الكهربائي -->
+      <path d="M186 100 L226 77 L252 92 L212 115 Z" fill="url(#brass)"/>
+      <path d="M186 100 L212 115 L212 138 L186 123 Z" fill="#8A6518"/>
+      <path d="M212 115 L252 92 L252 115 L212 138 Z" fill="#B8862B"/>
+      <path d="M204 76 L228 62 L242 70 L218 84 Z" fill="#4B5563"/>
+      <path d="M204 76 L218 84 L218 96 L204 88 Z" fill="#374151"/>
+      <path d="M218 84 L242 70 L242 82 L218 96 Z" fill="#3F4753"/>
+      <ellipse cx="223" cy="66" rx="7" ry="4" fill="#6B7280"/>
+
+      <!-- أسلاك -->
+      <path d="M166 98 Q182 92 196 88" stroke="#DC2626" stroke-width="2.4" fill="none"/>
+      <path d="M168 102 Q184 96 198 92" stroke="#111827" stroke-width="2.4" fill="none"/>
+
+      <!-- تحذير -->
+      <path d="M146 44 L160 68 L132 68 Z" fill="#EA580C"/>
+      <line x1="146" y1="54" x2="146" y2="61" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>
+      <circle cx="146" cy="65" r="1.4" fill="#fff"/>
+
+      <!-- جزيئات غاز -->
+      <circle cx="66" cy="62" r="3.4" fill="#EA580C" opacity=".38"/>
+      <circle cx="80" cy="48" r="2.6" fill="#EA580C" opacity=".28"/>
+      <circle cx="98" cy="58" r="3" fill="#EA580C" opacity=".2"/>
+    </svg>
+  </div>
+  <div class="cb">
+    <h3>كشف تسرب الغاز مع إغلاق تلقائي</h3>
+    <p>حساس MQ-5 على اللوحة، وعند التسرب يأمر الصمام الكهربائي بالإغلاق فوراً.</p>
+    <div class="parts"><span class="part">MQ-5</span><span class="part">ESP32</span><span class="part">صمام كهربائي</span></div>
+  </div>
+</div>
+
+<!-- 3. مراقبة خلايا النحل -->
+<div class="card">
+  <div class="stage">
+    <svg width="290" height="200" viewBox="0 0 290 200">
+      <defs>
+        <linearGradient id="wood" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#D4A574"/><stop offset="1" stop-color="#A87548"/>
+        </linearGradient>
+      </defs>
+
+      <!-- الخلية — ثلاث طوابق isometric -->
+      <g>
+        <path d="M74 150 L150 106 L216 144 L140 188 Z" fill="#8B5E3C"/>
+        <path d="M74 150 L140 188 L140 172 L74 134 Z" fill="#6E4A2F"/>
+        <path d="M140 188 L216 144 L216 128 L140 172 Z" fill="#7D5335"/>
+
+        <path d="M74 134 L150 90 L216 128 L140 172 Z" fill="url(#wood)"/>
+        <path d="M74 134 L140 172 L140 156 L74 118 Z" fill="#8A5F3A"/>
+        <path d="M140 172 L216 128 L216 112 L140 156 Z" fill="#9C6C42"/>
+
+        <path d="M74 118 L150 74 L216 112 L140 156 Z" fill="url(#wood)"/>
+        <path d="M74 118 L140 156 L140 140 L74 102 Z" fill="#8A5F3A"/>
+        <path d="M140 156 L216 112 L216 96 L140 140 Z" fill="#9C6C42"/>
+
+        <!-- الغطاء -->
+        <path d="M68 102 L150 55 L222 96 L140 143 Z" fill="#B98A55"/>
+        <path d="M68 102 L140 143 L140 134 L68 93 Z" fill="#8A6440"/>
+        <path d="M140 143 L222 96 L222 87 L140 134 Z" fill="#A67A4A"/>
+      </g>
+
+      <!-- فتحة الدخول -->
+      <path d="M96 144 L118 131 L124 135 L102 148 Z" fill="#3D2817"/>
+
+      <!-- وحدة الحساسات فوق الغطاء -->
+      <path d="M150 66 L182 48 L200 58 L168 76 Z" fill="#2F7D5C"/>
+      <path d="M150 66 L168 76 L168 88 L150 78 Z" fill="#164033"/>
+      <path d="M168 76 L200 58 L200 70 L168 88 Z" fill="#1D5340"/>
+      <path d="M162 62 L178 53 L186 58 L170 67 Z" fill="#E5E7EB"/>
+      <circle cx="192" cy="62" r="3" fill="#22C55E"/>
+
+      <!-- ميكروفون -->
+      <ellipse cx="158" cy="76" rx="5.5" ry="3" fill="#4B5563"/>
+      <ellipse cx="158" cy="75" rx="3.5" ry="1.8" fill="#1F2937"/>
+
+      <!-- موجات صوت -->
+      <path d="M206 52 A13 13 0 0 1 216 44" stroke="#5B3DF5" stroke-width="2"
+        fill="none" opacity=".5" stroke-linecap="round"/>
+      <path d="M204 44 A22 22 0 0 1 222 33" stroke="#5B3DF5" stroke-width="2"
+        fill="none" opacity=".28" stroke-linecap="round"/>
+
+      <!-- ميزان تحت الخلية -->
+      <path d="M64 168 L146 120 L228 166 L146 214 Z" fill="#D1D5DB" opacity=".55"/>
+      <text x="240" y="150" font-size="9.5" fill="#767C8C" font-family="monospace">kg</text>
+
+      <!-- نحلة -->
+      <ellipse cx="242" cy="118" rx="5" ry="3.4" fill="#F0B429" transform="rotate(-18 242 118)"/>
+      <path d="M239 116 h6" stroke="#1F2937" stroke-width="1.4"/>
+      <ellipse cx="240" cy="113" rx="3.4" ry="1.8" fill="#fff" opacity=".65"/>
+    </svg>
+  </div>
+  <div class="cb">
+    <h3>مراقبة صحة خلايا النحل</h3>
+    <p>وحدة حساسات فوق الخلية تقيس الحرارة والرطوبة والوزن، وميكروفون يحلل صوت الطنين.</p>
+    <div class="parts"><span class="part">حساسات بيئية</span><span class="part">ميكروفون</span><span class="part">خلية وزن</span></div>
+  </div>
+</div>
+
+<!-- 4. مراقبة الكهرباء -->
+<div class="card">
+  <div class="stage">
+    <svg width="290" height="200" viewBox="0 0 290 200">
+      <defs>
+        <linearGradient id="pcb3" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#2F7D5C"/><stop offset="1" stop-color="#1E5A41"/>
+        </linearGradient>
+      </defs>
+
+      <!-- صندوق الكهرباء -->
+      <path d="M36 122 L104 82 L104 148 L36 188 Z" fill="#D8DCE4"/>
+      <path d="M36 122 L104 82 L142 104 L74 144 Z" fill="#EDEFF3"/>
+      <path d="M74 144 L142 104 L142 170 L74 210 Z" fill="#B9BFCA"/>
+
+      <!-- قواطع -->
+      <g>
+        <path d="M50 124 L68 114 L76 118 L58 128 Z" fill="#374151"/>
+        <path d="M50 124 L58 128 L58 138 L50 134 Z" fill="#1F2937"/>
+        <path d="M58 128 L76 118 L76 128 L58 138 Z" fill="#2D3748"/>
+        <path d="M60 118 L70 112 L74 114 L64 120 Z" fill="#EF4444"/>
+      </g>
+      <g>
+        <path d="M50 142 L68 132 L76 136 L58 146 Z" fill="#374151"/>
+        <path d="M50 142 L58 146 L58 156 L50 152 Z" fill="#1F2937"/>
+        <path d="M58 146 L76 136 L76 146 L58 156 Z" fill="#2D3748"/>
+        <path d="M60 136 L70 130 L74 132 L64 138 Z" fill="#22C55E"/>
+      </g>
+
+      <!-- حساس التيار — حلقة CT -->
+      <ellipse cx="128" cy="122" rx="24" ry="14" fill="#1F2937"/>
+      <ellipse cx="128" cy="119" rx="24" ry="14" fill="#374151"/>
+      <ellipse cx="128" cy="119" rx="12" ry="7" fill="#111827"/>
+      <path d="M128 112 L128 105" stroke="#D4AF37" stroke-width="2.4" stroke-linecap="round"/>
+
+      <!-- سلك يمر بالحلقة -->
+      <path d="M104 108 Q128 116 156 106" stroke="#111827" stroke-width="4.5"
+        fill="none" stroke-linecap="round"/>
+
+      <!-- اللوحة -->
+      <path d="M170 110 L232 74 L266 94 L204 130 Z" fill="url(#pcb3)"/>
+      <path d="M170 110 L204 130 L204 146 L170 126 Z" fill="#164033"/>
+      <path d="M204 130 L266 94 L266 110 L204 146 Z" fill="#1D5340"/>
+      <path d="M194 106 L218 92 L230 99 L206 113 Z" fill="#E5E7EB"/>
+      <circle cx="244" cy="104" r="3.2" fill="#22C55E"/>
+
+      <!-- سلك للوحة -->
+      <path d="M144 118 Q160 116 176 114" stroke="#DC2626" stroke-width="2.4" fill="none"/>
+
+      <!-- رسم بياني -->
+      <g opacity=".7">
+        <path d="M186 56 L198 44 L210 50 L222 32 L234 40"
+          stroke="#5B3DF5" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+        <circle cx="222" cy="32" r="3" fill="#5B3DF5"/>
+      </g>
+    </svg>
+  </div>
+  <div class="cb">
+    <h3>مراقبة استهلاك الكهرباء</h3>
+    <p>حساس تيار حلقي حول السلك الرئيسي داخل صندوق القواطع، يرسل القراءات للوحة التحكم.</p>
+    <div class="parts"><span class="part">حساس تيار SCT</span><span class="part">ESP32</span><span class="part">لوحة تحكم</span></div>
+  </div>
+</div>
+
+</div>
+</body>
+</html>

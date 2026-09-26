@@ -1,0 +1,19 @@
+.DS_Store
+node_modules/
+*.log
+.vscode/
+
+# build output
+dist/
+.astro/
+
+# secrets
+.env
+.env.*
+!.env.example
+
+# local backups and one-off scripts
+*.backup.json
+site/_*.py
+site/_*.cjs
+site/_*.js

@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>تتبع الأصول والمعدّات داخل المباني — مشروع تخرج</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#141824;--ink2:#3D4354;--dim:#767C8C;--faint:#A8ADBA;
+  --line:#E6E8EE;--soft:#F4F5F8;--paper:#FBFBFD;--white:#fff;
+  --acc:#5B3DF5;--acc2:#7C63F7;--accs:#EFEBFF;
+  --wa:#25D366;--ok:#0E9F6E;--okbg:#DEF7EC;
+  --hard:#E02424;--hardbg:#FDE8E8;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'IBM Plex Sans Arabic',sans-serif;background:var(--paper);
+  color:var(--ink);line-height:1.65;font-size:15px;-webkit-font-smoothing:antialiased}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+a{color:inherit;text-decoration:none}
+
+.dbar{background:var(--ink);color:#fff;padding:9px 24px;font-size:12.5px}
+.dbar b{font-weight:600}
+.dbar span{color:var(--faint);margin-inline-start:12px}
+
+header{background:var(--white);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:30}
+.hin{max-width:900px;margin:0 auto;padding:0 24px;height:60px;display:flex;align-items:center;gap:12px}
+.logo{display:flex;align-items:center;gap:9px;font-weight:700;font-size:16px}
+.logo i{width:29px;height:29px;border-radius:9px;background:var(--acc);display:grid;
+  place-items:center;color:#fff;font-style:normal;font-size:14px;font-weight:700}
+.hin .wa{margin-inline-start:auto;background:var(--acc);color:#fff;padding:9px 15px;
+  border-radius:8px;font-size:13px;font-weight:600}
+
+.wrap{max-width:900px;margin:0 auto;padding:30px 24px 70px}
+
+.dhead{display:flex;gap:9px;align-items:center;margin-bottom:11px;flex-wrap:wrap}
+.lvl{padding:4px 11px;border-radius:99px;font-size:11.5px;font-weight:600;
+  background:var(--hardbg);color:var(--hard)}
+.cat{font-size:11.5px;font-weight:600;color:var(--acc)}
+h1{font-size:31px;font-weight:700;line-height:1.32;margin-bottom:13px;letter-spacing:-.3px}
+.lead{font-size:16.5px;color:var(--ink2);line-height:1.78;margin-bottom:26px}
+
+.viewer{height:360px;background:linear-gradient(165deg,#EAF4FB,#D4E7F4);
+  border:1px solid var(--line);border-radius:14px;margin-bottom:32px;
+  display:grid;place-items:center;position:relative;overflow:hidden}
+.viewer .cap{position:absolute;bottom:13px;inset-inline-start:50%;transform:translateX(50%);
+  font-size:12px;color:var(--dim);background:rgba(255,255,255,.82);padding:5px 13px;
+  border-radius:99px}
+
+.sec{margin-bottom:32px}
+.sec h2{font-size:19px;font-weight:600;margin-bottom:13px}
+.sec p{color:var(--ink2);line-height:1.82}
+.sec ul{list-style:none;display:flex;flex-direction:column;gap:10px;margin-top:5px}
+.sec li{padding-inline-start:23px;position:relative;color:var(--ink2);line-height:1.72}
+.sec li::before{content:'';position:absolute;inset-inline-start:0;top:11px;width:6px;height:6px;
+  border-radius:50%;background:var(--acc)}
+
+.how{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-top:6px}
+
+/* الفيديو */
+.vid{position:relative;border-radius:14px;overflow:hidden;border:1px solid var(--line);
+  background:#0B0D12;aspect-ratio:16/9;cursor:pointer}
+.vid video{width:100%;height:100%;object-fit:cover;display:block;background:#0B0D12}
+.vid .wm{position:absolute;bottom:14px;inset-inline-end:16px;color:rgba(255,255,255,.42);
+  font-size:12.5px;font-weight:600;pointer-events:none;z-index:3;
+  text-shadow:0 1px 6px rgba(0,0,0,.6)}
+.vid .play{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}
+.vid .play i{width:64px;height:64px;border-radius:50%;background:rgba(220,38,38,.94);
+  display:grid;place-items:center;font-style:normal;box-shadow:0 6px 24px rgba(0,0,0,.35);
+  transition:.25s}
+.vid:hover .play i{transform:scale(1.08);background:#DC2626}
+.vid .play svg{margin-inline-start:4px}
+.vidnote{font-size:12.5px;color:var(--dim);margin-top:9px;display:flex;align-items:center;gap:7px}
+.step{background:var(--white);border:1px solid var(--line);border-radius:12px;padding:15px 16px}
+.step b{display:block;font-size:13px;color:var(--acc);font-weight:600;margin-bottom:5px}
+.step span{font-size:13.5px;color:var(--ink2);line-height:1.6}
+
+/* ===== السلة ===== */
+.box{background:var(--white);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.boxhead{padding:17px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+.boxhead h2{font-size:17px;font-weight:600}
+.boxhead .n{margin-inline-start:auto;font-size:13px;color:var(--dim)}
+
+.item{border-bottom:1px solid var(--line);padding:15px 20px}
+.item:last-of-type{border-bottom:none}
+.item.off{background:var(--soft)}
+.item.off .nm{color:var(--faint);text-decoration:line-through}
+
+.row1{display:flex;align-items:flex-start;gap:12px}
+.chk{width:21px;height:21px;border:2px solid var(--line);border-radius:6px;flex-shrink:0;
+  margin-top:2px;display:grid;place-items:center;transition:.15s;background:#fff}
+.chk.on{background:var(--acc);border-color:var(--acc)}
+.chk svg{opacity:0;transition:.15s}
+.chk.on svg{opacity:1}
+.mid{flex:1;min-width:0}
+.nm{font-size:15px;font-weight:600;line-height:1.45}
+.dsc{font-size:13px;color:var(--dim);margin-top:2px}
+.req{display:inline-block;font-size:11px;font-weight:600;background:var(--accs);
+  color:var(--acc);padding:2px 8px;border-radius:99px;margin-inline-start:7px;vertical-align:middle}
+.pr{font-size:15px;font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums}
+.pr small{font-size:11.5px;color:var(--dim);font-weight:400;display:block;text-align:end}
+
+.qty{display:flex;align-items:center;gap:2px;margin-top:9px;border:1px solid var(--line);
+  border-radius:7px;width:fit-content;background:#fff}
+.qty button{width:28px;height:28px;color:var(--dim);font-size:15px;font-weight:600}
+.qty button:hover{color:var(--ink);background:var(--soft)}
+.qty span{min-width:30px;text-align:center;font-size:13.5px;font-weight:600}
+
+.alts{margin-top:11px;padding-inline-start:33px}
+.altlbl{font-size:12px;color:var(--dim);font-weight:500;margin-bottom:7px}
+.alt{display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid var(--line);
+  border-radius:9px;margin-bottom:6px;cursor:pointer;transition:.14s;background:#fff}
+.alt:hover{border-color:var(--acc2)}
+.alt.on{border-color:var(--acc);background:var(--accs)}
+.rad{width:16px;height:16px;border:2px solid var(--line);border-radius:50%;flex-shrink:0;
+  display:grid;place-items:center}
+.alt.on .rad{border-color:var(--acc)}
+.alt.on .rad::after{content:'';width:7px;height:7px;border-radius:50%;background:var(--acc)}
+.alt .an{flex:1;font-size:13.5px;font-weight:500}
+.alt .ad{font-size:12px;color:var(--dim);font-weight:400}
+.alt .ap{font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums}
+
+.add{padding:15px 20px;border-top:1px solid var(--line);background:var(--soft)}
+.add .lbl{font-size:12.5px;font-weight:600;color:var(--dim);margin-bottom:9px}
+.addrow{display:flex;align-items:center;gap:11px;padding:9px 12px;background:#fff;
+  border:1px solid var(--line);border-radius:9px;margin-bottom:6px;cursor:pointer;transition:.14s}
+.addrow:hover{border-color:var(--acc2)}
+.addrow.on{border-color:var(--acc);background:var(--accs)}
+.addrow .an{flex:1;font-size:13.5px;font-weight:500}
+.addrow .ad{font-size:12px;color:var(--dim)}
+.addrow .ap{font-size:13.5px;font-weight:600}
+
+.total{padding:18px 20px;background:var(--ink);color:#fff}
+.trow{display:flex;justify-content:space-between;font-size:14px;
+  color:rgba(255,255,255,.62);margin-bottom:7px}
+.trow.big{font-size:21px;font-weight:700;color:#fff;margin:12px 0 0;
+  padding-top:14px;border-top:1px solid rgba(255,255,255,.14)}
+.tnum{font-variant-numeric:tabular-nums}
+
+.cta{padding:18px 20px;background:var(--white)}
+.wabtn{width:100%;background:var(--wa);color:#fff;padding:15px;border-radius:11px;
+  font-size:15.5px;font-weight:700;display:flex;align-items:center;justify-content:center;
+  gap:9px;transition:.15s}
+.wabtn:hover{background:#1EB855}
+.perks{display:flex;flex-wrap:wrap;gap:7px;margin-top:13px;justify-content:center}
+.perk{font-size:12px;color:var(--ok);background:var(--okbg);padding:5px 11px;
+  border-radius:99px;font-weight:500}
+
+.gate{background:linear-gradient(135deg,#5B3DF5,#8B5CF6);border-radius:16px;padding:30px;
+  color:#fff;margin-top:34px}
+.gate h3{font-size:20px;font-weight:700;margin-bottom:9px}
+.gate p{font-size:14.5px;opacity:.92;line-height:1.7;margin-bottom:18px}
+.gate ul{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:20px}
+.gate li{font-size:13.5px;padding-inline-start:22px;position:relative;opacity:.95}
+.gate li::before{content:'✓';position:absolute;inset-inline-start:0;font-weight:700}
+.gate .btn{background:#fff;color:var(--acc);padding:12px 22px;border-radius:9px;
+  font-weight:700;font-size:14.5px;display:inline-block}
+
+.note{font-size:12.5px;color:var(--faint);text-align:center;margin-top:16px}
+
+@media(max-width:620px){
+  h1{font-size:25px}
+  .gate ul{grid-template-columns:1fr}
+  .viewer{height:250px}
+}
+
+.lockwrap{position:relative}
+.lockrows{padding:16px 20px;filter:blur(5px);user-select:none;pointer-events:none}
+.lockrow{height:17px;background:linear-gradient(90deg,var(--soft) 62%,transparent);
+  border-radius:5px;margin-bottom:15px}
+.lockrow:nth-child(even){background:linear-gradient(90deg,var(--soft) 44%,transparent)}
+.lockover{position:absolute;inset:0;display:grid;place-items:center;
+  background:linear-gradient(180deg,rgba(251,251,253,.55),rgba(251,251,253,.94))}
+.lockbox{text-align:center;max-width:330px;padding:0 20px}
+.lockicon{font-size:26px;margin-bottom:7px}
+.lockbox b{display:block;font-size:16px;margin-bottom:6px}
+.lockbox span{font-size:13.5px;color:var(--dim);line-height:1.7}
+.sidenote{margin-top:18px;padding:15px 18px;border:1px solid var(--line);
+  border-inline-start:3px solid var(--acc);border-radius:11px;background:var(--white)}
+.sidenote b{display:block;font-size:13px;color:var(--acc);font-weight:600;margin-bottom:5px}
+.sidenote span{font-size:14px;color:var(--ink2);line-height:1.75}
+</style>
+</head>
+<body>
+
+<div class="dbar"><b>ديمو</b><span>الأسعار مبدئية — بتتحدث لما تجيب أسعار المتجر</span></div>
+
+<header>
+  <div class="hin">
+    <div class="logo"><i>م</i> مشاريع</div>
+    <a href="#" class="wa">تواصل واتساب</a>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="dhead">
+    <span class="lvl" style="background:#FDE8E8;color:#E02424">متقدم</span>
+    <span class="cat">إنترنت الأشياء · لوجستيات</span>
+  </div>
+  <h1>تتبع الأصول والمعدّات داخل المباني</h1>
+  <p class="lead">
+    نظام بيحدد موقع أي جهاز أو معدّة داخل المبنى — للغرفة والطابق بالضبط. كل أصل بينحط عليه وسم صغير ببطارية، وعقد استقبال موزّعة بتلتقط إشارته وبتقدّر مكانه من قوة الإشارة، فبتفتح اللوحة وتشوف كل شي وين هو الآن.
+  </p>
+
+  <div class="viewer">
+    <svg width="360" height="220" viewBox="0 0 360 220" fill="none">
+      <rect x="24" y="32" width="196" height="160" rx="8" fill="#fff" stroke="#141824" stroke-width="2.2"/>
+      <path d="M24 92 h196 M24 140 h196 M96 32 v160 M156 32 v160" stroke="#E6E8EE" stroke-width="1.8"/>
+      <text x="60" y="50" font-size="8.5" fill="#A8ADBA" text-anchor="middle" font-family="sans-serif">غرفة ١</text>
+      <text x="126" y="50" font-size="8.5" fill="#A8ADBA" text-anchor="middle" font-family="sans-serif">غرفة ٢</text>
+      <text x="188" y="50" font-size="8.5" fill="#A8ADBA" text-anchor="middle" font-family="sans-serif">غرفة ٣</text>
+      <!-- عقد الاستقبال -->
+      <g>
+        <rect x="52" y="60" width="14" height="10" rx="2.5" fill="#2F7D5C"/>
+        <rect x="182" y="60" width="14" height="10" rx="2.5" fill="#2F7D5C"/>
+        <rect x="52" y="164" width="14" height="10" rx="2.5" fill="#2F7D5C"/>
+        <rect x="182" y="164" width="14" height="10" rx="2.5" fill="#2F7D5C"/>
+      </g>
+      <!-- الأصل المتتبَّع -->
+      <rect x="108" y="106" width="34" height="26" rx="4" fill="#C79235" stroke="#141824" stroke-width="1.8"/>
+      <path d="M108 116 h34" stroke="#141824" stroke-width="1.4"/>
+      <circle cx="125" cy="119" r="19" stroke="#5B3DF5" stroke-width="1.8" fill="none" opacity=".55"/>
+      <circle cx="125" cy="119" r="30" stroke="#5B3DF5" stroke-width="1.6" fill="none" opacity=".28"/>
+      <path d="M110 108 L62 70 M140 108 L186 70 M110 130 L62 168 M140 130 L186 168"
+            stroke="#5B3DF5" stroke-width="1.4" stroke-dasharray="4 4" opacity=".45"/>
+      <!-- لوحة النتيجة -->
+      <rect x="238" y="66" width="106" height="88" rx="9" fill="#fff" stroke="#E6E8EE" stroke-width="2"/>
+      <rect x="250" y="80" width="60" height="9" rx="4" fill="#EFEBFF"/>
+      <text x="291" y="112" font-size="10" fill="#141824" text-anchor="middle" font-family="sans-serif">جهاز ١٢٤</text>
+      <text x="291" y="128" font-size="9.5" fill="#5B3DF5" text-anchor="middle" font-family="sans-serif">غرفة ٢ · الطابق ١</text>
+      <text x="291" y="142" font-size="8" fill="#767C8C" text-anchor="middle" font-family="sans-serif">آخر تحديث قبل ثانيتين</text>
+    </svg>
+    <div class="cap">رسم توضيحي — المجسم ثلاثي الأبعاد قيد الإعداد</div>
+  </div>
+
+  <div class="sec">
+    <h2>المشكلة</h2>
+    <p>الـGPS بيوقف عند باب المبنى — جوّا الجدران ما بيعطي طابق ولا غرفة. وبالمستشفيات والمصانع والمخازن، الوقت اللي بيضيع بالبحث عن جهاز موجود فعلاً بس محدا بيعرف وين، بيتحوّل لساعات أسبوعياً. والأسوأ إن الجهاز بينحسب مفقود فبينشترى بديل وهو موجود بغرفة تانية. المشكلة مش الضياع — المشكلة إنه ما في سجل حي لمكان كل شي.</p>
+  </div>
+
+  <div class="sec">
+    <h2>كيف يشتغل</h2>
+    <div class="how">
+      <div class="step"><b>١ · الوسم</b><span>كل أصل بينحط عليه وسم صغير بيبث إشارة دورية.</span></div>
+      <div class="step"><b>٢ · الالتقاط</b><span>عقد استقبال موزّعة على الغرف بتلتقط الإشارة وبتقيس قوتها.</span></div>
+      <div class="step"><b>٣ · التقدير</b><span>النظام بيقارن قوة الإشارة عند كل عقدة ليقدّر أقرب غرفة.</span></div>
+      <div class="step"><b>٤ · التصفية</b><span>متوسط عدة قراءات بيمنع القفز بين الغرف بسبب التذبذب.</span></div>
+      <div class="step"><b>٥ · العرض</b><span>خريطة المبنى بتوري كل أصل بغرفته الحالية.</span></div>
+      <div class="step"><b>٦ · التنبيه</b><span>خروج أصل من منطقته المسموحة بيرفع تنبيه فوري.</span></div>
+    </div>
+  </div>
+
+
+  <div class="sec" id="vidSec" style="display:none">
+    <h2>شوف الفكرة على أرض الواقع</h2>
+    <div class="vid" id="vid" onclick="playVid()"></div>
+    <div class="vidnote">
+      <span>▸</span>
+      <span>الفيديو يوضّح الفكرة والنتيجة — تفاصيل التنفيذ التقني ضمن الاستشارة</span>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h2>مميزات المشروع</h2>
+    <ul>
+      <li>بيحل مشكلة الـGPS داخل المباني — نقطة تقنية واضحة أمام اللجنة</li>
+      <li>الوسوم رخيصة، فبتقدر تغطي عشرات الأصول بكلفة معقولة</li>
+      <li>سجل تاريخي بيوري وين كان كل أصل مش وين هو بس</li>
+      <li>التنبيه عند الخروج بيحوّله لنظام حماية من الفقدان كمان</li>
+      <li>مستخدمون فعليون: مستشفيات، مخازن، مصانع، جامعات</li>
+    </ul>
+  </div>
+
+  <div class="sec">
+    <h2>التحديات المتوقعة</h2>
+    <p style="margin-bottom:10px">هاي العقبات اللي رح تواجهك وقت التنفيذ، حكيناها من
+    الآخر عشان تكون على بيّنة قبل ما تبلّش.</p>
+    <ul>
+      <li>قوة الإشارة بتتأثر بالجدران والمعادن والأشخاص — أصعب جزء تقنياً</li>
+      <li>حدود الغرف مش واضحة للنظام، والأصل قرب الباب بيتذبذب بين غرفتين</li>
+      <li>عمر بطارية الوسم لازم يكون شهوراً مش أياماً</li>
+      <li>كل عقدة إضافية بتزيد الدقة وبتزيد الكلفة — لازم توازن</li>
+      <li>المعايرة بتختلف من مبنى لمبنى، فما في إعداد جاهز يشتغل بكل مكان</li>
+    </ul>
+    <p style="margin-top:12px;font-size:13.5px;color:var(--dim)">طريقة التعامل مع كل
+    وحدة فيهن مشروحة ضمن الاستشارة.</p>
+  </div>
+
+  <!-- ═══ السلة ═══ -->
+  <div class="sec">
+    <h2>سلة المشروع</h2>
+    <p style="margin-bottom:16px">كل القطع المطلوبة بمكان واحد. شيّل اللي عندك، وبدّل حسب ميزانيتك.</p>
+
+    <div class="box">
+      <div class="boxhead">
+        <h2>القطع الأساسية</h2>
+        <span class="n" id="cnt"></span>
+      </div>
+      <div id="items"></div>
+
+      <div class="add">
+        <div class="lbl">إضافات اختيارية</div>
+        <div id="extras"></div>
+      </div>
+
+      <div class="total">
+        <div class="trow"><span>عدد القطع</span><span class="tnum" id="tq">0</span></div>
+        <div class="trow"><span>التوصيل داخل عمّان</span><span>مجاني</span></div>
+        <div class="trow big"><span>المجموع</span><span class="tnum" id="tp">0 د.أ</span></div>
+      </div>
+
+      <div class="cta">
+        <button class="wabtn" onclick="order()">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M17.5 14.4c-.3-.2-1.7-.8-2-.9-.3-.1-.5-.2-.7.1-.2.3-.7.9-.9 1.1-.2.2-.3.2-.6.1-1.7-.9-2.9-1.6-4-3.5-.3-.5.3-.5.9-1.6.1-.2 0-.4 0-.5 0-.2-.7-1.6-.9-2.2-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.5s1.1 2.9 1.2 3.1c.1.2 2.1 3.2 5.1 4.5 1.9.8 2.6.9 3.5.7.6-.1 1.7-.7 1.9-1.4.2-.7.2-1.2.2-1.4-.1-.2-.3-.3-.6-.5M12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2"/>
+          </svg>
+          أكّد الطلب على واتساب
+        </button>
+        <div class="perks">
+          <span class="perk">✓ قطع مفحوصة</span>
+          <span class="perk">✓ تجهيز ٣-٥ أيام</span>
+          <span class="perk">✓ ضمان استبدال ٧ أيام</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="gate">
+    <h3>محتاج الطريق التقني كامل؟</h3>
+    <p>الاستشارة تعطيك خطة تنفيذ حقيقية تمشي عليها من أول خطوة لآخر وحدة.</p>
+    <ul>
+      <li>طريقة التعامل مع التحديات المذكورة فوق — وحدة وحدة</li>
+      <li>خوارزمية تقدير الموقع من قوة الإشارة</li>
+      <li>تصفية القراءات ومنع القفز بين الغرف</li>
+      <li>توزيع العقد وحساب التغطية اللازمة</li>
+      <li>إدارة طاقة الوسم لإطالة عمر البطارية</li>
+      <li>بناء خريطة المبنى ولوحة التتبع</li>
+      <li>خطة زمنية بمراحل + نصائح المناقشة</li>
+      <li>المكتبات والأدوات المطلوبة</li>
+      <li>مخطط التوصيل الكامل</li>
+      <li>المصادر والمراجع</li>
+    </ul>
+    <a href="#" class="btn">احجز استشارة على واتساب</a>
+  </div>
+
+  <div class="note">
+    الأسعار من كتالوج متجر معتمد وقابلة للتحديث · القطع المعلّمة "مورّد آخر" تُطلب خارجه
+  </div>
+
+</div>
+
+<script>
+/* ══════════════════════════════════
+   عدّل من هون
+   ══════════════════════════════════ */
+const WHATSAPP  = '962790000000';   // رقمك بصيغة دولية بدون +
+const INSTAGRAM = 'your_page';
+const PROJECT   = 'تتبع الأصول والمعدّات داخل المباني';
+
+// ═══ الفيديو ═══
+// حط اسم ملف الفيديو (يكون بنفس مجلد الصفحة أو بمجلد videos)
+// اتركه فاضي وما بيظهر القسم إطلاقاً
+const VIDEO  = '';                    // مثال: 'videos/asset.mp4'
+const POSTER = '';                    // صورة الغلاف — اختيارية
+/* ══════════════════════════════════ */
+
+/* ═══ تهيئة الفيديو ═══ */
+if(VIDEO){
+  document.getElementById('vidSec').style.display='';
+  const v=document.getElementById('vid');
+  v.innerHTML=
+    '<video id="player" '+(POSTER?'poster="'+POSTER+'" ':'')+
+    'preload="metadata" playsinline controlsList="nodownload" '+
+    'oncontextmenu="return false" onended="resetVid()">'+
+    '<source src="'+VIDEO+'" type="video/mp4">'+
+    'متصفحك ما بيدعم تشغيل الفيديو.'+
+    '</video>'+
+    '<div class="play" id="playBtn"><i>'+
+    '<svg width="24" height="24" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg>'+
+    '</i></div>'+
+    '<div class="wm">مشاريع</div>';
+}
+
+function playVid(){
+  const p=document.getElementById('player');
+  if(!p) return;
+  const btn=document.getElementById('playBtn');
+  if(p.paused){
+    p.controls=true;
+    p.play();
+    if(btn) btn.style.display='none';
+  }
+}
+function resetVid(){
+  const btn=document.getElementById('playBtn');
+  if(btn) btn.style.display='';
+}
+
+const PARTS=[
+ {id:'mcu', nm:'عقد الاستقبال', req:true, qty:4,
+  opts:[
+   {k:'esp32n', nm:'ESP32 NodeMCU', d:'عقدة لكل غرفة · الأنسب', p:7.5, def:true},
+   {k:'nodemcu', nm:'NodeMCU ESP8266', d:'أوفر · دقة أقل', p:5}
+  ]},
+ {id:'tag', nm:'وسوم الأصول', req:true, qty:4,
+  opts:[
+   {k:'esp32m', nm:'ESP32E DevKitC كوسم', d:'بث دوري وتحكم بالطاقة', p:8, def:true},
+   {k:'nrf', nm:'NRF24L01+ كوسم', d:'أوفر بكثير · بدّه لوحة صغيرة معه', p:3.5}
+  ]},
+ {id:'tagb', nm:'بطاريات الوسوم', req:true, qty:4,
+  opts:[
+   {k:'li18', nm:'بطارية ليثيوم ٣.٧ فولت + شاحن', d:'تشغيل مستقل لكل وسم', p:4.25, def:true},
+   {k:'lipo', nm:'بطارية ليثيوم بوليمر مسطحة', d:'أنحف وعمر أطول', p:10}
+  ]},
+ {id:'disp', nm:'شاشة المحطة', req:true, qty:1,
+  opts:[
+   {k:'lcd', nm:'شاشة LCD 16×2 مع I2C', d:'حالة العقد', p:5, def:true},
+   {k:'tft', nm:'شاشة TFT 2.4 بوصة', d:'خريطة مصغّرة ملوّنة', p:9}
+  ]},
+ {id:'rfidr', nm:'قارئ بطاقات للتسليم', req:false, qty:1,
+  opts:[
+   {k:'rfidr', nm:'قارئ RFID 13.56 ميجا', d:'تسجيل من استلم الأصل · يُطلب من مورّد آخر', p:11.5, def:true}
+  ]},
+ {id:'rfidc', nm:'بطاقات تعريف', req:false, qty:4,
+  opts:[
+   {k:'rfidc', nm:'بطاقة RFID 13.56 ميجا', d:'بطاقة لكل مستخدم', p:0.7, def:true}
+  ]},
+ {id:'alarm', nm:'التنبيه', req:true, qty:1,
+  opts:[
+   {k:'buzz', nm:'جرس فعّال ٥ فولت', d:'تنبيه عند خروج أصل', p:0.4, def:true},
+   {k:'buzzled', nm:'جرس + ليد وامض', d:'صوتي وبصري', p:1}
+  ]},
+ {id:'mem', nm:'تخزين السجل', req:true, qty:1,
+  opts:[
+   {k:'sd', nm:'وحدة بطاقة ذاكرة', d:'سجل تاريخي لمواقع الأصول', p:0.9, def:true}
+  ]},
+ {id:'power', nm:'تغذية العقد', req:true, qty:1,
+  opts:[
+   {k:'ad5', nm:'محوّلات ٥ فولت للعقد', d:'تشغيل ثابت من الكهرباء', p:3, def:true},
+   {k:'ups', nm:'محوّل + بطارية احتياطية', d:'ما بتتوقف بانقطاع الكهرباء', p:12}
+  ]},
+ {id:'wires', nm:'أسلاك وعلب', req:true, qty:1,
+  opts:[
+   {k:'kit', nm:'أسلاك + لوحات تجارب + علب', d:'لكل العقد والوسوم', p:3, def:true}
+  ]}
+];
+
+const EXTRAS=[
+  {k:'node', nm:'عقدة استقبال إضافية', d:'كل عقدة بترفع الدقة', p:7.5},
+  {k:'rtc', nm:'وحدة توقيت RTC', d:'ختم زمني دقيق للسجل', p:3.5},
+  {k:'lora', nm:'وحدة LoRa', d:'ربط مبانٍ متباعدة بنفس النظام', p:8},
+  {k:'door', nm:'حساس فتح باب مغناطيسي', d:'تأكيد عبور الأصل من المدخل', p:0.5},
+  {k:'imu', nm:'وحدة MPU6050 على الوسم', d:'كشف حركة الأصل مش موقعه بس', p:4},
+  {k:'case', nm:'علب صغيرة للوسوم', d:'تثبيت الوسم على الأصل · مورّد آخر', p:10}
+];
+
+const state={};
+PARTS.forEach(p=>{state[p.id]={on:true,qty:p.qty,pick:(p.opts.find(o=>o.def)||p.opts[0]).k}});
+const extraOn={};EXTRAS.forEach(e=>extraOn[e.k]=false);
+
+const AR=n=>n.toLocaleString('ar-EG');
+const check=`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+
+function render(){
+  document.getElementById('items').innerHTML=PARTS.map(p=>{
+    const st=state[p.id], sel=p.opts.find(o=>o.k===st.pick), multi=p.opts.length>1;
+    return `
+<div class="item ${st.on?'':'off'}">
+  <div class="row1">
+    <div class="chk ${st.on?'on':''}" onclick="tog('${p.id}')">${check}</div>
+    <div class="mid">
+      <div class="nm">${sel.nm}${p.req?'<span class="req">أساسي</span>':''}</div>
+      <div class="dsc">${sel.d}</div>
+      ${st.on?`<div class="qty">
+        <button onclick="q('${p.id}',-1)">−</button>
+        <span>${AR(st.qty)}</span>
+        <button onclick="q('${p.id}',1)">+</button></div>`:''}
+    </div>
+    <div class="pr">${AR(sel.p*st.qty)} د.أ<small>${AR(sel.p)} للقطعة</small></div>
+  </div>
+  ${st.on&&multi?`<div class="alts">
+    <div class="altlbl">بدائل متاحة</div>
+    ${p.opts.map(o=>`<div class="alt ${o.k===st.pick?'on':''}" onclick="pick('${p.id}','${o.k}')">
+      <div class="rad"></div>
+      <div class="an">${o.nm}<div class="ad">${o.d}</div></div>
+      <div class="ap">${AR(o.p)} د.أ</div></div>`).join('')}
+  </div>`:''}
+</div>`}).join('');
+
+  document.getElementById('extras').innerHTML=EXTRAS.map(e=>`
+    <div class="addrow ${extraOn[e.k]?'on':''}" onclick="tex('${e.k}')">
+      <div class="rad" style="border-radius:5px"></div>
+      <div class="an">${e.nm}<div class="ad">${e.d}</div></div>
+      <div class="ap">+${AR(e.p)} د.أ</div></div>`).join('');
+
+  let total=0,count=0,active=0;
+  PARTS.forEach(p=>{const st=state[p.id];if(!st.on)return;
+    const sel=p.opts.find(o=>o.k===st.pick);
+    total+=sel.p*st.qty;count+=st.qty;active++});
+  EXTRAS.forEach(e=>{if(extraOn[e.k]){total+=e.p;count++}});
+
+  document.getElementById('tq').textContent=AR(count)+' قطعة';
+  document.getElementById('tp').textContent=AR(total)+' د.أ';
+  document.getElementById('cnt').textContent=AR(active)+' من '+AR(PARTS.length)+' مفعّلة';
+}
+
+function tog(id){
+  const p=PARTS.find(x=>x.id===id);
+  if(p.req&&state[id].on&&!confirm('هاي قطعة أساسية للمشروع. متأكد بدك تشيلها؟'))return;
+  state[id].on=!state[id].on;render();
+}
+function pick(id,k){state[id].pick=k;render()}
+function q(id,d){state[id].qty=Math.max(1,Math.min(9,state[id].qty+d));render()}
+function tex(k){extraOn[k]=!extraOn[k];render()}
+
+function order(){
+  let lines=[],total=0;
+  PARTS.forEach(p=>{const st=state[p.id];if(!st.on)return;
+    const sel=p.opts.find(o=>o.k===st.pick);
+    lines.push(`• ${sel.nm} × ${st.qty} — ${sel.p*st.qty} د.أ`);
+    total+=sel.p*st.qty});
+  const ex=EXTRAS.filter(e=>extraOn[e.k]);
+  if(ex.length){lines.push('');lines.push('إضافات:');
+    ex.forEach(e=>{lines.push(`• ${e.nm} — ${e.p} د.أ`);total+=e.p})}
+
+  const msg=`مرحبا 👋
+بدي أطلب سلة مشروع:
+*${PROJECT}*
+
+${lines.join('\n')}
+
+المجموع: *${total} د.أ*
+
+الاسم:
+الجامعة:
+العنوان:`;
+  window.open(`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(msg)}`,'_blank');
+}
+
+render();
+</script>
+</body>
+</html>

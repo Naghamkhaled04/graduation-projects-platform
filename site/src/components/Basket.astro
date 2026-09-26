@@ -1,0 +1,19 @@
+---
+/** لوحة السلة وزرها العائم. تُدرج بأي صفحة فيها شبكة منتجات */
+---
+
+<aside class="bsk" hidden aria-label="سلتك">
+  <div class="top"><b>سلتك</b><button type="button" class="x" aria-label="إغلاق">×</button></div>
+  <div class="list"></div>
+  <div class="foot">
+    <div class="trow"><span>المجموع التقريبي</span><b class="total">٠ د.أ</b></div>
+    <button type="button" class="order">اطلب السلة على واتساب</button>
+    <p class="c-note">بنأكد التوفر والسعر النهائي معك بالواتساب.</p>
+  </div>
+</aside>
+<button type="button" class="bfab" hidden><span>0</span> بالسلة</button>
+
+<script>
+  import { mountBasket } from '../scripts/basket';
+  mountBasket();
+</script>

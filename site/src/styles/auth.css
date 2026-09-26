@@ -1,0 +1,59 @@
+/* صفحات الدخول والتسجيل: عمود واحد يتمدد مع الشاشة */
+.auth { min-height: 100vh; min-height: 100dvh; display: grid; place-items: center; padding: 92px var(--gutter) 48px; }
+.auth .box { width: 100%; max-width: 460px; }
+.auth .brand { text-align: center; margin-bottom: 20px; }
+.auth .brand b { font-size: 26px; display: block; } .auth .brand span { color: var(--fg-2); font-size: 14.5px; }
+.auth .card { background: #fff; border-radius: 26px; padding: clamp(20px, 5vw, 32px); box-shadow: 0 0 0 1px rgba(15,61,62,.07), 0 26px 60px -30px rgba(15,61,62,.45); }
+.auth h1 { font-size: clamp(22px, 5vw, 27px); margin-bottom: 6px; }
+.auth .sub { color: var(--fg-2); font-size: 14.5px; line-height: 1.8; margin-bottom: 20px; }
+
+.auth .steps { display: flex; gap: 6px; margin-bottom: 18px; }
+.auth .steps i { flex: 1; height: 4px; border-radius: 2px; background: rgba(15,61,62,.14); }
+.auth .steps i.on { background: var(--orange); }
+
+.auth .pick { display: grid; gap: 10px; margin-bottom: 4px; }
+.auth .opt { display: flex; align-items: center; gap: 14px; text-align: start; font: 400 14px var(--font); background: var(--cream); color: var(--green); border: 1px solid transparent; border-radius: 18px; padding: 16px; cursor: pointer; transition: all .2s; width: 100%; }
+.auth .opt:hover { border-color: var(--orange); }
+.auth .opt.on { background: #fff4ec; border-color: var(--orange); }
+.auth .opt .ic { width: 42px; height: 42px; flex: none; border-radius: 13px; background: #fff; color: var(--green); display: grid; place-items: center; }
+.auth .opt.on .ic { background: var(--orange); color: #fff; }
+.auth .opt .tx { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.auth .opt b { font-size: 15.5px; } .auth .opt small { color: var(--fg-2); font-size: 12.5px; line-height: 1.6; }
+
+.auth label { display: grid; gap: 6px; font-size: 13.5px; margin-bottom: 14px; }
+.auth label small { color: var(--fg-2); font-weight: 400; }
+.auth input, .auth select { font: 400 15px var(--font); padding: 13px 16px; border-radius: 14px; border: 1px solid rgba(15,61,62,.18); background: #fff; color: var(--green); width: 100%; outline: none; }
+.auth input:focus, .auth select:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(232,116,59,.16); }
+.auth .two { display: grid; grid-template-columns: 1fr 120px; gap: 12px; }
+.auth .pw { position: relative; } .auth .pw input { padding-inline-end: 52px; }
+.auth .pw button { position: absolute; inset-inline-end: 6px; bottom: 5px; width: 40px; height: 40px; border: 0; background: none; color: var(--fg-2); cursor: pointer; display: grid; place-items: center; }
+
+.auth .go { width: 100%; justify-content: center; font-size: 15.5px; padding: 14px; margin-top: 4px; }
+.auth .back { background: none; border: 0; color: var(--fg-2); font: 400 14px var(--font); cursor: pointer; padding: 10px 0; }
+.auth .alt { text-align: center; margin-top: 18px; font-size: 14px; color: var(--fg-2); }
+.auth .alt a { color: var(--orange); font-weight: 500; }
+.auth .err { color: #b4553a; font-size: 13.5px; line-height: 1.7; min-height: 1.2em; }
+.auth .ok { color: #2f7d5c; font-size: 13.5px; }
+.auth .fine { font-size: 12.5px; color: var(--fg-2); line-height: 1.8; margin-top: 14px; text-align: center; }
+.auth .hintbox { background: var(--mint); border-radius: 14px; padding: 11px 15px; font-size: 13px; line-height: 1.8; margin-bottom: 14px; }
+.auth .refbox { display: flex; align-items: center; gap: 10px; background: #fff4ec; border: 1px solid var(--orange); border-radius: 16px; padding: 12px 16px; margin-bottom: 16px; font-size: 14px; line-height: 1.6; }
+.auth .refbox b { color: var(--orange); }
+.auth .done { text-align: center; display: grid; gap: 10px; justify-items: center; }
+.auth .done .big { width: 62px; height: 62px; border-radius: 50%; background: var(--mint); color: var(--green); display: grid; place-items: center; }
+.auth .done p { color: var(--fg-2); line-height: 1.9; }
+
+@media (max-width: 420px) { .auth .two { grid-template-columns: 1fr; } .auth { padding-top: 80px; } }
+
+/* تبويبات الحساب — منقولة عن صفحة الدخول بمتجرنا: كبسولات، والنشط بخط برتقالي تحته */
+.auth .tabs { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 22px; }
+.auth .tabs a {
+  position: relative; font: 500 14px var(--font); text-decoration: none;
+  color: #7a7168; background: #f6f8f8; border: 0.8px solid #e6dccd;
+  padding: 11px 22px; border-radius: 999px; transition: all .2s;
+}
+.auth .tabs a:hover { border-color: var(--orange); color: var(--orange); }
+.auth .tabs a.on { background: #1a1613; color: #fffdf9; border-color: #1a1613; }
+.auth .tabs a.on::after {
+  content: ''; position: absolute; inset-inline: 18%; bottom: -7px; height: 3px;
+  border-radius: 3px; background: var(--orange);
+}

@@ -1,0 +1,99 @@
+---
+import Base from '../../layouts/Base.astro';
+import '../../styles/store.css';
+import Basket from '../../components/Basket.astro';
+import ProdCard from '../../components/ProdCard.astro';
+import { PRODUCTS, CATEGORIES, ar } from '../../data/storecats';
+import { usedBy } from '../../data/projectparts';
+
+const linked = PRODUCTS.filter((p) => usedBy(p.id).length).length;
+---
+
+<Base title="كل القطع — المتجر" description={`${ar(PRODUCTS.length)} قطعة بأسعارها، ببحث وفلترة حسب القسم.`}>
+  <main class="nv">
+    <div class="wrap">
+      <div class="nv-head">
+        <a class="crumb" href="/store">← المتجر</a>
+        <h1>كل السلع</h1>
+        <p class="lede"><b>{ar(PRODUCTS.length)}</b> قطعة، منها <b>{ar(linked)}</b> مربوطة بمشاريعنا.</p>
+      </div>
+
+      <div class="nv-layout">
+        <aside class="nv-side">
+          <h2>الأقسام</h2>
+          <ul>
+            <li><a href="#" class="on" data-cat="">كل السلع <span class="n">{ar(PRODUCTS.length)}</span></a></li>
+            {CATEGORIES.map((c) => (
+              <li><a href={`/store/${c.slug}`} data-cat={c.cat}>{c.cat} <span class="n">{ar(c.n)}</span></a></li>
+            ))}
+          </ul>
+        </aside>
+
+        <div>
+          <div class="nv-bar">
+            <input id="q" type="search" placeholder="ابحث… (ESP32، حساس، محرك)" autocomplete="off" enterkeyhint="search" />
+            <select id="sort">
+              <option value="">الترتيب الافتراضي</option>
+              <option value="p">الأرخص أولاً</option>
+              <option value="-p">الأغلى أولاً</option>
+            </select>
+            <label class="nv-btn nv-btn--ghost" style="cursor:pointer"><input type="checkbox" id="onlyp" style="accent-color:#fa7b19;margin-inline-end:6px" /> بمشاريعنا فقط</label>
+            <span class="cnt" id="cnt"></span>
+          </div>
+
+          <div class="nv-grid" id="grid">
+            {PRODUCTS.map((p) => <ProdCard p={p} used={usedBy(p.id)} />)}
+          </div>
+          <p class="none" id="none" hidden>ما لقينا قطعة بهالاسم. جرّب كلمة أقصر أو بالإنجليزي.</p>
+          <div class="more" id="more"><button type="button" class="nv-btn nv-btn--ghost">شوف المزيد</button></div>
+        </div>
+      </div>
+    </div>
+
+    <Basket />
+  </main>
+</Base>
+
+<script>
+  const ar = (n: number) => n.toLocaleString('ar-EG');
+  const grid = document.getElementById('grid')!;
+  const all = [...grid.querySelectorAll<HTMLElement>('.nv-card')];
+  const q = document.getElementById('q') as HTMLInputElement;
+  const sort = document.getElementById('sort') as HTMLSelectElement;
+  const onlyp = document.getElementById('onlyp') as HTMLInputElement;
+  const cnt = document.getElementById('cnt')!, none = document.getElementById('none')!, more = document.getElementById('more')!;
+
+  const STEP = 60;
+  let matched: HTMLElement[] = [], shown = 0;
+
+  function render(reset = true) {
+    if (reset) { all.forEach((el) => (el.hidden = true)); shown = 0; }
+    matched.slice(shown, shown + STEP).forEach((el) => (el.hidden = false));
+    shown = Math.min(shown + STEP, matched.length);
+    more.hidden = shown >= matched.length;
+    cnt.textContent = `${ar(matched.length)} قطعة`;
+    none.hidden = matched.length > 0;
+  }
+  function filter() {
+    const t = q.value.trim().toLowerCase(), only = onlyp.checked, dir = sort.value;
+    matched = all.filter((el) => (!t || el.dataset.search!.includes(t)) && (!only || el.dataset.used !== '0'));
+    if (dir) {
+      matched.sort((a, b) => {
+        const d = Number(a.dataset.price) - Number(b.dataset.price);
+        return dir === '-p' ? -d : d;
+      });
+      matched.forEach((el) => grid.appendChild(el));
+    }
+    render();
+  }
+
+  const pre = new URLSearchParams(location.search).get('q');
+  if (pre) q.value = pre;
+
+  let deb = 0;
+  q.addEventListener('input', () => { clearTimeout(deb); deb = window.setTimeout(filter, 180); });
+  sort.addEventListener('change', filter);
+  onlyp.addEventListener('change', filter);
+  more.querySelector('button')!.addEventListener('click', () => render(false));
+  filter();
+</script>

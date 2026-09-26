@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>معاينة الهوية — رحلة المشروع</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cream:#F7EFE3; --cream2:#EFE6D6; --green:#0F3D3E; --green2:#0A2E30;
+  --sage:#7FA07A; --mint:#C6D3A6; --orange:#E8743B; --teal:#00979D;
+  --bg:var(--cream); --fg:var(--green);
+}
+*{box-sizing:border-box;margin:0}
+html{scroll-behavior:auto}
+body{font-family:'IBM Plex Sans Arabic',system-ui,sans-serif;background:var(--cream);color:var(--green);overflow-x:hidden}
+header{position:fixed;inset:0 0 auto 0;z-index:20;display:flex;justify-content:space-between;align-items:center;padding:16px clamp(16px,4vw,48px);mix-blend-mode:normal}
+.logo{font-weight:700;font-size:20px;color:var(--fg);transition:color .3s}
+nav{display:flex;gap:6px;background:rgba(255,255,255,.55);backdrop-filter:blur(12px);border-radius:999px;padding:6px;box-shadow:0 4px 24px rgba(15,61,62,.08)}
+nav a{font-size:14px;color:var(--green);text-decoration:none;padding:8px 16px;border-radius:999px}
+nav a.on{background:var(--green);color:var(--cream)}
+
+/* ---------- Hero ---------- */
+.hero{min-height:100vh;display:grid;place-items:center;position:relative;overflow:hidden;padding:120px 20px 60px;text-align:center}
+.blob{position:absolute;border-radius:50%;filter:blur(60px);opacity:.55;z-index:0}
+.b1{width:46vmax;height:46vmax;background:#F3D7BD;top:-14vmax;left:-10vmax}
+.b2{width:38vmax;height:38vmax;background:#CFE0C4;bottom:-16vmax;right:-8vmax}
+.hero-in{position:relative;z-index:2;max-width:900px}
+.kicker{display:inline-block;font-size:14px;color:var(--green);background:var(--cream2);padding:6px 16px;border-radius:999px;margin-bottom:22px}
+h1{font-size:clamp(44px,9vw,112px);line-height:1.08;font-weight:700;letter-spacing:-.01em}
+h1 .w{display:inline-block;opacity:0;transform:translateY(60%) rotate(4deg);animation:up .9s cubic-bezier(.2,.8,.2,1) forwards}
+h1 .w:nth-child(2){animation-delay:.12s}h1 .w:nth-child(3){animation-delay:.24s}h1 .w:nth-child(4){animation-delay:.36s}
+h1 em{font-style:normal;color:var(--orange)}
+@keyframes up{to{opacity:1;transform:none}}
+.lead{max-width:560px;margin:22px auto 34px;font-size:clamp(16px,2vw,19px);line-height:1.8;color:#3f5c5c;opacity:0;animation:up 1s .6s forwards}
+
+/* glowing pill (مرجع الحقل المتوهج) */
+.pill{display:inline-flex;align-items:center;gap:14px;background:#fff;border-radius:999px;padding:14px 14px 14px 30px;
+  font:500 17px 'IBM Plex Sans Arabic';color:var(--green);text-decoration:none;position:relative;
+  box-shadow:0 0 0 1px rgba(232,116,59,.35),0 0 28px rgba(232,116,59,.45),0 18px 40px -12px rgba(232,116,59,.5);
+  animation:glow 3s ease-in-out infinite;opacity:0;animation:glow 3s ease-in-out infinite,up 1s .8s forwards}
+.pill i{width:38px;height:38px;border-radius:50%;background:var(--orange);color:#fff;display:grid;place-items:center;font-style:normal;transition:transform .3s}
+.pill:hover i{transform:translateX(-6px)}
+@keyframes glow{50%{box-shadow:0 0 0 1px rgba(232,116,59,.5),0 0 44px rgba(232,116,59,.65),0 18px 50px -10px rgba(232,116,59,.6)}}
+
+/* عناصر عائمة */
+.float{position:absolute;z-index:1;will-change:transform}
+.float svg{display:block;animation:bob 6s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-14px) rotate(3deg)}}
+
+/* ---------- Journey (scroll-driven) ---------- */
+.journey{height:420vh;position:relative;background:var(--bg);color:var(--fg)}
+.stage{position:sticky;top:0;height:100vh;overflow:hidden;display:grid;place-items:center}
+.bigword{position:absolute;inset:0;display:grid;place-items:center;font-size:clamp(90px,22vw,340px);font-weight:700;opacity:.07;white-space:nowrap;will-change:transform;pointer-events:none}
+.title2{position:absolute;top:13vh;text-align:center;z-index:3;padding:0 16px}
+.title2 h2{font-size:clamp(28px,4.4vw,56px);line-height:1.2}
+.title2 p{margin-top:8px;opacity:.7;font-size:clamp(14px,1.6vw,17px)}
+svg.map{width:min(1200px,100%);height:auto;max-height:64vh;overflow:visible;position:relative;z-index:2}
+.track{fill:none;stroke:currentColor;stroke-opacity:.18;stroke-width:3;stroke-dasharray:2 12;stroke-linecap:round}
+.prog{fill:none;stroke:var(--orange);stroke-width:5;stroke-linecap:round;filter:drop-shadow(0 0 8px rgba(232,116,59,.6))}
+.st circle.o{fill:var(--bg);stroke:currentColor;stroke-opacity:.35;stroke-width:3;transition:all .4s}
+.st text{fill:currentColor;transition:opacity .4s,transform .4s;opacity:.35;font-family:'IBM Plex Sans Arabic'}
+.st .t{font-size:26px;font-weight:700}.st .d{font-size:16px}
+.st.on circle.o{fill:var(--orange);stroke:var(--orange);stroke-opacity:1;filter:drop-shadow(0 0 10px rgba(232,116,59,.7))}
+.st.on text{opacity:1}
+.hint{position:absolute;bottom:4vh;font-size:13px;opacity:.55;z-index:3;display:flex;gap:8px;align-items:center}
+.hint b{display:block;width:18px;height:28px;border:2px solid currentColor;border-radius:10px;position:relative}
+.hint b::after{content:"";position:absolute;left:50%;top:5px;width:3px;height:6px;margin-left:-1.5px;border-radius:2px;background:currentColor;animation:wheel 1.6s infinite}
+@keyframes wheel{to{transform:translateY(9px);opacity:0}}
+#led{animation:blink 1.2s steps(2) infinite}@keyframes blink{50%{opacity:.25}}
+
+/* ---------- Cards ---------- */
+.cards{padding:110px clamp(16px,4vw,48px);background:var(--cream)}
+.cards h3{font-size:clamp(28px,4vw,48px);text-align:center;margin-bottom:12px}
+.cards .sub{text-align:center;color:#3f5c5c;margin-bottom:54px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:26px;max-width:1000px;margin:auto}
+.card{position:relative;background:rgba(255,255,255,.7);border-radius:28px;padding:30px;overflow:hidden;backdrop-filter:blur(8px);
+  box-shadow:0 0 0 1px rgba(15,61,62,.06),0 20px 50px -20px rgba(15,61,62,.25);transition:transform .4s,box-shadow .4s;
+  opacity:0;transform:translateY(40px)}
+.card.in{opacity:1;transform:none;transition:opacity .8s,transform .8s cubic-bezier(.2,.8,.2,1),box-shadow .4s}
+.card:hover{transform:translateY(-8px);box-shadow:0 0 0 1px rgba(232,116,59,.5),0 0 40px rgba(232,116,59,.35),0 24px 60px -20px rgba(232,116,59,.45)}
+.lvl{display:inline-block;font-size:12px;padding:4px 12px;border-radius:999px;background:var(--mint);color:var(--green);margin-bottom:14px}
+.card h4{font-size:22px;margin-bottom:10px}.card p{color:#3f5c5c;line-height:1.8;font-size:15px}
+.card .foot{display:flex;justify-content:space-between;align-items:center;margin-top:22px;padding-top:16px;border-top:1px solid rgba(15,61,62,.1)}
+.price{font-weight:700;font-size:20px}
+.btn{background:var(--orange);color:#fff;border-radius:999px;padding:9px 20px;font-size:14px;text-decoration:none}
+.split{margin:80px auto 0;max-width:1000px;border-radius:32px;overflow:hidden;display:grid;grid-template-columns:1fr 1fr;min-height:200px}
+.split div{padding:34px;font-size:18px;line-height:1.8}
+.split .l{background:var(--cream2)}.split .r{background:var(--green);color:var(--cream)}
+.split small{display:block;opacity:.6;margin-bottom:6px;font-size:13px;letter-spacing:.08em}
+@media(max-width:640px){.split{grid-template-columns:1fr}nav{display:none}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}h1 .w,.lead,.pill,.card{opacity:1!important;transform:none!important}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo" id="logo">مشاريع</div>
+  <nav><a class="on" href="#">الرئيسية</a><a href="#cards">المشاريع</a><a href="#journey">كيف نشتغل</a></nav>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="blob b1"></div><div class="blob b2"></div>
+
+  <div class="float" data-s=".06" style="top:22%;right:10%">
+    <svg width="120" height="80" viewBox="0 0 120 80"><rect x="4" y="10" width="112" height="60" rx="8" fill="#0F5C5E"/><rect x="20" y="24" width="34" height="30" rx="3" fill="#0A2E30"/><rect x="66" y="26" width="26" height="8" rx="2" fill="#0A2E30"/><g fill="#D9B44A"><rect x="18" y="4" width="4" height="8"/><rect x="28" y="4" width="4" height="8"/><rect x="38" y="4" width="4" height="8"/><rect x="48" y="4" width="4" height="8"/></g><circle cx="98" cy="54" r="5" fill="#E8743B"/></svg>
+  </div>
+  <div class="float" data-s="-.09" style="bottom:20%;left:9%">
+    <svg width="64" height="64" viewBox="0 0 64 64" style="animation-delay:-2s"><circle cx="32" cy="32" r="24" fill="#E8743B" opacity=".92"/><circle cx="32" cy="32" r="24" fill="url(#g1)"/><defs><radialGradient id="g1" cx=".35" cy=".3"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient></defs></svg>
+  </div>
+  <div class="float" data-s=".12" style="top:30%;left:14%">
+    <svg width="90" height="40" viewBox="0 0 90 40" style="animation-delay:-4s"><rect x="14" y="10" width="62" height="20" rx="10" fill="#C6D3A6"/><rect x="26" y="10" width="6" height="20" fill="#0F3D3E"/><rect x="40" y="10" width="6" height="20" fill="#E8743B"/><rect x="54" y="10" width="6" height="20" fill="#0F3D3E"/><path d="M0 20h14M76 20h14" stroke="#0F3D3E" stroke-width="3"/></svg>
+  </div>
+
+  <div class="hero-in">
+    <span class="kicker">مشاريع تخرج لطلاب الحاسوب وإنترنت الأشياء</span>
+    <h1><span class="w">من</span> <span class="w"><em>فكرة</em></span> <span class="w">إلى</span> <span class="w">مناقشة</span></h1>
+    <p class="lead">اختر مشروعك، شوف قطعه وتكلفته بشفافية، وجهّز سلتك من متجر موثوق. وإذا احتجت مسار التنفيذ خطوة بخطوة، عندنا استشارة ٤٥ دقيقة.</p>
+    <a class="pill" href="#cards">استعرض المشاريع <i>←</i></a>
+  </div>
+</section>
+
+<!-- JOURNEY -->
+<section class="journey" id="journey">
+  <div class="stage">
+    <div class="bigword" id="bigword">مشروعك</div>
+    <div class="title2"><h2>أربع خطوات بتوصلك للمناقشة</h2><p>مرّر لتتحرك البوردة على الطريق</p></div>
+
+    <svg class="map" viewBox="0 0 1200 520" id="map">
+      <path id="track" class="track" d="M1100 140 C 930 140 980 330 780 330 S 590 130 430 250 S 330 440 100 400"/>
+      <path id="prog" class="prog" d="M1100 140 C 930 140 980 330 780 330 S 590 130 430 250 S 330 440 100 400"/>
+      <g id="stations"></g>
+      <g id="board">
+        <g transform="translate(-45,-28)">
+          <rect x="4" y="4" width="90" height="56" rx="9" fill="#000" opacity=".18"/>
+          <rect width="90" height="56" rx="9" fill="#00979D"/>
+          <rect x="12" y="14" width="30" height="28" rx="3" fill="#0A2E30"/>
+          <rect x="52" y="14" width="24" height="7" rx="2" fill="#0A2E30"/>
+          <g fill="#E3C25A"><rect x="10" y="-5" width="4" height="8"/><rect x="20" y="-5" width="4" height="8"/><rect x="30" y="-5" width="4" height="8"/><rect x="40" y="-5" width="4" height="8"/></g>
+          <circle id="led" cx="76" cy="44" r="5" fill="#E8743B"/>
+          <circle cx="76" cy="44" r="10" fill="#E8743B" opacity=".25"/>
+        </g>
+      </g>
+    </svg>
+    <div class="hint"><b></b> مرّر للأسفل</div>
+  </div>
+</section>
+
+<!-- CARDS -->
+<section class="cards" id="cards">
+  <h3>مشاريع جاهزة لتبدأ فيها</h3>
+  <p class="sub">الوصف والمكونات والتكلفة مجاناً. المسار التفصيلي بالاستشارة.</p>
+  <div class="grid">
+    <article class="card"><span class="lvl">متوسط</span><h4>مراقبة المحلول الوريدي عن بُعد</h4><p>حساس وزن بيراقب كيس المحلول وبيرسل تنبيه لما يقارب على الفراغ، ممرض واحد يتابع عدة مرضى.</p><div class="foot"><span class="price">٨٠ د.أ</span><a class="btn" href="#">جهّز السلة</a></div></article>
+    <article class="card"><span class="lvl">سهل</span><h4>قراءة عداد الكهرباء والفاتورة</h4><p>بيعدّ وميض ليد العداد وبيحسب الوحدات والفاتورة، وبيعرضها على الموبايل مباشرة.</p><div class="foot"><span class="price">٥٢ د.أ</span><a class="btn" href="#">جهّز السلة</a></div></article>
+    <article class="card"><span class="lvl">متقدم</span><h4>إشارة مرور بممر أخضر للإسعاف</h4><p>الإشارة بتفتح الطريق تلقائياً لما تقترب سيارة إسعاف، وبتوفّر دقائق ثمينة.</p><div class="foot"><span class="price">🔒 استشارة</span><a class="btn" href="#">اعرف أكثر</a></div></article>
+  </div>
+  <div class="split"><div class="l"><small>مجاني</small>الفكرة، المشكلة، المكونات، التكلفة.</div><div class="r"><small>١٥ د.أ</small>المسار، المكتبات، مخطط التوصيل، وحلول التحديات.</div></div>
+</section>
+
+<script>
+(function(){
+  const root=document.documentElement, $=s=>document.querySelector(s);
+  const journey=$('#journey'), track=$('#track'), prog=$('#prog'), board=$('#board'), st=$('#stations'), big=$('#bigword'), logo=$('#logo');
+  const L=track.getTotalLength();
+  prog.style.strokeDasharray=L; prog.style.strokeDashoffset=L;
+
+  const steps=[['الفكرة','اختر مشروعاً يناسبك',0],['القطع','سلة جاهزة بأسعار المورّد',.34],['البناء','استشارة ومسار خطوة بخطوة',.68],['المناقشة','نصائح جاهزة للجنة',1]];
+  const NS='http://www.w3.org/2000/svg', nodes=[];
+  steps.forEach(([t,d,f])=>{
+    const p=track.getPointAtLength(L*f), g=document.createElementNS(NS,'g'); g.setAttribute('class','st');
+    g.innerHTML=`<circle class="o" cx="${p.x}" cy="${p.y}" r="16"/><text class="t" x="${p.x}" y="${p.y+60}" text-anchor="middle">${t}</text><text class="d" x="${p.x}" y="${p.y+86}" text-anchor="middle">${d}</text>`;
+    st.appendChild(g); nodes.push({g,f});
+  });
+
+  const hex=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)), mix=(a,b,t)=>a.map((v,i)=>Math.round(v+(b[i]-v)*t));
+  const C1=hex('#F7EFE3'), C2=hex('#0F3D3E'), F1=hex('#0F3D3E'), F2=hex('#F7EFE3');
+  const rgb=a=>`rgb(${a})`;
+
+  function frame(){
+    const r=journey.getBoundingClientRect(), span=r.height-innerHeight;
+    const p=Math.min(1,Math.max(0,-r.top/span));
+    prog.style.strokeDashoffset=L*(1-p);
+    const pt=track.getPointAtLength(L*p), pt2=track.getPointAtLength(Math.min(L,L*p+2));
+    const ang=Math.atan2(pt2.y-pt.y,pt2.x-pt.x)*180/Math.PI*.35;
+    board.setAttribute('transform',`translate(${pt.x},${pt.y}) rotate(${ang}) scale(${1+Math.sin(p*Math.PI)*.25})`);
+    nodes.forEach(n=>n.g.classList.toggle('on',p>=n.f-.015));
+    // الخلفية: كريمي -> أخضر غامق بين 15% و55% من الرحلة
+    const t=Math.min(1,Math.max(0,(p-.15)/.4));
+    journey.style.setProperty('--bg',rgb(mix(C1,C2,t)));
+    journey.style.setProperty('--fg',rgb(mix(F1,F2,t)));
+    journey.style.background=rgb(mix(C1,C2,t)); journey.style.color=rgb(mix(F1,F2,t));
+    big.style.transform=`translateX(${(p-.5)*-18}vw)`;
+    // شعار الهيدر يتبع اللون عند الدخول للقسم
+    logo.style.color=(r.top<40&&r.bottom>40)?rgb(mix(F1,F2,t)):'';
+  }
+  // بارالاكس العناصر العائمة
+  const floats=[...document.querySelectorAll('.float')];
+  function par(){const y=scrollY;floats.forEach(f=>f.style.transform=`translateY(${y*f.dataset.s}px)`)}
+  // ظهور البطاقات
+  const io=new IntersectionObserver(es=>es.forEach((e,i)=>{if(e.isIntersecting){setTimeout(()=>e.target.classList.add('in'),i*120);io.unobserve(e.target)}}),{threshold:.15});
+  document.querySelectorAll('.card').forEach(c=>io.observe(c));
+  setTimeout(()=>document.querySelectorAll('.card').forEach(c=>c.classList.add('in')),2500); // شبكة أمان
+  let tick=false;
+  function on(){if(!tick){tick=true;requestAnimationFrame(()=>{frame();par();tick=false})}}
+  addEventListener('scroll',on,{passive:true});addEventListener('resize',on);on();
+})();
+</script>
+</body>
+</html>

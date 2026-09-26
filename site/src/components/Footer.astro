@@ -1,0 +1,38 @@
+---
+import { WHATSAPP, INSTAGRAM } from '../data/config';
+---
+
+<footer class="ft">
+  <div class="container in">
+    <div class="brand">
+      <b>مشاريع</b>
+      <p>أفكار مشاريع تخرج لطلاب الحاسوب وإنترنت الأشياء: مكونات وسلة قطع جاهزة، واستشارة لمن يحتاجها.</p>
+    </div>
+    <nav aria-label="روابط الموقع">
+      <b>الموقع</b>
+      <a href="/#projects">المشاريع</a><a href="/store">المتجر</a><a href="/city">المدينة الذكية</a><a href="/communities">المجتمعات</a>
+    </nav>
+    <nav aria-label="عنّا">
+      <b>عنّا</b>
+      <a href="/about">من نحن</a><a href="/ambassador">كن سفيراً</a><a href="/terms">الشروط والأحكام</a>
+    </nav>
+    <nav aria-label="تواصل">
+      <b>تواصل معنا</b>
+      <a href={`https://wa.me/${WHATSAPP}`} target="_blank" rel="noopener">واتساب</a>
+      {INSTAGRAM && <a href={INSTAGRAM} target="_blank" rel="noopener">إنستغرام</a>}
+    </nav>
+  </div>
+  <div class="container copy">© مشاريع</div>
+</footer>
+
+<style is:global>
+  .ft { background: var(--green-2); color: var(--cream); padding: 56px 0 26px; margin-top: 0; position: relative; z-index: 1; }
+  .ft .in { display: grid; grid-template-columns: 1.6fr repeat(3, 1fr); gap: 32px; }
+  .ft .brand b { font-size: 22px; } .ft .brand p { opacity: .7; margin-top: 8px; line-height: 1.9; max-width: 36ch; font-size: 14px; }
+  .ft nav { display: grid; gap: 8px; align-content: start; } .ft nav b { font-size: 14px; opacity: .6; margin-bottom: 4px; font-weight: 500; }
+  .ft nav a { color: var(--cream); text-decoration: none; font-size: 14.5px; opacity: .88; } .ft nav a:hover { color: var(--orange); opacity: 1; }
+  .ft .copy { margin-top: 36px; padding-top: 18px; border-top: 1px solid rgba(255,255,255,.12); font-size: 12.5px; opacity: .55; }
+  @media (max-width: 760px) { .ft .in { grid-template-columns: 1fr 1fr; } .ft .brand { grid-column: 1 / -1; } }
+  /* الأزرار العائمة (واتساب والشات) بتغطي أسفل الصفحة، فبنحجز لها مساحة */
+  @media (max-width: 640px) { .ft { padding-bottom: 104px; } }
+</style>

@@ -1,0 +1,203 @@
+---
+import Base from '../../layouts/Base.astro';
+import '../../styles/community.css';
+import { UNIVERSITIES } from '../../data/universities';
+import { KINDS } from '../../community/communities';
+import { svg } from '../../data/icons';
+
+export function getStaticPaths() {
+  return UNIVERSITIES.map((u) => ({ params: { slug: u.slug }, props: { u } }));
+}
+const { u } = Astro.props;
+---
+
+<Base title={`مجتمع ${u.name} — مشاريع`} description={`مجتمع طلاب ${u.name}: أسئلة تقنية، عرض مشاريع، شركاء، ومصادر.`}>
+  <main class="pf feed" data-uni={u.name} data-slug={u.slug}>
+    <div class="container">
+      <a class="back" href="/communities">← كل المجتمعات</a>
+      <div class="fhead">
+        <div><h1>مجتمع {u.short}</h1><p class="c-note" id="mods"></p></div>
+        <div class="acts" id="facts"></div>
+      </div>
+
+      <div class="notif" id="notif" hidden></div>
+
+      <div class="kinds" id="kinds">
+        <button type="button" class="k on" data-k="">الكل</button>
+        {KINDS.map((k) => <button type="button" class="k" data-k={k.k}>{k.label}</button>)}
+      </div>
+
+      <div class="c-card compose" id="compose" hidden></div>
+      <div id="posts"><p class="c-note">جارٍ التحميل…</p></div>
+    </div>
+  </main>
+</Base>
+
+<script>
+  import { getBackend } from '../../community/backend';
+  import { getCommunities, KINDS, MOD_ONLY, kindLabel, kindIcon, demoMod, type Post, type PostKind } from '../../community/communities';
+  import { uniSlug } from '../../data/universities';
+  import { esc, ar, date, STATUS } from '../../community/ui';
+  import { svg } from '../../data/icons';
+
+  const root = document.querySelector<HTMLElement>('.feed')!;
+  const uni = root.dataset.uni!, slug = root.dataset.slug!;
+  const postsEl = document.getElementById('posts')!, composeEl = document.getElementById('compose')!;
+  let filter = '', canMod = false, member = false, all: Post[] = [];
+
+  (async () => {
+    const [be, com] = await Promise.all([getBackend(), getCommunities()]);
+    const p = await be.profile().catch(() => null);
+    member = !!p?.university && uniSlug(p.university) === slug;
+    canMod = await com.canModerate(uni).catch(() => false);
+
+    const mods = await com.moderators(uni).catch(() => []);
+    document.getElementById('mods')!.textContent = mods.length ? 'المشرفون: ' + mods.map((m) => m.name).join('، ') : 'ما في مشرف لهالمجتمع بعد.';
+
+    const acts = document.getElementById('facts')!;
+    acts.innerHTML = `${member ? `<button type="button" class="c-btn" id="new-post">${svg('plus', 15)} اكتب منشور</button>` : `<a class="c-btn" href="/profile">انضم: حدّد جامعتك بملفك</a>`}
+      ${member && !canMod ? `<button type="button" class="c-btn ghost" id="apply-mod">قدّم لتكون مشرفاً</button>` : ''}
+      ${canMod ? `<span class="c-badge modb">${svg('medal', 13)} أنت مشرف هون</span>` : ''}
+      ${be.mode === 'local' && member ? `<button type="button" class="c-btn ghost" id="demo-mod">${canMod ? 'إيقاف' : 'تجربة'} وضع المشرف</button>` : ''}`;
+
+    acts.querySelector('#demo-mod')?.addEventListener('click', async () => { await demoMod(uni, !canMod); location.reload(); });
+    acts.querySelector('#new-post')?.addEventListener('click', () => { composeEl.hidden = !composeEl.hidden; if (!composeEl.hidden) paintCompose(); });
+    acts.querySelector('#apply-mod')?.addEventListener('click', async () => {
+      const why = prompt('ليش بدك تكون مشرف مجتمع جامعتك؟ (بنراجع الطلب)');
+      if (!why) return;
+      try { await com.applyModerator(uni, why); alert('وصل طلبك. بنراجعه ونرد عليك.'); }
+      catch (e: any) { alert(e.message === 'AUTH' ? 'سجّل دخولك أولاً' : e.message); }
+    });
+
+    document.getElementById('kinds')!.addEventListener('click', (e) => {
+      const b = (e.target as HTMLElement).closest<HTMLElement>('.k'); if (!b) return;
+      document.querySelectorAll('.k').forEach((x) => x.classList.toggle('on', x === b));
+      filter = b.dataset.k ?? ''; paint();
+    });
+
+    function paintCompose() {
+      composeEl.innerHTML = `<h3>منشور جديد</h3>
+        <div class="kpick">${KINDS.filter((k) => !k.modOnly || canMod).map((k, i) => `<label class="kp"><input type="radio" name="kind" value="${k.k}" ${i === 0 ? 'checked' : ''} /><span>${svg(k.icon, 15)} ${k.label}<small>${k.hint}</small></span></label>`).join('')}</div>
+        <label id="due-wrap" hidden>تاريخ التسليم<input type="date" id="np-due" /></label>
+        <label>العنوان<input id="np-title" maxlength="100" placeholder="مثلاً: ESP32 بيفصل لما أشغّل المحرك" /></label>
+        <label>التفاصيل<textarea id="np-body" rows="5" maxlength="1200" placeholder="شو جربت؟ شو القطع؟ وين علقت؟"></textarea></label>
+        <p class="c-err" id="np-err"></p>
+        <button type="button" class="c-btn" id="np-send">أرسل</button>
+        <p class="c-note">منشورك بيظهر بعد موافقة مشرف جامعتك.</p>`;
+      composeEl.querySelectorAll('input[name=kind]').forEach((r) => r.addEventListener('change', (e) => {
+        composeEl.querySelector('#due-wrap')!.toggleAttribute('hidden', (e.target as HTMLInputElement).value !== 'deadline');
+      }));
+      composeEl.querySelector('#np-send')!.addEventListener('click', async () => {
+        const k = (composeEl.querySelector('input[name=kind]:checked') as HTMLInputElement).value as PostKind;
+        const t = (composeEl.querySelector('#np-title') as HTMLInputElement).value;
+        const b = (composeEl.querySelector('#np-body') as HTMLTextAreaElement).value;
+        const due = (composeEl.querySelector('#np-due') as HTMLInputElement | null)?.value || null;
+        if (k === 'deadline' && !due) { composeEl.querySelector('#np-err')!.textContent = 'حدّد تاريخ التسليم'; return; }
+        try { await com.addPost(uni, k, t, b, due); composeEl.hidden = true; await load(); }
+        catch (e: any) { composeEl.querySelector('#np-err')!.textContent = e.message === 'AUTH' ? 'سجّل دخولك أولاً' : e.message; }
+      });
+    }
+
+    async function load() { all = await com.posts(uni).catch(() => []); paint(); paintDeadlines(); }
+
+    /** شريط علوي: مواعيد التسليم القريبة + جديد ما شفته */
+    async function paintDeadlines() {
+      const box = document.getElementById('notif')!;
+      if (!member) { box.hidden = true; return; }
+      const today = new Date().toISOString().slice(0, 10);
+      const soon = all.filter((p) => p.kind === 'deadline' && p.status === 'approved' && p.due && p.due >= today)
+        .sort((a, b) => (a.due! < b.due! ? -1 : 1)).slice(0, 3);
+      const fresh = await com.unseen(uni).catch(() => []);
+      const newOnes = fresh.filter((p) => p.kind !== 'deadline').length;
+      if (!soon.length && !newOnes) { box.hidden = true; return; }
+      const days = (d: string) => Math.round((new Date(d).getTime() - Date.now()) / 864e5);
+      box.hidden = false;
+      box.innerHTML = `${soon.map((p) => { const n = days(p.due!); return `<div class="nrow ${n <= 3 ? 'urgent' : ''}">${svg('medal', 15)}<b>${esc(p.title)}</b><span>${n <= 0 ? 'اليوم' : n === 1 ? 'بكرا' : 'بعد ' + ar(n) + ' يوم'} · ${esc(p.due!)}</span></div>`; }).join('')}
+        ${newOnes ? `<div class="nrow">${svg('chat', 15)}<b>${ar(newOnes)} ${newOnes === 1 ? 'منشور جديد' : 'منشورات جديدة'} بمجتمعك</b><button type="button" id="mark">علّمها مقروءة</button></div>` : ''}`;
+      box.querySelector('#mark')?.addEventListener('click', async () => { await com.markSeen(uni); paintDeadlines(); });
+    }
+
+    function paint() {
+      const list = all.filter((p) => (!filter || p.kind === filter) && (p.status === 'approved' || canMod || p.user_id === 'me'));
+      postsEl.innerHTML = list.length ? list.map((p) => `
+        <article class="c-card post" data-id="${p.id}">
+          <div class="ptop"><span class="kind">${svg(kindIcon(p.kind), 14)} ${esc(kindLabel(p.kind))}</span>
+            <b>${esc(p.author ?? 'طالب')}</b><small>${date(p.created_at)}</small>
+            ${p.status !== 'approved' ? `<span class="c-badge ${p.status}">${STATUS[p.status]}</span>` : ''}</div>
+          <h3>${esc(p.title)}</h3>
+          ${p.due ? `<p class="due">${svg('medal', 14)} التسليم: ${esc(p.due)}</p>` : ''}
+          <p class="body">${esc(p.body)}</p>
+          <div class="pfoot">
+            <button type="button" class="link" data-open="${p.id}">${svg('chat', 14)} ${p.replies ? ar(p.replies) + ' رد' : 'رد'}</button>
+            ${canMod && p.status === 'pending' ? `<button type="button" class="c-btn sm" data-ok="${p.id}">اعتماد</button><button type="button" class="c-btn ghost sm" data-no="${p.id}">رفض</button>` : ''}
+          </div>
+          <div class="replies" hidden></div>
+        </article>`).join('')
+        : `<p class="c-note">ما في منشورات ${filter ? 'بهالنوع' : 'بعد'}. ${member ? 'كن أول واحد.' : 'حدّد جامعتك بملفك للمشاركة.'}</p>`;
+    }
+
+    postsEl.addEventListener('click', async (e) => {
+      const t = (e.target as HTMLElement).closest<HTMLElement>('[data-open],[data-ok],[data-no],[data-rdel],[data-rsend]'); if (!t) return;
+      if (t.dataset.ok) { await com.moderate(t.dataset.ok, 'approved'); return load(); }
+      if (t.dataset.no) { await com.moderate(t.dataset.no, 'rejected'); return load(); }
+      if (t.dataset.rdel) { await com.removeReply(t.dataset.rdel); return openReplies(t.closest('.post')!.getAttribute('data-id')!); }
+      if (t.dataset.rsend) {
+        const art = t.closest('.post')!, inp = art.querySelector<HTMLInputElement>('.rin')!;
+        try { await com.addReply(t.dataset.rsend, inp.value); inp.value = ''; await openReplies(t.dataset.rsend); }
+        catch (x: any) { art.querySelector('.rerr')!.textContent = x.message === 'AUTH' ? 'سجّل دخولك أولاً' : x.message; }
+        return;
+      }
+      if (t.dataset.open) {
+        const box = t.closest('.post')!.querySelector<HTMLElement>('.replies')!;
+        if (!box.hidden) { box.hidden = true; return; }
+        box.hidden = false; await openReplies(t.dataset.open);
+      }
+    });
+
+    async function openReplies(id: string) {
+      const art = postsEl.querySelector(`.post[data-id="${id}"]`); if (!art) return;
+      const box = art.querySelector<HTMLElement>('.replies')!;
+      const rs = await com.replies(id).catch(() => []);
+      box.innerHTML = `${rs.map((r) => `<div class="rp"><b>${esc(r.author ?? 'طالب')}</b>${r.mine || canMod ? `<button class="x" data-rdel="${r.id}" aria-label="حذف">×</button>` : ''}<div>${esc(r.body)}</div></div>`).join('')}
+        ${member ? `<div class="rform"><input class="rin" maxlength="600" placeholder="اكتب ردك…" /><button type="button" class="c-btn sm" data-rsend="${id}">رد</button></div><p class="c-err rerr"></p>` : '<p class="c-note">حدّد جامعتك بملفك لترد.</p>'}`;
+    }
+
+    await load();
+  })();
+</script>
+
+<style is:global>
+  .feed .back { color: var(--fg-2); text-decoration: none; font-size: 14px; }
+  .feed .fhead { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; margin: 8px 0 20px; }
+  .feed h1 { margin-bottom: 4px; } .feed .acts { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .feed .c-btn svg, .feed .modb svg { vertical-align: -3px; margin-inline-end: 4px; }
+  .feed .modb { background: rgba(232,116,59,.16); color: #a8481c; }
+  .feed .kinds { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+  .feed .k { font: 500 13.5px var(--font); border: 1px solid rgba(15,61,62,.2); background: #fff; color: var(--green); padding: 8px 16px; border-radius: 999px; cursor: pointer; transition: all .2s; }
+  .feed .k:hover { border-color: var(--orange); } .feed .k.on { background: var(--green); color: var(--cream); border-color: var(--green); }
+  .feed .compose { margin-bottom: 18px; }
+  .feed .kpick { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 8px; margin-bottom: 14px; }
+  .feed .kp input { position: absolute; opacity: 0; } .feed .kp span { display: grid; gap: 2px; font-size: 14px; padding: 11px 14px; border-radius: 14px; background: var(--cream); border: 1px solid transparent; cursor: pointer; }
+  .feed .kp span small { color: var(--fg-2); font-size: 12px; line-height: 1.6; }
+  .feed .kp input:checked + span { background: #fff4ec; border-color: var(--orange); }
+  .feed .post { margin-bottom: 14px; }
+  .feed .ptop { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 13px; margin-bottom: 8px; }
+  .feed .kind { background: var(--mint); color: var(--green); padding: 3px 11px; border-radius: 999px; font-size: 12.5px; }
+  .feed .ptop small { color: var(--fg-2); } .feed .post h3 { font-size: 18px; margin-bottom: 6px; }
+  .feed .post .body { color: var(--fg-2); line-height: 1.9; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .feed .pfoot { display: flex; gap: 8px; align-items: center; margin-top: 12px; }
+  .feed .link { font: 500 13px var(--font); background: none; border: 0; color: var(--orange); cursor: pointer; padding: 0; }
+  .feed .replies { margin-top: 14px; padding-top: 12px; border-top: 1px dashed rgba(15,61,62,.15); display: grid; gap: 8px; }
+  .feed .rp { background: var(--cream); border-radius: 14px; padding: 10px 14px; font-size: 14px; line-height: 1.8; overflow-wrap: anywhere; }
+  .feed .rp b { font-size: 13px; color: var(--orange); } .feed .rp .x { float: inline-end; border: 0; background: none; cursor: pointer; opacity: .5; }
+  .feed .rform { display: flex; gap: 6px; } .feed .rin { flex: 1; font: 400 14px var(--font); padding: 9px 14px; border-radius: 999px; border: 1px solid rgba(15,61,62,.18); background: #fff; outline: none; }
+  .feed .rin:focus { border-color: var(--orange); }
+  .feed .sm { padding: 6px 14px; font-size: 13px; }
+  .feed .notif { display: grid; gap: 8px; margin-bottom: 18px; }
+  .feed .nrow { display: flex; align-items: center; gap: 10px; background: var(--mint); border-radius: 16px; padding: 12px 16px; font-size: 14px; }
+  .feed .nrow.urgent { background: #ffe8dc; box-shadow: inset 0 0 0 1px rgba(232,116,59,.45); }
+  .feed .nrow b { flex: 1; min-width: 0; font-weight: 500; } .feed .nrow span { font-size: 12.5px; color: var(--fg-2); white-space: nowrap; }
+  .feed .nrow button { font: 500 12.5px var(--font); border: 0; background: none; color: var(--orange); cursor: pointer; }
+  @media (max-width: 560px) { .feed .nrow { flex-wrap: wrap; } .feed .nrow span { flex: 1 1 100%; white-space: normal; } }
+  .feed .due { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--orange); font-weight: 500; margin-bottom: 6px; }
+</style>

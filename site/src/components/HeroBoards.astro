@@ -1,0 +1,112 @@
+---
+import { BOARDS } from '../data/boards';
+import { PRODUCTS, CATEGORIES, ar } from '../data/storecats';
+import projects from '../data/projects.json';
+
+const n = (projects as unknown[]).length;
+---
+
+<section class="hb">
+  <div class="wrap">
+    <div class="hb-copy">
+      <span class="k"><i></i> لطلاب مشاريع التخرج</span>
+      <h1>من <b>فكرة</b><br />إلى <b>مناقشة</b></h1>
+      <p>
+        بنختارلك مشروع تقدر تنفّذه فعلاً، وبنجهّزلك قطعه بأسعارها،
+        وبنمشي معك للمناقشة. كل شي بمكان واحد.
+      </p>
+      <div class="hb-acts">
+        <a class="btn" href="#projects">تصفّح المشاريع</a>
+        <a class="btn ghost" href="/store">زيارة المتجر</a>
+        <a class="btn ghost" href="#boards">شو الفرق بين الألواح؟</a>
+      </div>
+      <div class="hb-stats">
+        <div><b>{ar(PRODUCTS.length)}</b><span>قطعة بالمتجر</span></div>
+        <div><b>{ar(CATEGORIES.length)}</b><span>قسم</span></div>
+        <div><b>{ar(n)}</b><span>مشروع جاهز</span></div>
+      </div>
+    </div>
+
+    <div class="hb-stage">
+      <canvas aria-label="لوحات تحكم ثلاثية الأبعاد"></canvas>
+      <div class="hb-now">
+        <span class="dot"></span>
+        <b id="hb-name">Arduino UNO</b>
+        <span id="hb-sub">نقطة البداية</span>
+      </div>
+      <div class="hb-dots">
+        {BOARDS.map((b, i) => <i data-i={i} class:list={{ on: i === 0 }} title={b.name}></i>)}
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  import { mountHeroBoards } from '../scripts/heroboards';
+  import { BOARDS } from '../data/boards';
+
+  const canvas = document.querySelector<HTMLCanvasElement>('.hb-stage canvas');
+  if (canvas) {
+    const nameEl = document.getElementById('hb-name')!, subEl = document.getElementById('hb-sub')!;
+    const dots = [...document.querySelectorAll<HTMLElement>('.hb-dots i')];
+    const ORDER = ['uno', 'esp32', 'rpi', 'pico', 'esp8266'];
+    mountHeroBoards(canvas, (id) => {
+      const b = BOARDS.find((x) => x.id === id);
+      if (!b) return;
+      nameEl.textContent = b.name; subEl.textContent = b.sub;
+      const i = ORDER.indexOf(id);
+      dots.forEach((d, j) => d.classList.toggle('on', j === i));
+    });
+  }
+</script>
+
+<style>
+  .hb { background: var(--cream); padding: 118px 0 70px; position: relative; overflow: hidden; }
+  .hb::before { content: ''; position: absolute; inset-inline-start: -18%; top: -10%; width: 62%; aspect-ratio: 1;
+    border-radius: 50%; background: var(--cream-2); }
+  .wrap { position: relative; z-index: 1; max-width: 1240px; margin: 0 auto; padding: 0 var(--gutter);
+    display: grid; grid-template-columns: 1fr 1fr; gap: clamp(20px, 4vw, 54px); align-items: center; }
+
+  .k { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--fg-2);
+    background: #fff; border: 1px solid rgba(15,61,62,.1); padding: 6px 15px; border-radius: 999px; margin-bottom: 18px; }
+  .k i { width: 7px; height: 7px; border-radius: 50%; background: var(--orange); box-shadow: 0 0 8px var(--orange); }
+
+  .hb-copy h1 { font-size: clamp(2.4rem, 1.2rem + 4.4vw, 5rem); line-height: 1.08; letter-spacing: -0.02em; margin-bottom: 16px; }
+  .hb-copy h1 b { color: var(--orange); }
+  .hb-copy p { color: var(--fg-2); font-size: clamp(15px, 1.4vw, 17.5px); line-height: 1.95; max-width: 46ch; margin-bottom: 24px; }
+
+  .hb-acts { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 30px; }
+  .btn { font: 500 14.5px var(--font); text-decoration: none; padding: 13px 24px; border-radius: 999px;
+    background: var(--orange); color: #fff; transition: transform .2s, box-shadow .2s, background .2s; }
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 24px -10px rgba(232,116,59,.8); }
+  .btn.ghost { background: #fff; color: var(--green); box-shadow: inset 0 0 0 1px rgba(15,61,62,.14); }
+  .btn.ghost:hover { box-shadow: inset 0 0 0 1px var(--orange); color: var(--orange); }
+
+  .hb-stats { display: flex; gap: 30px; flex-wrap: wrap; }
+  .hb-stats div { display: grid; gap: 2px; }
+  .hb-stats b { font-size: clamp(22px, 2.4vw, 30px); line-height: 1; }
+  .hb-stats span { font-size: 12.5px; color: var(--fg-2); }
+
+  .hb-stage { position: relative; aspect-ratio: 1/.92; min-height: 340px; }
+  .hb-stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: grab; }
+  .hb-stage canvas:active { cursor: grabbing; }
+
+  .hb-now { position: absolute; inset-inline-start: 0; bottom: 34px; display: flex; align-items: center; gap: 9px;
+    background: #fff; border: 1px solid rgba(15,61,62,.1); border-radius: 999px; padding: 9px 18px;
+    box-shadow: 0 14px 34px -22px rgba(15,61,62,.7); pointer-events: none; }
+  .hb-now .dot { width: 8px; height: 8px; border-radius: 50%; background: #3ad17a; box-shadow: 0 0 8px #3ad17a; }
+  .hb-now b { font-size: 14.5px; } .hb-now span { font-size: 12.5px; color: var(--fg-2); }
+
+  .hb-dots { position: absolute; inset-inline-end: 6px; bottom: 40px; display: grid; gap: 7px; }
+  .hb-dots i { width: 7px; height: 7px; border-radius: 50%; background: rgba(15,61,62,.2); transition: all .3s; }
+  .hb-dots i.on { background: var(--orange); transform: scale(1.5); }
+
+  @media (max-width: 900px) {
+    .hb { padding: 100px 0 50px; }
+    .wrap { grid-template-columns: 1fr; }
+    .hb-stage { order: -1; min-height: 280px; aspect-ratio: 1/.7; }
+    .hb-now { bottom: 10px; padding: 7px 14px; }
+    .hb-dots { bottom: 16px; }
+    .hb-stats { gap: 20px; }
+  }
+</style>

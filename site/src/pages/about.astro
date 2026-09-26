@@ -1,0 +1,89 @@
+---
+import Base from '../layouts/Base.astro';
+import '../styles/community.css';
+import { svg } from '../data/icons';
+import { WHATSAPP, CONSULT_PRICE } from '../data/config';
+const wa = `https://wa.me/${WHATSAPP}?text=${encodeURIComponent('مرحباً، بدي أستفسر عن مشاريع التخرج')}`;
+---
+
+<Base title="من نحن — مشاريع" description="مين إحنا، وشو منقدّم لطلاب مشاريع التخرج بالأردن.">
+  <main class="pf about">
+    <div class="container">
+      <h1>من نحن</h1>
+      <p class="lead">إحنا فريق بيساعد طلاب الحاسوب وإنترنت الأشياء بالأردن يختاروا مشروع تخرج يقدروا ينفّذوه فعلاً، ويجهّزوا قطعه، ويوصلوا للمناقشة وهم فاهمين شغلهم.</p>
+
+      <div class="c-card why">
+        <h2>ليش بلّشنا</h2>
+        <p>أكتر طالب بيضيع شهرين بالسؤال «شو أعمل؟»، وبعدين بيختار فكرة أكبر من وقته أو ميزانيته، وبيكتشف متأخر إنه القطعة مش متوفرة أو غالية. إحنا اختصرنا هالطريق: كل فكرة عندنا مكتوب إلها المكونات والتكلفة التقريبية والتحديات اللي رح تواجهك، قبل ما تبلّش.</p>
+      </div>
+
+      <h2>شو بنقدّم</h2>
+      <div class="cards">
+        <div class="c-card">
+          <span class="ic"><Fragment set:html={svg('box', 20)} /></span>
+          <b>أفكار جاهزة ومجانية</b>
+          <p>الوصف والمكونات والتكلفة التقريبية مفتوحة للكل، بلا تسجيل.</p>
+        </div>
+        <div class="c-card">
+          <span class="ic"><Fragment set:html={svg('store', 20)} /></span>
+          <b>القطع مجهّزة</b>
+          <p>سلة لكل مشروع بالبدائل والأسعار، بتطلبها بواتساب وبتوصلك.</p>
+        </div>
+        <div class="c-card">
+          <span class="ic"><Fragment set:html={svg('chat', 20)} /></span>
+          <b>استشارة لمن يحتاجها</b>
+          <p>جلسة ومستند فيه المسار التقني وحلول التحديات، بـ{CONSULT_PRICE} د.أ. مش إلزامية.</p>
+        </div>
+        <div class="c-card">
+          <span class="ic"><Fragment set:html={svg('flask', 20)} /></span>
+          <b>تعديل على المشروع</b>
+          <p>بدك تغيّر قطعة أو تضيف ميزة أو تبسّطه لميزانيتك؟ احكيلنا وبنرد بالسعر والمدة.</p>
+        </div>
+        <div class="c-card">
+          <span class="ic"><Fragment set:html={svg('building', 20)} /></span>
+          <b>مجتمع لكل جامعة</b>
+          <p>تسأل زملاءك، تعرض شغلك، تدوّر على شريك، وتتابع مواعيد التسليم.</p>
+        </div>
+        <div class="c-card">
+          <span class="ic"><Fragment set:html={svg('compass', 20)} /></span>
+          <b>مدينتنا الذكية</b>
+          <p>كل طالب إله مبنى، وكل مشروع نفّذه طابق فيه. مبناك بيكبر وبيضوي مع شغلك.</p>
+        </div>
+      </div>
+
+      <div class="c-card rules">
+        <h2>شو ما بنعمله</h2>
+        <ul>
+          <li>ما بنعمل المشروع بدل الطالب، وما بنكتب كوداً جاهزاً للتسليم.</li>
+          <li>ما بنوعدك بعلامة، الشغل شغلك والمناقشة مناقشتك.</li>
+          <li>ما بنبيع بياناتك، وبريدك ورقمك الجامعي ما بيظهروا لأحد.</li>
+        </ul>
+      </div>
+
+      <div class="c-card cta">
+        <h2>عندك سؤال أو فكرة؟</h2>
+        <p>احكيلنا فكرتك ولو ما لقيتها عندنا، بنشوف كيف نساعدك تنفّذها.</p>
+        <div class="acts">
+          <a class="pill" href={wa} target="_blank" rel="noopener">راسلنا على واتساب <i>←</i></a>
+          <a class="c-btn ghost" href="/ambassador">كن سفيراً لجامعتك</a>
+        </div>
+      </div>
+    </div>
+  </main>
+</Base>
+
+<style is:global>
+  .about .container { max-width: 900px; } .about h1 { margin-bottom: 14px; }
+  .about h2 { font-size: 24px; margin: 36px 0 14px; } .about .c-card h2 { margin-top: 0; }
+  .about .lead { color: var(--fg-2); font-size: 18px; line-height: 2; max-width: 66ch; }
+  .about .why { margin-top: 26px; } .about .why p { color: var(--fg-2); line-height: 2; }
+  .about .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 14px; }
+  .about .cards .c-card { display: grid; gap: 8px; align-content: start; }
+  .about .ic { width: 42px; height: 42px; border-radius: 14px; background: var(--mint); color: var(--green); display: grid; place-items: center; }
+  .about .cards b { font-size: 16.5px; } .about .cards p { font-size: 14px; color: var(--fg-2); line-height: 1.85; }
+  .about .rules { margin-top: 26px; } .about .rules ul { padding-inline-start: 20px; display: grid; gap: 6px; } .about .rules li { color: var(--fg-2); line-height: 1.9; }
+  .about .cta { margin-top: 26px; background: var(--green); color: var(--cream); box-shadow: 0 0 0 1px rgba(232,116,59,.4), 0 0 50px -16px rgba(232,116,59,.35); }
+  .about .cta p { opacity: .84; margin-bottom: 14px; }
+  .about .cta .acts { display: flex; gap: 10px; flex-wrap: wrap; }
+  .about .cta .pill { color: var(--green); } .about .cta .c-btn.ghost { color: var(--cream); box-shadow: inset 0 0 0 1px rgba(255,255,255,.3); text-decoration: none; }
+</style>

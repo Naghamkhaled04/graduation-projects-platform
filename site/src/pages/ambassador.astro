@@ -1,0 +1,51 @@
+---
+import Base from '../layouts/Base.astro';
+import '../styles/community.css';
+import { UNIVERSITIES } from '../data/universities';
+import { WHATSAPP } from '../data/config';
+---
+
+<Base title="كن سفيراً لجامعتك — مشاريع" description="سفراء الجامعات: طلاب بيعرّفوا زملاءهم على مشاريع التخرج وبيشتغلوا معنا.">
+  <main class="pf">
+    <div class="container amb">
+      <h1>كن سفيراً لجامعتك</h1>
+      <p class="lead">أنت أعرف الناس بطلاب جامعتك. السفير طالب بيعرّف زملاءه على المنصة وبيساعدهم يختاروا مشروعهم، وبيشتغل معنا بشكل منظّم.</p>
+
+      <div class="c-card">
+        <h3>شو بيعمل السفير؟</h3>
+        <ul>
+          <li>ينشر أفكار المشاريع بمجموعات جامعته وتخصصه.</li>
+          <li>يرشّح للطلاب المشروع المناسب ويوجّههم للمنصة.</li>
+          <li>يشارك بمعارض المشاريع بجامعته ويعرض شغل الطلاب.</li>
+        </ul>
+        <p class="c-note">شروط التعاون والمزايا والعمولة <b>بنتفق عليها معك بشكل واضح ومكتوب قبل ما تبدأ</b>، ما في التزام من الطرفين قبل هيك.</p>
+      </div>
+
+      <div class="c-card form">
+        <h3>قدّم طلبك</h3>
+        <label>اسمك<input id="a-name" maxlength="60" autocomplete="off" /></label>
+        <label>الجامعة<select id="a-uni">{UNIVERSITIES.map((u) => <option>{u.name}</option>)}<option>جامعة أخرى</option></select></label>
+        <div class="two"><label>التخصص<input id="a-major" maxlength="60" /></label><label>السنة<select id="a-year">{[1, 2, 3, 4, 5].map((y) => <option>{y}</option>)}</select></label></div>
+        <label>ليش بدك تكون سفير؟ <small>(اختياري)</small><textarea id="a-why" rows="3" maxlength="400"></textarea></label>
+        <p class="c-err" id="a-err"></p>
+        <button type="button" class="c-btn" id="a-send">أرسل طلبي على واتساب</button>
+        <p class="c-note">بيفتح واتساب برسالة جاهزة فيها بياناتك. ما بنخزّن شي على الموقع.</p>
+      </div>
+    </div>
+  </main>
+</Base>
+
+<script define:vars={{ WHATSAPP }}>
+  document.getElementById('a-send').addEventListener('click', () => {
+    const v = (id) => document.getElementById(id).value.trim();
+    if (v('a-name').length < 2) { document.getElementById('a-err').textContent = 'اكتب اسمك'; return; }
+    const msg = `مرحباً، بدي أكون سفير جامعتي.\nالاسم: ${v('a-name')}\nالجامعة: ${v('a-uni')}\nالتخصص: ${v('a-major')}\nالسنة: ${v('a-year')}\n${v('a-why') ? 'ليش: ' + v('a-why') : ''}`;
+    window.open(`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(msg)}`, '_blank', 'noopener');
+  });
+</script>
+
+<style is:global>
+  .amb { max-width: 720px; } .amb h1 { margin-bottom: 12px; } .amb .lead { color: var(--fg-2); font-size: 18px; margin-bottom: 24px; }
+  .amb .c-card { margin-bottom: 18px; } .amb ul { padding-inline-start: 20px; display: grid; gap: 6px; margin: 10px 0; }
+  .amb .two { display: grid; grid-template-columns: 1fr 120px; gap: 12px; } .amb h3 { margin-bottom: 8px; }
+</style>

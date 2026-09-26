@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>مولد الطاقة من الأمواج — مشروع تخرج</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#141824;--ink2:#3D4354;--dim:#767C8C;--faint:#A8ADBA;
+  --line:#E6E8EE;--soft:#F4F5F8;--paper:#FBFBFD;--white:#fff;
+  --acc:#5B3DF5;--acc2:#7C63F7;--accs:#EFEBFF;
+  --wa:#25D366;--ok:#0E9F6E;--okbg:#DEF7EC;
+  --mid:#C27803;--midbg:#FDF6B2;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'IBM Plex Sans Arabic',sans-serif;background:var(--paper);
+  color:var(--ink);line-height:1.65;font-size:15px;-webkit-font-smoothing:antialiased}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+a{color:inherit;text-decoration:none}
+
+.dbar{background:var(--ink);color:#fff;padding:9px 24px;font-size:12.5px}
+.dbar b{font-weight:600}
+.dbar span{color:var(--faint);margin-inline-start:12px}
+
+header{background:var(--white);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:30}
+.hin{max-width:900px;margin:0 auto;padding:0 24px;height:60px;display:flex;align-items:center;gap:12px}
+.logo{display:flex;align-items:center;gap:9px;font-weight:700;font-size:16px}
+.logo i{width:29px;height:29px;border-radius:9px;background:var(--acc);display:grid;
+  place-items:center;color:#fff;font-style:normal;font-size:14px;font-weight:700}
+.hin .wa{margin-inline-start:auto;background:var(--acc);color:#fff;padding:9px 15px;
+  border-radius:8px;font-size:13px;font-weight:600}
+
+.wrap{max-width:900px;margin:0 auto;padding:30px 24px 70px}
+.dhead{display:flex;gap:9px;align-items:center;margin-bottom:11px;flex-wrap:wrap}
+.lvl{padding:4px 11px;border-radius:99px;font-size:11.5px;font-weight:600;
+  background:var(--midbg);color:var(--mid)}
+.cat{font-size:11.5px;font-weight:600;color:var(--acc)}
+h1{font-size:31px;font-weight:700;line-height:1.32;margin-bottom:13px;letter-spacing:-.3px}
+.lead{font-size:16.5px;color:var(--ink2);line-height:1.78;margin-bottom:26px}
+
+/* المجسم */
+#stage{height:440px;position:relative;cursor:grab;background:#08161F;
+  border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:32px}
+#stage:active{cursor:grabbing}
+#stage canvas{display:block}
+.load{position:absolute;inset:0;display:grid;place-items:center;background:#08161F;
+  color:#4E6B7C;font-size:13px;z-index:9;transition:.6s}
+.load.gone{opacity:0;pointer-events:none}
+.bar{position:absolute;bottom:13px;inset-inline-start:50%;transform:translateX(50%);
+  display:flex;gap:5px;z-index:6}
+.bar button{background:rgba(255,255,255,.08);backdrop-filter:blur(14px);color:#E8EAEE;
+  border:1px solid rgba(255,255,255,.14);padding:6px 13px;border-radius:7px;
+  font-size:12px;font-weight:500;font-family:inherit;transition:.15s}
+.bar button:hover{background:rgba(255,255,255,.18)}
+.bar button.on{background:var(--acc);border-color:#7C63F7;color:#fff}
+.hint{position:absolute;top:14px;inset-inline-start:50%;transform:translateX(50%);
+  color:rgba(255,255,255,.42);font-size:12px;pointer-events:none;transition:.7s;z-index:6}
+.hint.gone{opacity:0}
+.wm{position:absolute;bottom:16px;inset-inline-end:18px;color:rgba(255,255,255,.3);
+  font-size:12.5px;font-weight:600;pointer-events:none;z-index:6}
+.legend{position:absolute;top:14px;inset-inline-start:16px;background:rgba(8,22,31,.74);
+  backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.12);border-radius:10px;
+  padding:11px 13px;font-size:12px;color:#DCE4EA;z-index:6}
+.legend div{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.legend div:last-child{margin-bottom:0}
+.legend i{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+.gauge{position:absolute;top:14px;inset-inline-end:16px;background:rgba(8,22,31,.74);
+  backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.12);border-radius:10px;
+  padding:11px 14px;z-index:6;min-width:118px}
+.gauge .gl{font-size:10.5px;color:#7FA0B2;font-weight:500}
+.gauge .gv{font-size:19px;font-weight:700;color:#2BE07A;font-variant-numeric:tabular-nums;
+  line-height:1.3}
+.gauge .gb{height:4px;background:rgba(255,255,255,.12);border-radius:99px;margin-top:6px;
+  overflow:hidden}
+.gauge .gb div{height:100%;background:#2BE07A;width:0;transition:.1s}
+
+.sec{margin-bottom:32px}
+.sec h2{font-size:19px;font-weight:600;margin-bottom:13px}
+.sec p{color:var(--ink2);line-height:1.82}
+.sec ul{list-style:none;display:flex;flex-direction:column;gap:10px;margin-top:5px}
+.sec li{padding-inline-start:23px;position:relative;color:var(--ink2);line-height:1.72}
+.sec li::before{content:'';position:absolute;inset-inline-start:0;top:11px;width:6px;height:6px;
+  border-radius:50%;background:var(--acc)}
+
+.flow{background:var(--white);border:1px solid var(--line);border-radius:13px;
+  padding:18px 20px;margin-top:6px;font-size:14px;line-height:2.1;color:var(--ink2)}
+.flow b{color:var(--acc);font-weight:600}
+
+.how{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-top:6px}
+.step{background:var(--white);border:1px solid var(--line);border-radius:12px;padding:15px 16px}
+.step b{display:block;font-size:13px;color:var(--acc);font-weight:600;margin-bottom:5px}
+.step span{font-size:13.5px;color:var(--ink2);line-height:1.6}
+
+.apps{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:11px;margin-top:6px}
+.app{background:var(--white);border:1px solid var(--line);border-radius:11px;padding:13px 15px;
+  display:flex;gap:11px;align-items:flex-start}
+.app .ic{font-size:19px;line-height:1}
+.app b{display:block;font-size:13.5px;font-weight:600;margin-bottom:2px}
+.app span{font-size:12.5px;color:var(--dim);line-height:1.55}
+
+/* السلة */
+.box{background:var(--white);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.boxhead{padding:17px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+.boxhead h2{font-size:17px;font-weight:600}
+.boxhead .n{margin-inline-start:auto;font-size:13px;color:var(--dim)}
+.item{border-bottom:1px solid var(--line);padding:15px 20px}
+.item:last-of-type{border-bottom:none}
+.item.off{background:var(--soft)}
+.item.off .nm{color:var(--faint);text-decoration:line-through}
+.row1{display:flex;align-items:flex-start;gap:12px}
+.chk{width:21px;height:21px;border:2px solid var(--line);border-radius:6px;flex-shrink:0;
+  margin-top:2px;display:grid;place-items:center;transition:.15s;background:#fff}
+.chk.on{background:var(--acc);border-color:var(--acc)}
+.chk svg{opacity:0;transition:.15s}
+.chk.on svg{opacity:1}
+.mid{flex:1;min-width:0}
+.nm{font-size:15px;font-weight:600;line-height:1.45}
+.dsc{font-size:13px;color:var(--dim);margin-top:2px}
+.req{display:inline-block;font-size:11px;font-weight:600;background:var(--accs);
+  color:var(--acc);padding:2px 8px;border-radius:99px;margin-inline-start:7px;vertical-align:middle}
+.pr{font-size:15px;font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums}
+.pr small{font-size:11.5px;color:var(--dim);font-weight:400;display:block;text-align:end}
+.qty{display:flex;align-items:center;gap:2px;margin-top:9px;border:1px solid var(--line);
+  border-radius:7px;width:fit-content;background:#fff}
+.qty button{width:28px;height:28px;color:var(--dim);font-size:15px;font-weight:600}
+.qty button:hover{color:var(--ink);background:var(--soft)}
+.qty span{min-width:30px;text-align:center;font-size:13.5px;font-weight:600}
+.alts{margin-top:11px;padding-inline-start:33px}
+.altlbl{font-size:12px;color:var(--dim);font-weight:500;margin-bottom:7px}
+.alt{display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid var(--line);
+  border-radius:9px;margin-bottom:6px;cursor:pointer;transition:.14s;background:#fff}
+.alt:hover{border-color:var(--acc2)}
+.alt.on{border-color:var(--acc);background:var(--accs)}
+.rad{width:16px;height:16px;border:2px solid var(--line);border-radius:50%;flex-shrink:0;
+  display:grid;place-items:center}
+.alt.on .rad{border-color:var(--acc)}
+.alt.on .rad::after{content:'';width:7px;height:7px;border-radius:50%;background:var(--acc)}
+.alt .an{flex:1;font-size:13.5px;font-weight:500}
+.alt .ad{font-size:12px;color:var(--dim);font-weight:400}
+.alt .ap{font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums}
+.add{padding:15px 20px;border-top:1px solid var(--line);background:var(--soft)}
+.add .lbl{font-size:12.5px;font-weight:600;color:var(--dim);margin-bottom:9px}
+.addrow{display:flex;align-items:center;gap:11px;padding:9px 12px;background:#fff;
+  border:1px solid var(--line);border-radius:9px;margin-bottom:6px;cursor:pointer;transition:.14s}
+.addrow:hover{border-color:var(--acc2)}
+.addrow.on{border-color:var(--acc);background:var(--accs)}
+.addrow .an{flex:1;font-size:13.5px;font-weight:500}
+.addrow .ad{font-size:12px;color:var(--dim)}
+.addrow .ap{font-size:13.5px;font-weight:600}
+.total{padding:18px 20px;background:var(--ink);color:#fff}
+.trow{display:flex;justify-content:space-between;font-size:14px;
+  color:rgba(255,255,255,.62);margin-bottom:7px}
+.trow.big{font-size:21px;font-weight:700;color:#fff;margin:12px 0 0;
+  padding-top:14px;border-top:1px solid rgba(255,255,255,.14)}
+.tnum{font-variant-numeric:tabular-nums}
+.cta{padding:18px 20px;background:var(--white)}
+.wabtn{width:100%;background:var(--wa);color:#fff;padding:15px;border-radius:11px;
+  font-size:15.5px;font-weight:700;display:flex;align-items:center;justify-content:center;
+  gap:9px;transition:.15s}
+.wabtn:hover{background:#1EB855}
+.perks{display:flex;flex-wrap:wrap;gap:7px;margin-top:13px;justify-content:center}
+.perk{font-size:12px;color:var(--ok);background:var(--okbg);padding:5px 11px;
+  border-radius:99px;font-weight:500}
+
+.gate{background:linear-gradient(135deg,#5B3DF5,#8B5CF6);border-radius:16px;padding:30px;
+  color:#fff;margin-top:34px}
+.gate h3{font-size:20px;font-weight:700;margin-bottom:9px}
+.gate p{font-size:14.5px;opacity:.92;line-height:1.7;margin-bottom:18px}
+.gate ul{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:20px}
+.gate li{font-size:13.5px;padding-inline-start:22px;position:relative;opacity:.95}
+.gate li::before{content:'✓';position:absolute;inset-inline-start:0;font-weight:700}
+.gate .btn{background:#fff;color:var(--acc);padding:12px 22px;border-radius:9px;
+  font-weight:700;font-size:14.5px;display:inline-block}
+.note{font-size:12.5px;color:var(--faint);text-align:center;margin-top:16px}
+
+@media(max-width:620px){
+  h1{font-size:25px}.gate ul{grid-template-columns:1fr}#stage{height:320px}
+  .gauge{display:none}
+}
+</style>
+</head>
+<body>
+
+<div class="dbar"><b>ديمو</b><span>الأسعار مبدئية — بتتحدث لما تجيب أسعار المتجر</span></div>
+
+<header>
+  <div class="hin">
+    <div class="logo"><i>م</i> مشاريع</div>
+    <a href="#" class="wa">تواصل واتساب</a>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="dhead">
+    <span class="lvl">متوسط — متقدم</span>
+    <span class="cat">طاقة متجددة · إنترنت الأشياء</span>
+  </div>
+  <h1>جهاز توليد الطاقة من أمواج البحر</h1>
+  <p class="lead">
+    عوّامة تطفو على سطح الماء وتتحرك مع كل موجة. حركتها الرأسية تتحوّل عبر نظام
+    بكرات إلى دوران يشغّل مولداً كهربائياً، والطاقة تُخزَّن ببطارية مع عرض حي
+    للجهد والتيار والقدرة المولّدة.
+  </p>
+
+  <div id="stage">
+    <div class="load" id="load">جاري بناء المجسم…</div>
+    <div class="legend">
+      <div><i style="background:#E8792B"></i> العوّامة</div>
+      <div><i style="background:#C0C6D0"></i> نظام البكرات</div>
+      <div><i style="background:#B8862B"></i> المولد</div>
+      <div><i style="background:#2F7D5C"></i> وحدة التحكم</div>
+    </div>
+    <div class="gauge">
+      <div class="gl">القدرة المولّدة</div>
+      <div class="gv" id="gv">0.0 W</div>
+      <div class="gb"><div id="gbf"></div></div>
+    </div>
+    <div class="hint" id="hint">اسحب للتدوير</div>
+    <div class="wm">مشاريع</div>
+    <div class="bar">
+      <button class="on" onclick="setSea(0,this)">بحر هادئ</button>
+      <button onclick="setSea(1,this)">أمواج متوسطة</button>
+      <button onclick="setSea(2,this)">أمواج قوية</button>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h2>المشكلة</h2>
+    <p>الطاقة المتجددة بالأردن تعتمد على الشمس والرياح، والبحر شبه مهمل كمصدر —
+    رغم إن الأمواج تشتغل ليل نهار وبكل الفصول، بعكس الشمس اللي تنقطع بالليل.
+    والمناطق الساحلية والجزر البعيدة عن الشبكة بتحتاج مصدر طاقة مستقل ومستمر.</p>
+  </div>
+
+  <div class="sec">
+    <h2>المبدأ الفيزيائي</h2>
+    <div class="flow">
+      موجة تصعد → <b>العوّامة تطفو لأعلى</b> → تشد السلك →
+      <b>البكرة تدور</b> → المولد ينتج تياراً → <b>دائرة الشحن</b> →
+      البطارية تتخزّن → الشاشة تعرض القراءات
+    </div>
+  </div>
+
+  <div class="sec">
+    <h2>كيف يشتغل</h2>
+    <div class="how">
+      <div class="step"><b>١ · الالتقاط</b><span>العوّامة تتبع سطح الماء وترتفع وتنخفض مع كل موجة.</span></div>
+      <div class="step"><b>٢ · التحويل</b><span>سلك مشدود يلف على بكرة، فيحوّل الحركة الرأسية لدوران.</span></div>
+      <div class="step"><b>٣ · التوليد</b><span>البكرة تدير محرك DC كمولّد، فينتج تياراً متغيراً.</span></div>
+      <div class="step"><b>٤ · التخزين</b><span>دائرة تقويم وشحن تنظّم التيار وتخزنه بالبطارية.</span></div>
+      <div class="step"><b>٥ · القياس</b><span>حساسات الموضع والتيار والجهد ترسل القراءات للمتحكم.</span></div>
+      <div class="step"><b>٦ · العرض</b><span>شاشة تعرض القدرة اللحظية والطاقة المتراكمة.</span></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h2>مميزات المشروع</h2>
+    <ul>
+      <li>يجمع الميكانيكا والكهرباء والبرمجة بمشروع واحد — يبيّن عمق فهمك</li>
+      <li>نتيجة قابلة للقياس بالأرقام: جهد وتيار وقدرة — سهلة التوثيق بالتقرير</li>
+      <li>موضوع الطاقة المتجددة له وزن عالي عند لجان المناقشة</li>
+      <li>قابل للاختبار بحوض ماء صغير — ما بتحتاج تروح للبحر</li>
+      <li>مجال نادر محلياً — أغلب مشاريع الطاقة عن الشمس، قليل عن الأمواج</li>
+    </ul>
+  </div>
+
+  <div class="sec">
+    <h2>التطبيقات العملية</h2>
+    <div class="apps">
+      <div class="app"><span class="ic">🏝️</span><div><b>الجزر النائية</b><span>مصدر طاقة مستقل عن الشبكة</span></div></div>
+      <div class="app"><span class="ic">📡</span><div><b>عوّامات الملاحة</b><span>تشغيل أضواء وأجهزة إرسال بحرية</span></div></div>
+      <div class="app"><span class="ic">🔬</span><div><b>محطات القياس البحرية</b><span>تغذية حساسات مراقبة المياه</span></div></div>
+      <div class="app"><span class="ic">🏠</span><div><b>المنشآت الساحلية</b><span>دعم جزئي لاستهلاك المرافق</span></div></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h2>التحديات المتوقعة</h2>
+    <ul>
+      <li>عزل المولد والإلكترونيات عن الرذاذ والرطوبة — أهم سبب لفشل المشروع</li>
+      <li>الحركة تنتج تياراً متغيراً وغير منتظم — تحتاج دائرة تقويم وتنظيم</li>
+      <li>احتكاك نظام البكرات يبتلع جزءاً من الطاقة</li>
+      <li>معايرة حساس الموضع مع الارتفاع الحقيقي للموجة</li>
+      <li>القدرة المولّدة من نموذج صغير محدودة — الهدف إثبات المبدأ مش تشغيل بيت</li>
+    </ul>
+  </div>
+
+  <div class="sec">
+    <h2>سلة المشروع</h2>
+    <p style="margin-bottom:16px">
+      ابدأ بالحساسات الثلاثة الأساسية: الموضع والتيار والجهد. الباقي إضافات تقوّي التقرير.
+    </p>
+
+    <div class="box">
+      <div class="boxhead">
+        <h2>القطع الأساسية</h2>
+        <span class="n" id="cnt"></span>
+      </div>
+      <div id="items"></div>
+
+      <div class="add">
+        <div class="lbl">حساسات وإضافات اختيارية</div>
+        <div id="extras"></div>
+      </div>
+
+      <div class="total">
+        <div class="trow"><span>عدد القطع</span><span class="tnum" id="tq">0</span></div>
+        <div class="trow"><span>التوصيل داخل عمّان</span><span>مجاني</span></div>
+        <div class="trow big"><span>المجموع</span><span class="tnum" id="tp">0 د.أ</span></div>
+      </div>
+
+      <div class="cta">
+        <button class="wabtn" onclick="order()">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M17.5 14.4c-.3-.2-1.7-.8-2-.9-.3-.1-.5-.2-.7.1-.2.3-.7.9-.9 1.1-.2.2-.3.2-.6.1-1.7-.9-2.9-1.6-4-3.5-.3-.5.3-.5.9-1.6.1-.2 0-.4 0-.5 0-.2-.7-1.6-.9-2.2-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.5s1.1 2.9 1.2 3.1c.1.2 2.1 3.2 5.1 4.5 1.9.8 2.6.9 3.5.7.6-.1 1.7-.7 1.9-1.4.2-.7.2-1.2.2-1.4-.1-.2-.3-.3-.6-.5M12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2"/>
+          </svg>
+          أكّد الطلب على واتساب
+        </button>
+        <div class="perks">
+          <span class="perk">✓ قطع مفحوصة</span>
+          <span class="perk">✓ تجهيز ٣-٥ أيام</span>
+          <span class="perk">✓ ضمان استبدال ٧ أيام</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="gate">
+    <h3>محتاج الطريق التقني كامل؟</h3>
+    <p>الفكرة والقطع مجانية. الاستشارة تعطيك خطة تنفيذ حقيقية تمشي عليها.</p>
+    <ul>
+      <li>تصميم نظام البكرات ونسبة النقل</li>
+      <li>اختيار المولد وحساب الخرج المتوقع</li>
+      <li>دائرة التقويم والشحن وحماية البطارية</li>
+      <li>معايرة الحساسات وكود القراءة</li>
+      <li>طريقة عزل المكونات عن الماء</li>
+      <li>خطة زمنية بمراحل + نصائح المناقشة</li>
+    </ul>
+    <a href="#" class="btn">احجز استشارة على واتساب</a>
+  </div>
+
+  <div class="note">الأسعار تقديرية · القطع من متجر معتمد بضمان استبدال</div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+/* ══════════════════════════════════
+   عدّل من هون
+   ══════════════════════════════════ */
+const WHATSAPP = '962790000000';
+const PROJECT  = 'جهاز توليد الطاقة من أمواج البحر';
+/* ══════════════════════════════════ */
+
+/* ═════════ السلة ═════════ */
+const PARTS=[
+ {id:'mcu', nm:'لوحة التحكم', req:true, qty:1,
+  opts:[
+   {k:'esp32', nm:'ESP32 DevKit', d:'واي فاي · يرسل القراءات للموبايل', p:7.5,def:true},
+   {k:'nano', nm:'Arduino Nano', d:'أرخص · بدون اتصال لاسلكي', p:5.5},
+   {k:'uno', nm:'Arduino UNO R3', d:'أسهل للمبتدئ · منافذ أوضح', p:4.5}
+  ]},
+
+ {id:'gen', nm:'المولد الكهربائي', req:true, qty:1,
+  opts:[
+   {k:'dc775', nm:'محرك DC 775 كمولّد', d:'خرج جيد عند دوران متوسط · الأنسب · يُطلب من مورّد آخر', p:14,def:true},
+   {k:'dc385', nm:'محرك DC صغير 385', d:'أرخص · خرج أقل · للنموذج المصغّر', p:6.5},
+   {k:'step', nm:'محرك ستيبر NEMA17', d:'يولّد عند سرعات منخفضة · يحتاج تقويم ثلاثي', p:3.25}
+  ]},
+
+ {id:'pos', nm:'حساس الموضع', req:true, qty:1,
+  opts:[
+   {k:'pot', nm:'مقاومة متغيرة خطية', d:'تقيس ارتفاع العوّامة مباشرة · الأبسط', p:0.25,def:true},
+   {k:'enc', nm:'إنكودر دوّار', d:'يقيس دوران البكرة · أدق ولا يتآكل', p:1.5},
+   {k:'us', nm:'حساس موجات HC-SR04', d:'بدون تلامس · يتأثر برذاذ الماء', p:2}
+  ]},
+
+ {id:'cur', nm:'حساس التيار', req:true, qty:1,
+  opts:[
+   {k:'acs', nm:'ACS712 (5 أمبير)', d:'يقيس التيار المولّد · شائع ورخيص', p:2.5,def:true},
+   {k:'ina', nm:'INA219', d:'يقيس التيار والجهد والقدرة معاً · أدق', p:3}
+  ]},
+
+ {id:'volt', nm:'حساس الجهد', req:true, qty:1,
+  opts:[
+   {k:'div', nm:'وحدة مقسّم جهد 0-25 فولت', d:'يقرأ جهد البطارية · بسيط', p:1,def:true},
+   {k:'ina2', nm:'مدمج مع INA219', d:'اختره لو أخذت INA219 فوق', p:3}
+  ]},
+
+ {id:'rect', nm:'دائرة التقويم والشحن', req:true, qty:1,
+  opts:[
+   {k:'tp', nm:'TP4056 مع حماية', d:'شحن بطارية ليثيوم · الأبسط', p:1.5,def:true},
+   {k:'boost', nm:'محوّل رافع + منظّم', d:'يثبّت الجهد المتغيّر قبل الشحن', p:1.75},
+   {k:'mppt', nm:'وحدة شحن ذكية', d:'كفاءة أعلى · مناسبة للنموذج المتقدم', p:3}
+  ]},
+
+ {id:'batt', nm:'بطارية التخزين', req:true, qty:1,
+  opts:[
+   {k:'li18', nm:'ليثيوم 18650 + حامل', d:'خفيفة وشائعة · الأنسب للنموذج', p:4.25,def:true},
+   {k:'lipo', nm:'ليثيوم بوليمر 2000mAh', d:'أخف · تحتاج عناية بالشحن', p:10},
+   {k:'sup', nm:'مكثف فائق (Supercapacitor)', d:'يخزّن نبضات الموج السريعة · مبتكر · يُطلب من مورّد آخر', p:12}
+  ]},
+
+ {id:'disp', nm:'شاشة العرض', req:true, qty:1,
+  opts:[
+   {k:'oled', nm:'شاشة OLED 0.96', d:'واضحة وصغيرة · الأنسب', p:6,def:true},
+   {k:'lcd', nm:'شاشة LCD 16×2 مع I2C', d:'أكبر وأوضح من بعيد', p:5}
+  ]},
+
+ {id:'pulley', nm:'نظام البكرات والنقل', req:true, qty:1,
+  opts:[
+   {k:'basic', nm:'بكرات + سلك + ياي إرجاع', d:'النظام الأساسي لتحويل الحركة', p:5,def:true},
+   {k:'gear', nm:'مجموعة تروس رفع السرعة', d:'ترفع دوران المولّد · خرج أعلى', p:2}
+  ]},
+
+ {id:'buoy', nm:'العوّامة والهيكل', req:true, qty:1,
+  opts:[
+   {k:'pvc', nm:'عوّامة فوم + إطار PVC', d:'خفيف ورخيص · تصنّعه بنفسك · يُطلب من مورّد آخر', p:16,def:true},
+   {k:'alu', nm:'إطار ألمنيوم + عوّامة مغلقة', d:'أمتن · مناسب للاختبار الحقيقي · يُطلب من مورّد آخر', p:26}
+  ]},
+
+ {id:'wires', nm:'أسلاك ووصلات', req:false, qty:1,
+  opts:[
+   {k:'kit', nm:'أسلاك + موصلات + لوحة تجارب', d:'شيلها لو عندك', p:3,def:true}
+  ]}
+];
+
+const EXTRAS=[
+ {k:'press', nm:'حساس ضغط الموجة', d:'يقيس قوة الموجة — يقوّي التحليل بالتقرير', p:5},
+ {k:'accel', nm:'حساس تسارع MPU6050', d:'يقيس حركة العوّامة بثلاثة محاور', p:4},
+ {k:'rpm', nm:'حساس سرعة الدوران', d:'يقيس RPM المولّد — يربط السرعة بالخرج', p:0.5},
+ {k:'temp', nm:'حساس حرارة DS18B20', d:'مقاوم للماء — يراقب حرارة المولّد', p:3.5},
+ {k:'sd', nm:'وحدة تسجيل SD', d:'يسجّل القراءات لتحليلها لاحقاً', p:0.9},
+ {k:'led', nm:'مصباح LED للعرض', d:'يضيء بالطاقة المولّدة — مؤثر بالمناقشة', p:1},
+ {k:'case', nm:'علبة عزل مقاومة للماء', d:'حماية الإلكترونيات من الرذاذ · يُطلب من مورّد آخر', p:10}
+];
+
+const state={};
+PARTS.forEach(p=>{state[p.id]={on:true,qty:p.qty,pick:(p.opts.find(o=>o.def)||p.opts[0]).k}});
+const extraOn={};EXTRAS.forEach(e=>extraOn[e.k]=false);
+const AR=n=>n.toLocaleString('ar-EG');
+const check=`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+
+function render(){
+  document.getElementById('items').innerHTML=PARTS.map(p=>{
+    const st=state[p.id],sel=p.opts.find(o=>o.k===st.pick),multi=p.opts.length>1;
+    return `
+<div class="item ${st.on?'':'off'}">
+  <div class="row1">
+    <div class="chk ${st.on?'on':''}" onclick="tog('${p.id}')">${check}</div>
+    <div class="mid">
+      <div class="nm">${sel.nm}${p.req?'<span class="req">أساسي</span>':''}</div>
+      <div class="dsc">${sel.d}</div>
+      ${st.on?`<div class="qty"><button onclick="q('${p.id}',-1)">−</button>
+        <span>${AR(st.qty)}</span><button onclick="q('${p.id}',1)">+</button></div>`:''}
+    </div>
+    <div class="pr">${AR(sel.p*st.qty)} د.أ<small>${AR(sel.p)} للقطعة</small></div>
+  </div>
+  ${st.on&&multi?`<div class="alts"><div class="altlbl">بدائل متاحة</div>
+    ${p.opts.map(o=>`<div class="alt ${o.k===st.pick?'on':''}" onclick="pick('${p.id}','${o.k}')">
+      <div class="rad"></div><div class="an">${o.nm}<div class="ad">${o.d}</div></div>
+      <div class="ap">${AR(o.p)} د.أ</div></div>`).join('')}</div>`:''}
+</div>`}).join('');
+
+  document.getElementById('extras').innerHTML=EXTRAS.map(e=>`
+    <div class="addrow ${extraOn[e.k]?'on':''}" onclick="tex('${e.k}')">
+      <div class="rad" style="border-radius:5px"></div>
+      <div class="an">${e.nm}<div class="ad">${e.d}</div></div>
+      <div class="ap">+${AR(e.p)} د.أ</div></div>`).join('');
+
+  let total=0,count=0,active=0;
+  PARTS.forEach(p=>{const st=state[p.id];if(!st.on)return;
+    const sel=p.opts.find(o=>o.k===st.pick);total+=sel.p*st.qty;count+=st.qty;active++});
+  EXTRAS.forEach(e=>{if(extraOn[e.k]){total+=e.p;count++}});
+  document.getElementById('tq').textContent=AR(count)+' قطعة';
+  document.getElementById('tp').textContent=AR(total)+' د.أ';
+  document.getElementById('cnt').textContent=AR(active)+' من '+AR(PARTS.length)+' مفعّلة';
+}
+function tog(id){const p=PARTS.find(x=>x.id===id);
+  if(p.req&&state[id].on&&!confirm('هاي قطعة أساسية للمشروع. متأكد بدك تشيلها؟'))return;
+  state[id].on=!state[id].on;render()}
+function pick(id,k){state[id].pick=k;render()}
+function q(id,d){state[id].qty=Math.max(1,Math.min(9,state[id].qty+d));render()}
+function tex(k){extraOn[k]=!extraOn[k];render()}
+function order(){
+  let lines=[],total=0;
+  PARTS.forEach(p=>{const st=state[p.id];if(!st.on)return;
+    const sel=p.opts.find(o=>o.k===st.pick);
+    lines.push(`• ${sel.nm} × ${st.qty} — ${sel.p*st.qty} د.أ`);total+=sel.p*st.qty});
+  const ex=EXTRAS.filter(e=>extraOn[e.k]);
+  if(ex.length){lines.push('');lines.push('إضافات:');
+    ex.forEach(e=>{lines.push(`• ${e.nm} — ${e.p} د.أ`);total+=e.p})}
+  const msg=`مرحبا 👋
+بدي أطلب سلة مشروع:
+*${PROJECT}*
+
+${lines.join('\n')}
+
+المجموع: *${total} د.أ*
+
+الاسم:
+الجامعة:
+العنوان:`;
+  window.open(`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(msg)}`,'_blank');
+}
+render();
+
+/* ═════════ المجسم ═════════ */
+const stage=document.getElementById('stage');
+const W=()=>stage.clientWidth,H=()=>stage.clientHeight;
+const rnd=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
+rnd.setSize(W(),H());rnd.setPixelRatio(Math.min(devicePixelRatio,2));
+rnd.shadowMap.enabled=true;rnd.shadowMap.type=THREE.PCFSoftShadowMap;
+rnd.outputEncoding=THREE.sRGBEncoding;rnd.toneMapping=THREE.ACESFilmicToneMapping;
+rnd.toneMappingExposure=1.06;rnd.physicallyCorrectLights=true;
+stage.insertBefore(rnd.domElement,stage.firstChild);
+
+const scene=new THREE.Scene();
+const cam=new THREE.PerspectiveCamera(36,W()/H(),.1,400);
+
+function cvs(w,h){const c=document.createElement('canvas');c.width=w;c.height=h;return c}
+function tx(c,r=1){const t=new THREE.CanvasTexture(c);
+  t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(r,r);
+  t.anisotropy=rnd.capabilities.getMaxAnisotropy();return t}
+function noiseBump(sc,amt){
+  const c=cvs(256,256),x=c.getContext('2d'),d=x.createImageData(256,256);
+  for(let i=0;i<d.data.length;i+=4){const v=128+(Math.random()-.5)*amt;
+    d.data[i]=d.data[i+1]=d.data[i+2]=v;d.data[i+3]=255}
+  x.putImageData(d,0,0);return tx(c,sc)}
+function waterTex(){
+  const c=cvs(512,512),x=c.getContext('2d');
+  const g=x.createLinearGradient(0,0,512,512);
+  g.addColorStop(0,'#2A4C60');g.addColorStop(.5,'#1C3A4C');g.addColorStop(1,'#142E3C');
+  x.fillStyle=g;x.fillRect(0,0,512,512);
+  for(let i=0;i<120;i++){
+    x.strokeStyle=`rgba(150,200,225,${.02+Math.random()*.05})`;
+    x.lineWidth=1+Math.random()*2.5;
+    const y=Math.random()*512,w=60+Math.random()*170,px=Math.random()*512;
+    x.beginPath();x.moveTo(px,y);
+    x.quadraticCurveTo(px+w/2,y+(Math.random()-.5)*20,px+w,y);x.stroke();
+  }
+  return tx(c,2)}
+const TX={fine:noiseBump(9,11),bump:noiseBump(5,18),water:waterTex()};
+
+(function(){
+  const c=cvs(1024,512),x=c.getContext('2d');
+  const g=x.createLinearGradient(0,0,0,512);
+  g.addColorStop(0,'#B4D2E6');g.addColorStop(.4,'#7BA3BC');
+  g.addColorStop(.54,'#3B5A6E');g.addColorStop(1,'#12222C');
+  x.fillStyle=g;x.fillRect(0,0,1024,512);
+  const sun=x.createRadialGradient(680,80,10,680,80,180);
+  sun.addColorStop(0,'rgba(255,246,228,.98)');sun.addColorStop(1,'rgba(255,238,205,0)');
+  x.fillStyle=sun;x.fillRect(480,0,420,300);
+  const t=new THREE.CanvasTexture(c);
+  t.mapping=THREE.EquirectangularReflectionMapping;t.encoding=THREE.sRGBEncoding;
+  scene.environment=t})();
+scene.background=new THREE.Color(0x08161F);
+scene.fog=new THREE.FogExp2(0x102530,.0085);
+
+const key=new THREE.DirectionalLight(0xFFF4E0,3.3);
+key.position.set(22,34,18);key.castShadow=true;
+key.shadow.mapSize.set(2048,2048);
+Object.assign(key.shadow.camera,{left:-28,right:28,top:28,bottom:-28,near:1,far:110});
+key.shadow.bias=-.0007;key.shadow.normalBias=.03;key.shadow.radius=4;scene.add(key);
+const bounce=new THREE.DirectionalLight(0x6FA8C8,1.05);
+bounce.position.set(-16,-5,-12);scene.add(bounce);
+const rim=new THREE.DirectionalLight(0xB8D6EA,.85);
+rim.position.set(-12,12,-18);scene.add(rim);
+scene.add(new THREE.HemisphereLight(0xA5C7DC,0x122C3A,.6));
+
+const waterGeo=new THREE.PlaneGeometry(180,180,80,80);
+const water=new THREE.Mesh(waterGeo,new THREE.MeshStandardMaterial({
+  map:TX.water,color:0x6B9BB6,roughness:.15,metalness:.4,
+  transparent:true,opacity:.94,bumpMap:TX.fine,bumpScale:.05}));
+water.rotation.x=-Math.PI/2;water.receiveShadow=true;scene.add(water);
+const wBase=waterGeo.attributes.position.array.slice();
+
+const M={
+  buoy: new THREE.MeshStandardMaterial({color:0xE8792B,roughness:.44,metalness:.06,
+         bumpMap:TX.fine,bumpScale:.014}),
+  buoyD:new THREE.MeshStandardMaterial({color:0xC25F1C,roughness:.5,metalness:.05}),
+  steel:new THREE.MeshStandardMaterial({color:0xC0C6D0,roughness:.24,metalness:.94,
+         bumpMap:TX.fine,bumpScale:.008}),
+  dark: new THREE.MeshStandardMaterial({color:0x2A3038,roughness:.44,metalness:.55}),
+  brass:new THREE.MeshStandardMaterial({color:0xB8862B,roughness:.26,metalness:.95}),
+  pcb:  new THREE.MeshStandardMaterial({color:0x1E6448,roughness:.48,metalness:.08}),
+  blk:  new THREE.MeshStandardMaterial({color:0x14171C,roughness:.55,metalness:.2}),
+  gold: new THREE.MeshStandardMaterial({color:0xD4A438,roughness:.22,metalness:1}),
+  white:new THREE.MeshStandardMaterial({color:0xEDF0F4,roughness:.5,metalness:.05}),
+};
+const rig=new THREE.Group();scene.add(rig);
+function B(w,h,d,m,x,y,z,p=rig){const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);
+  o.position.set(x,y,z);o.castShadow=o.receiveShadow=true;p.add(o);return o}
+function C(rt,rb,h,m,x,y,z,s=28,p=rig){const o=new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,s),m);
+  o.position.set(x,y,z);o.castShadow=o.receiveShadow=true;p.add(o);return o}
+
+/* المنصة الثابتة */
+const plat=new THREE.Group();rig.add(plat);
+// أرجل غاطسة
+[[-3.4,-3.4],[3.4,-3.4],[-3.4,3.4],[3.4,3.4]].forEach(([x,z])=>{
+  C(.28,.34,9,M.steel,x,-1.6,z,14,plat);
+  C(.75,.75,.4,M.dark,x,-6,z,14,plat);
+});
+// إطار المنصة
+B(8.2,.4,8.2,M.white,0,3.1,0,plat);
+B(8.4,.3,.4,M.steel,0,3.45,4.0,plat);
+B(8.4,.3,.4,M.steel,0,3.45,-4.0,plat);
+B(.4,.3,8.4,M.steel,4.0,3.45,0,plat);
+B(.4,.3,8.4,M.steel,-4.0,3.45,0,plat);
+// دعامات قطرية
+[[-3.4,3.4],[3.4,3.4],[-3.4,-3.4],[3.4,-3.4]].forEach(([x,z])=>{
+  const s=C(.14,.14,4.2,M.steel,x*.6,1.6,z*.6,10,plat);
+  s.rotation.set(z>0?-.5:.5,0,x>0?.5:-.5);
+});
+
+/* البرج والبكرة */
+B(.34,4.6,.34,M.steel,0,5.6,1.5);
+B(.34,4.6,.34,M.steel,0,5.6,-1.5);
+B(.34,.34,3.4,M.steel,0,7.8,0);
+// البكرة الرئيسية
+const pulley=new THREE.Group();pulley.position.set(0,7.8,0);rig.add(pulley);
+const pw=new THREE.Mesh(new THREE.CylinderGeometry(1.15,1.15,.55,32),M.dark);
+pw.rotation.x=Math.PI/2;pw.castShadow=true;pulley.add(pw);
+const pr=new THREE.Mesh(new THREE.TorusGeometry(1.15,.09,10,32),M.steel);
+pr.position.z=.28;pulley.add(pr);
+const pr2=pr.clone();pr2.position.z=-.28;pulley.add(pr2);
+// أذرع البكرة
+for(let i=0;i<6;i++){
+  const sp=new THREE.Mesh(new THREE.BoxGeometry(.1,2.05,.16),M.steel);
+  sp.rotation.z=i*Math.PI/6;pulley.add(sp);
+}
+C(.16,.16,.9,M.gold,0,7.8,0,12).rotation.x=Math.PI/2;
+
+/* المولد + تروس */
+const gearBig=new THREE.Group();gearBig.position.set(1.55,6.2,0);rig.add(gearBig);
+const gb=new THREE.Mesh(new THREE.CylinderGeometry(.85,.85,.34,26),M.brass);
+gb.rotation.x=Math.PI/2;gb.castShadow=true;gearBig.add(gb);
+for(let i=0;i<18;i++){
+  const t=new THREE.Mesh(new THREE.BoxGeometry(.13,.2,.3),M.brass);
+  const a=i/18*Math.PI*2;t.position.set(Math.cos(a)*.92,Math.sin(a)*.92,0);
+  t.rotation.z=a;gearBig.add(t);
+}
+const gearSm=new THREE.Group();gearSm.position.set(3.05,5.7,0);rig.add(gearSm);
+const gs=new THREE.Mesh(new THREE.CylinderGeometry(.42,.42,.34,20),M.brass);
+gs.rotation.x=Math.PI/2;gs.castShadow=true;gearSm.add(gs);
+for(let i=0;i<10;i++){
+  const t=new THREE.Mesh(new THREE.BoxGeometry(.12,.18,.3),M.brass);
+  const a=i/10*Math.PI*2;t.position.set(Math.cos(a)*.48,Math.sin(a)*.48,0);
+  t.rotation.z=a;gearSm.add(t);
+}
+// جسم المولد
+C(.62,.62,1.9,M.dark,4.3,5.7,0,24).rotation.z=Math.PI/2;
+C(.66,.66,.16,M.steel,3.4,5.7,0,24).rotation.z=Math.PI/2;
+C(.66,.66,.16,M.steel,5.2,5.7,0,24).rotation.z=Math.PI/2;
+B(1.1,.5,.06,M.white,4.3,5.7,.64);
+
+/* صندوق الإلكترونيات */
+const boxG=new THREE.Group();boxG.position.set(-2.5,4.2,0);rig.add(boxG);
+B(3.0,1.7,2.4,M.white,0,0,0,boxG);
+B(3.05,.14,2.45,M.dark,0,.88,0,boxG);
+// اللوحة داخل الصندوق (بارزة قليلاً)
+B(2.2,.14,1.5,M.pcb,0,1.0,0,boxG);
+B(.7,.16,.7,M.blk,-.35,1.14,0,boxG);
+const pinI=new THREE.InstancedMesh(new THREE.BoxGeometry(.05,.34,.05),M.gold,24);
+{let i=0;const m=new THREE.Matrix4();
+ for(let k=0;k<12;k++){m.setPosition(-.9+k*.16,1.22,.66);pinI.setMatrixAt(i++,m);
+   m.setPosition(-.9+k*.16,1.22,-.66);pinI.setMatrixAt(i++,m)}}
+pinI.castShadow=true;boxG.add(pinI);
+// الشاشة
+const scrM=new THREE.MeshStandardMaterial({color:0x0A1520,emissive:0x0E3A55,
+  emissiveIntensity:1.1,roughness:.15});
+B(1.3,.9,.08,M.dark,0,.1,1.24,boxG);
+const screen=new THREE.Mesh(new THREE.BoxGeometry(1.1,.72,.04),scrM);
+screen.position.set(0,.1,1.3);boxG.add(screen);
+// LED
+const ledM=new THREE.MeshStandardMaterial({color:0x2BE07A,emissive:0x1FCE68,
+  emissiveIntensity:2,roughness:.2});
+const led=new THREE.Mesh(new THREE.SphereGeometry(.1,16,16),ledM);
+led.position.set(.85,1.16,.5);boxG.add(led);
+
+/* العوّامة */
+const buoy=new THREE.Group();rig.add(buoy);
+C(1.9,2.1,1.15,M.buoy,0,0,0,32,buoy);
+C(1.55,1.9,.5,M.buoyD,0,-.72,0,32,buoy);
+C(2.05,2.05,.14,M.buoyD,0,.5,0,32,buoy);
+// حلقة التثبيت
+const eye=new THREE.Mesh(new THREE.TorusGeometry(.3,.075,8,20),M.steel);
+eye.position.y=.85;eye.rotation.y=Math.PI/2;eye.castShadow=true;buoy.add(eye);
+C(.2,.2,.36,M.steel,0,.65,0,12,buoy);
+// خطوط عاكسة
+for(let i=0;i<3;i++){
+  const st=new THREE.Mesh(new THREE.TorusGeometry(2.0,.05,8,32),
+    new THREE.MeshStandardMaterial({color:0xF5F7FA,roughness:.3,metalness:.3}));
+  st.rotation.x=Math.PI/2;st.position.y=-.25+i*.32;buoy.add(st);
+}
+
+/* السلك */
+const cableMat=new THREE.MeshStandardMaterial({color:0x3A3F47,roughness:.7,metalness:.25});
+let cable=null;
+function drawCable(by){
+  if(cable){rig.remove(cable);cable.geometry.dispose()}
+  const cu=new THREE.CatmullRomCurve3([
+    new THREE.Vector3(0,by+.85,0),
+    new THREE.Vector3(0,(by+8.9)/2,0),
+    new THREE.Vector3(0,7.8,0),
+    new THREE.Vector3(1.15,7.6,0)
+  ]);
+  cable=new THREE.Mesh(new THREE.TubeGeometry(cu,28,.075,8,false),cableMat);
+  cable.castShadow=true;rig.add(cable);
+}
+
+/* أوضاع البحر */
+let sea=0;
+const SEA=[{amp:.35,fq:.9,pw:0.6},{amp:.85,fq:1.25,pw:2.4},{amp:1.6,fq:1.65,pw:6.2}];
+function setSea(s,btn){
+  sea=s;
+  document.querySelectorAll('.bar button').forEach(b=>b.classList.remove('on'));
+  if(btn)btn.classList.add('on');
+}
+
+let rY=.68,rX=.24,tY=.68,tX=.24,d=27,tD=27,drag=false,px=0,py=0;
+stage.addEventListener('pointerdown',e=>{drag=true;px=e.clientX;py=e.clientY;
+  document.getElementById('hint').classList.add('gone')});
+addEventListener('pointerup',()=>drag=false);
+addEventListener('pointermove',e=>{if(!drag)return;
+  tY+=(e.clientX-px)*.006;
+  tX=Math.max(.03,Math.min(1.2,tX+(e.clientY-py)*.0045));
+  px=e.clientX;py=e.clientY});
+stage.addEventListener('wheel',e=>{e.preventDefault();
+  tD=Math.max(15,Math.min(55,tD+e.deltaY*.022))},{passive:false});
+
+const gv=document.getElementById('gv'),gbf=document.getElementById('gbf');
+let t=0,pwr=0,lastY=0;
+setTimeout(()=>document.getElementById('load').classList.add('gone'),700);
+
+(function loop(){
+  requestAnimationFrame(loop);
+  t+=.016;
+  const S=SEA[sea];
+
+  // الماء
+  const pos=water.geometry.attributes.position;
+  for(let i=0;i<pos.count;i++){
+    const x=wBase[i*3],y=wBase[i*3+1];
+    pos.array[i*3+2]=Math.sin(x*.22+t*S.fq)*S.amp
+                    +Math.cos(y*.27+t*S.fq*.8)*S.amp*.7
+                    +Math.sin((x+y)*.11+t*S.fq*.5)*S.amp*.4;
+  }
+  pos.needsUpdate=true;water.geometry.computeVertexNormals();
+
+  // العوّامة تتبع الموجة
+  const by=Math.sin(t*S.fq)*S.amp+Math.cos(t*S.fq*.8)*S.amp*.7;
+  buoy.position.y=by;
+  buoy.rotation.z=Math.cos(t*S.fq)*.07;
+  buoy.rotation.x=Math.sin(t*S.fq*.8)*.05;
+  drawCable(by);
+
+  // سرعة العوّامة → دوران البكرة والتروس
+  const vel=(by-lastY)/.016;lastY=by;
+  pulley.rotation.z-=vel*.09;
+  gearBig.rotation.z+=vel*.09;
+  gearSm.rotation.z-=vel*.09*(0.85/0.42);
+
+  // القدرة المولّدة
+  const inst=Math.abs(vel)*S.pw*1.35;
+  pwr+=(inst-pwr)*.12;
+  gv.textContent=pwr.toFixed(1)+' W';
+  gbf.style.width=Math.min(100,pwr/9*100)+'%';
+  scrM.emissiveIntensity=.5+Math.min(1.9,pwr*.22);
+  ledM.emissiveIntensity=1+Math.min(2.4,pwr*.3);
+
+  if(!drag) tY+=.0016;
+  rY+=(tY-rY)*.08;rX+=(tX-rX)*.08;d+=(tD-d)*.08;
+  cam.position.set(Math.sin(rY)*Math.cos(rX)*d,Math.sin(rX)*d+4,Math.cos(rY)*Math.cos(rX)*d);
+  cam.lookAt(0,3.4,0);
+  rnd.render(scene,cam);
+})();
+
+addEventListener('resize',()=>{cam.aspect=W()/H();cam.updateProjectionMatrix();rnd.setSize(W(),H())});
+</script>
+</body>
+</html>

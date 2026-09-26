@@ -1,0 +1,77 @@
+---
+import Base from '../layouts/Base.astro';
+import '../styles/auth.css';
+---
+
+<Base title="تسجيل الدخول — مشاريع" description="ادخل لحسابك بالبريد أو رقم موبايلك.">
+  <main class="auth">
+    <div class="box" id="lg"><p class="c-note">جارٍ التحميل…</p></div>
+  </main>
+</Base>
+
+<script>
+  import { getBackend } from '../community/backend';
+  import { svg } from '../data/icons';
+
+  const MODE = 'login';
+  const root = document.getElementById('lg')!;
+  const next = new URLSearchParams(location.search).get('next') || '/profile';
+
+  (async () => {
+    const be = await getBackend();
+    if (await be.session()) { location.replace(next); return; }
+
+    root.innerHTML = `
+      <div class="brand"><b>مشاريع</b><span>ادخل لحسابك</span></div>
+      <nav class="tabs">
+        <a href="/login${location.search}" class="${MODE === 'login' ? 'on' : ''}">تسجيل الدخول</a>
+        <a href="/join${location.search}" class="${MODE === 'join' ? 'on' : ''}">إنشاء حساب جديد</a>
+        <a href="#" id="tab-forgot">استعادة كلمة المرور</a>
+      </nav>
+      <div class="card">
+        <h1>تسجيل الدخول</h1>
+        <p class="sub">${be.mode === 'local' ? 'وضع تجريبي: أي بيانات بتمشي.' : 'ادخل ببريدك (الجامعي أو الشخصي) أو رقم موبايلك.'}</p>
+
+        <label>البريد أو رقم الموبايل
+          <input id="h" dir="ltr" autocomplete="username" placeholder="you@yu.edu.jo أو 0790000000" />
+        </label>
+        <label>كلمة السر
+          <span class="pw"><input id="p" type="password" autocomplete="current-password" placeholder="••••••••" /><button type="button" id="eye" aria-label="إظهار كلمة السر">${svg('eye', 18)}</button></span>
+        </label>
+
+        <p class="err" id="e"></p>
+        <button type="button" class="c-btn go" id="go">دخول</button>
+        <button type="button" class="back" id="forgot">نسيت كلمة السر؟</button>
+
+
+      </div>`;
+
+    const $ = (id: string) => root.querySelector(id) as HTMLInputElement;
+    const err = root.querySelector('#e')!;
+
+    root.querySelector('#eye')!.addEventListener('click', () => {
+      const p = $('#p'); p.type = p.type === 'password' ? 'text' : 'password';
+    });
+
+    const submit = async () => {
+      err.textContent = ''; err.className = 'err';
+      const h = $('#h').value.trim(), p = $('#p').value;
+      if (!h) { err.textContent = 'اكتب بريدك أو رقمك'; return; }
+      if (!p) { err.textContent = 'اكتب كلمة السر'; return; }
+      const btn = root.querySelector('#go') as HTMLButtonElement;
+      btn.disabled = true; btn.textContent = 'جارٍ الدخول…';
+      try { await be.logIn(h, p); location.href = next; }
+      catch (x: any) { err.textContent = x.message; btn.disabled = false; btn.textContent = 'دخول'; }
+    };
+    root.querySelector('#go')!.addEventListener('click', submit);
+    root.addEventListener('keydown', (e) => { if ((e as KeyboardEvent).key === 'Enter') submit(); });
+
+    root.querySelector('#tab-forgot')?.addEventListener('click', (e) => { e.preventDefault(); (root.querySelector('#forgot') as HTMLElement).click(); });
+    root.querySelector('#forgot')!.addEventListener('click', async () => {
+      const h = $('#h').value.trim();
+      if (!h.includes('@')) { err.textContent = 'اكتب بريدك بخانة البريد أولاً، وبنبعتلك رابط تغيير كلمة السر'; return; }
+      try { await be.resetPassword(h); err.className = 'ok'; err.textContent = 'بعتنالك رابط تغيير كلمة السر على بريدك'; }
+      catch (x: any) { err.textContent = x.message; }
+    });
+  })();
+</script>

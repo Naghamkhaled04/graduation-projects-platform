@@ -1,0 +1,30 @@
+---
+import { svg } from '../data/icons';
+import { WHATSAPP } from '../data/config';
+---
+
+<a class="wafab" id="wafab" href={`https://wa.me/${WHATSAPP}`} target="_blank" rel="noopener" aria-label="راسلنا على واتساب">
+  <span class="i" set:html={svg('phone', 24)}></span>
+  <span class="t">راسلنا</span>
+</a>
+
+<script>
+  // رسالة جاهزة تذكر الصفحة الحالية، فنعرف شو كان الطالب يتصفح
+  const a = document.getElementById('wafab') as HTMLAnchorElement | null;
+  if (a) {
+    const num = a.href.split('wa.me/')[1] ?? '';
+    const title = document.title.replace(/\s*[—-]\s*مشاريع\s*$/, '');
+    const onProject = /^\/(projects\/|p$)/.test(location.pathname);
+    a.href = `https://wa.me/${num}?text=${encodeURIComponent(onProject ? `مرحباً، عندي سؤال عن مشروع: ${title}` : 'مرحباً، عندي سؤال عن مشاريع التخرج')}`;
+  }
+</script>
+
+<style is:global>
+  .wafab { position: fixed; right: 20px; bottom: 22px; z-index: 55; display: inline-flex; align-items: center; gap: 0; height: 56px; padding: 0 16px; border-radius: 999px; background: var(--green); color: var(--cream); text-decoration: none; font: 500 14px var(--font);
+    box-shadow: 0 0 0 1px rgba(232,116,59,.5), 0 0 26px rgba(232,116,59,.3), 0 14px 30px -10px rgba(10,46,48,.6); transition: gap .3s, padding .3s; overflow: hidden; }
+  .wafab .t { max-width: 0; opacity: 0; white-space: nowrap; transition: max-width .3s, opacity .3s; }
+  .wafab:hover, .wafab:focus-visible { gap: 10px; padding: 0 20px; }
+  .wafab:hover .t, .wafab:focus-visible .t { max-width: 90px; opacity: 1; }
+  .wafab .i { display: inline-flex; }
+  @media (max-width: 640px) { .wafab { right: 14px; bottom: 16px; height: 50px; } }
+</style>

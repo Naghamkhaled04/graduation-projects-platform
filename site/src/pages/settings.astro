@@ -1,0 +1,104 @@
+---
+import Base from '../layouts/Base.astro';
+import '../styles/community.css';
+import { UNIVERSITIES } from '../data/universities';
+---
+
+<Base title="الإعدادات — مشاريع" description="عدّل ملفك: اسمك وجامعتك وتخصصك ونبذتك.">
+  <main class="pf st">
+    <div class="container">
+      <h1>الإعدادات</h1>
+      <div id="st-root"><p class="c-note">جارٍ التحميل…</p></div>
+    </div>
+  </main>
+</Base>
+
+<script define:vars={{ UNIVERSITIES }}>
+  window.__UNIS = UNIVERSITIES;
+</script>
+
+<script>
+  import { getBackend } from '../community/backend';
+  import { gate, esc, demoBanner } from '../community/ui';
+  import { svg } from '../data/icons';
+
+  const UNIS = (window as any).__UNIS as { slug: string; name: string }[];
+  const root = document.getElementById('st-root')!;
+
+  (async () => {
+    const be = await getBackend();
+    root.innerHTML = `${demoBanner(be)}<div id="gate"></div><div id="body" hidden></div>`;
+    const gateEl = root.querySelector<HTMLElement>('#gate')!, body = root.querySelector<HTMLElement>('#body')!;
+    if (!(await gate(gateEl, be, 'سجّل دخولك لتعدّل ملفك'))) return;
+    gateEl.hidden = true; body.hidden = false;
+
+    const p = await be.profile();
+    if (!p) { body.innerHTML = '<p class="c-note">ما لقينا ملفك.</p>'; return; }
+    const known = UNIS.some((u) => u.name === p.university);
+
+    body.innerHTML = `
+      <div class="c-card">
+        <h3>ملفك العام</h3>
+        <p class="c-note">هاي البيانات بتظهر لباقي الطلاب على ملفك العام وبالمجتمعات. بريدك ما بيظهر أبداً.</p>
+        <label>الاسم المعروض<input id="f-name" maxlength="40" value="${esc(p.display_name)}" /></label>
+        <label>الجامعة <small>(بتحدد مجتمعك)</small>
+          <select id="f-uni">
+            <option value="">— اختر جامعتك —</option>
+            ${UNIS.map((u) => `<option ${u.name === p.university ? 'selected' : ''}>${esc(u.name)}</option>`).join('')}
+            <option value="__other" ${p.university && !known ? 'selected' : ''}>جامعة أخرى…</option>
+          </select>
+        </label>
+        <label id="f-other-wrap" ${p.university && !known ? '' : 'hidden'}>اسم جامعتك<input id="f-other" maxlength="60" value="${esc(!known ? (p.university ?? '') : '')}" /></label>
+        <div class="two">
+          <label>التخصص<input id="f-major" maxlength="60" value="${esc(p.major ?? '')}" /></label>
+          <label>السنة<select id="f-year"><option value="">—</option>${[1, 2, 3, 4, 5].map((y) => `<option value="${y}" ${p.year === y ? 'selected' : ''}>السنة ${y}</option>`).join('')}</select></label>
+        </div>
+        <label>نبذة عنك <small>(٢٨٠ حرف)</small><textarea id="f-bio" rows="3" maxlength="280">${esc(p.bio ?? '')}</textarea></label>
+        <p class="c-err" id="f-err"></p><p class="c-ok" id="f-ok"></p>
+        <button type="button" class="c-btn" id="f-save">حفظ التعديلات</button>
+      </div>
+
+      <div class="c-card sec">
+        <h3>روابط سريعة</h3>
+        <div class="qlinks">
+          <a class="c-btn ghost" href="/profile">${svg('medal', 15)} نقاطي وتجاربي</a>
+          <a class="c-btn ghost" href="/u?id=${encodeURIComponent(p.id)}">${svg('eye', 15)} شوف ملفي كما يراه غيري</a>
+          <button type="button" class="c-btn ghost" id="copy">${svg('send', 15)} انسخ رابط ملفي</button>
+        </div>
+      </div>
+
+      <div class="c-card sec danger">
+        <h3>حذف حسابي</h3>
+        <p class="c-note">لحذف حسابك وتجاربك وصورك ومبناك، راسلنا وبنحذفها.</p>
+        <a class="c-btn ghost" href="/#contact">اطلب الحذف</a>
+      </div>`;
+
+    const v = (id: string) => (body.querySelector(id) as HTMLInputElement).value;
+    body.querySelector('#f-uni')!.addEventListener('change', (e) => {
+      body.querySelector('#f-other-wrap')!.toggleAttribute('hidden', (e.target as HTMLSelectElement).value !== '__other');
+    });
+    body.querySelector('#copy')!.addEventListener('click', async (e) => {
+      const b = e.currentTarget as HTMLButtonElement, url = `${location.origin}/u?id=${encodeURIComponent(p.id)}`;
+      try { await navigator.clipboard.writeText(url); b.textContent = 'انتسخ الرابط'; } catch { prompt('انسخ الرابط:', url); }
+    });
+    body.querySelector('#f-save')!.addEventListener('click', async () => {
+      const err = body.querySelector('#f-err')!, ok = body.querySelector('#f-ok')!;
+      err.textContent = ''; ok.textContent = '';
+      const uni = v('#f-uni') === '__other' ? v('#f-other') : v('#f-uni');
+      try {
+        await be.saveProfile({ display_name: v('#f-name'), university: uni, major: v('#f-major'), bio: v('#f-bio'), year: v('#f-year') ? Number(v('#f-year')) : null });
+        ok.textContent = 'انحفظت التعديلات';
+      } catch (x: any) { err.textContent = x.message; }
+    });
+  })();
+</script>
+
+<style is:global>
+  .st h1 { margin-bottom: 20px; } .st .container { max-width: 720px; }
+  .st .two { display: grid; grid-template-columns: 1fr 140px; gap: 12px; }
+  .st label small { color: var(--fg-2); font-weight: 400; }
+  .st .qlinks { display: flex; flex-wrap: wrap; gap: 8px; } .st .qlinks .c-btn svg { vertical-align: -3px; margin-inline-end: 5px; }
+  .st .c-ok { color: #2f7d5c; font-size: 13.5px; }
+  .st .danger h3 { color: #b4553a; }
+  @media (max-width: 560px) { .st .two { grid-template-columns: 1fr; } }
+</style>

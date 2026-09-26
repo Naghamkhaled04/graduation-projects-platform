@@ -1,0 +1,121 @@
+---
+const steps = [
+  { t: 'الفكرة', d: 'اختر مشروعاً يناسبك', f: 0 },
+  { t: 'القطع', d: 'سلة جاهزة بأسعار المورّد', f: 0.34 },
+  { t: 'البناء', d: 'استشارة ومسار خطوة بخطوة', f: 0.68 },
+  { t: 'المناقشة', d: 'نصائح جاهزة للجنة', f: 1 },
+];
+const PATH = 'M1100 140 C 930 140 980 330 780 330 S 590 130 430 250 S 330 440 100 400';
+---
+
+<section class="jr" id="how" data-steps={JSON.stringify(steps)}>
+  <div class="jr-stage">
+    <div class="word" aria-hidden="true">مشروعك</div>
+    <div class="jr-title">
+      <h2>أربع خطوات بتوصلك للمناقشة</h2>
+      <p>مرّر لتتحرك البوردة على الطريق</p>
+    </div>
+
+    <svg class="map" viewBox="0 0 1200 520" role="img" aria-label="رحلة الطالب من الفكرة إلى المناقشة">
+      <path class="track" d={PATH}></path>
+      <path class="prog" d={PATH}></path>
+      <g class="stations"></g>
+      <g class="board">
+        <g transform="translate(-45,-28)">
+          <rect x="4" y="4" width="90" height="56" rx="9" fill="#000" opacity=".18"></rect>
+          <rect width="90" height="56" rx="9" fill="#00979D"></rect>
+          <rect x="12" y="14" width="30" height="28" rx="3" fill="#0A2E30"></rect>
+          <rect x="52" y="14" width="24" height="7" rx="2" fill="#0A2E30"></rect>
+          <g fill="#E3C25A">
+            <rect x="10" y="-5" width="4" height="8"></rect><rect x="20" y="-5" width="4" height="8"></rect>
+            <rect x="30" y="-5" width="4" height="8"></rect><rect x="40" y="-5" width="4" height="8"></rect>
+          </g>
+          <circle class="led" cx="76" cy="44" r="5" fill="#E8743B"></circle>
+          <circle cx="76" cy="44" r="10" fill="#E8743B" opacity=".25"></circle>
+        </g>
+      </g>
+    </svg>
+  </div>
+</section>
+
+<script>
+  import { colorAt, rgb, sectionProgress, setHeader, sstep, clamp, type Stops } from '../scripts/theme';
+
+  const root = document.getElementById('how') as HTMLElement;
+  const stage = root.querySelector<HTMLElement>('.jr-stage')!;
+  const track = root.querySelector<SVGPathElement>('.track')!;
+  const prog = root.querySelector<SVGPathElement>('.prog')!;
+  const board = root.querySelector<SVGGElement>('.board')!;
+  const word = root.querySelector<HTMLElement>('.word')!;
+  const stations = root.querySelector<SVGGElement>('.stations')!;
+  const steps: { t: string; d: string; f: number }[] = JSON.parse(root.dataset.steps!);
+
+  const L = track.getTotalLength();
+  prog.style.strokeDasharray = String(L);
+  prog.style.strokeDashoffset = String(L);
+
+  const NS = 'http://www.w3.org/2000/svg';
+  const nodes = steps.map((s) => {
+    const pt = track.getPointAtLength(L * s.f);
+    const g = document.createElementNS(NS, 'g');
+    g.setAttribute('class', 'st');
+    g.innerHTML = `<circle class="o" cx="${pt.x}" cy="${pt.y}" r="16"/><text class="t" x="${pt.x}" y="${pt.y + 60}" text-anchor="middle">${s.t}</text><text class="d" x="${pt.x}" y="${pt.y + 86}" text-anchor="middle">${s.d}</text>`;
+    stations.appendChild(g);
+    return { g, f: s.f };
+  });
+
+  // تبدأ بنفس أخضر نهاية الهيرو وتنتهي كريمي
+  const BG: Stops = [[0, [10, 46, 48]], [0.12, [10, 46, 48]], [0.6, [247, 239, 227]], [1, [247, 239, 227]]];
+  const FG: Stops = [[0, [247, 239, 227]], [0.12, [247, 239, 227]], [0.6, [15, 61, 62]], [1, [15, 61, 62]]];
+
+  const frame = () => {
+    const { p, visible, covers } = sectionProgress(root);
+    if (covers) setHeader(rgb(colorAt(FG, p)), rgb(colorAt(BG, p)));
+    if (!visible) return;
+    const bg = rgb(colorAt(BG, p)), fg = rgb(colorAt(FG, p));
+    stage.style.background = bg;
+    stage.style.color = fg;
+    stage.style.setProperty('--bgc', bg);
+
+    const q = clamp((p - 0.05) / 0.85);
+    prog.style.strokeDashoffset = String(L * (1 - q));
+    const pt = track.getPointAtLength(L * q);
+    const pt2 = track.getPointAtLength(Math.min(L, L * q + 2));
+    const ang = (Math.atan2(pt2.y - pt.y, pt2.x - pt.x) * 180) / Math.PI * 0.35;
+    board.setAttribute('transform', `translate(${pt.x},${pt.y}) rotate(${ang}) scale(${1 + Math.sin(q * Math.PI) * 0.25})`);
+    nodes.forEach((n) => n.g.classList.toggle('on', q >= n.f - 0.015));
+    word.style.transform = `translateX(${(q - 0.5) * -18}vw)`;
+    word.style.opacity = String(0.05 + sstep(0.3, 0.7, p) * 0.03);
+  };
+  addEventListener('scroll', () => requestAnimationFrame(frame), { passive: true });
+  addEventListener('resize', frame);
+  frame();
+</script>
+
+<style is:global>
+  .jr { height: 420vh; position: relative; }
+  .jr-stage {
+    position: sticky; top: 0; height: 100vh; overflow: hidden; display: grid; place-items: center;
+    background: var(--green-2); color: var(--cream); --bgc: var(--green-2);
+  }
+  .jr .word {
+    position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none;
+    font-size: clamp(90px, 22vw, 340px); font-weight: 700; opacity: 0.05; white-space: nowrap; will-change: transform;
+  }
+  .jr-title { position: absolute; top: 13vh; text-align: center; z-index: 3; padding: 0 16px; }
+  .jr-title h2 { font-size: clamp(28px, 4.4vw, 56px); line-height: 1.2; }
+  .jr-title p { margin-top: 8px; opacity: 0.7; font-size: clamp(14px, 1.6vw, 17px); }
+  .jr .map { width: min(1200px, 100%); height: auto; max-height: 64vh; overflow: visible; position: relative; z-index: 2; }
+  .jr .track { fill: none; stroke: currentColor; stroke-opacity: 0.22; stroke-width: 3; stroke-dasharray: 2 12; stroke-linecap: round; }
+  .jr .prog { fill: none; stroke: var(--orange); stroke-width: 5; stroke-linecap: round; filter: drop-shadow(0 0 8px rgba(232, 116, 59, 0.6)); }
+  .jr .st circle.o { fill: var(--bgc); stroke: currentColor; stroke-opacity: 0.35; stroke-width: 3; transition: all 0.4s; }
+  .jr .st text { fill: currentColor; opacity: 0.35; transition: opacity 0.4s; font-family: var(--font); }
+  .jr .st .t { font-size: 26px; font-weight: 700; }
+  .jr .st .d { font-size: 16px; }
+  /* الـSVG بينضغط لثلث حجمه بالموبايل، فالنص بيصير 5px. بنكبّره ونخفي الوصف */
+  @media (max-width: 760px) { .jr .st .t { font-size: 52px; } .jr .st .d { display: none; } }
+  .jr .st.on circle.o { fill: var(--orange); stroke: var(--orange); stroke-opacity: 1; filter: drop-shadow(0 0 10px rgba(232, 116, 59, 0.7)); }
+  .jr .st.on text { opacity: 1; }
+  .jr .led { animation: jrblink 1.2s steps(2) infinite; }
+  @keyframes jrblink { 50% { opacity: 0.25; } }
+</style>

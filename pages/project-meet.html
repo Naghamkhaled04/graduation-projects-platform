@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>تفريغ الجلسات والمحاضرات بتمييز المتحدثين — مشروع تخرج</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#141824;--ink2:#3D4354;--dim:#767C8C;--faint:#A8ADBA;
+  --line:#E6E8EE;--soft:#F4F5F8;--paper:#FBFBFD;--white:#fff;
+  --acc:#5B3DF5;--acc2:#7C63F7;--accs:#EFEBFF;
+  --wa:#25D366;--ok:#0E9F6E;--okbg:#DEF7EC;
+  --hard:#E02424;--hardbg:#FDE8E8;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'IBM Plex Sans Arabic',sans-serif;background:var(--paper);
+  color:var(--ink);line-height:1.65;font-size:15px;-webkit-font-smoothing:antialiased}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+a{color:inherit;text-decoration:none}
+
+.dbar{background:var(--ink);color:#fff;padding:9px 24px;font-size:12.5px}
+.dbar b{font-weight:600}
+.dbar span{color:var(--faint);margin-inline-start:12px}
+
+header{background:var(--white);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:30}
+.hin{max-width:900px;margin:0 auto;padding:0 24px;height:60px;display:flex;align-items:center;gap:12px}
+.logo{display:flex;align-items:center;gap:9px;font-weight:700;font-size:16px}
+.logo i{width:29px;height:29px;border-radius:9px;background:var(--acc);display:grid;
+  place-items:center;color:#fff;font-style:normal;font-size:14px;font-weight:700}
+.hin .wa{margin-inline-start:auto;background:var(--acc);color:#fff;padding:9px 15px;
+  border-radius:8px;font-size:13px;font-weight:600}
+
+.wrap{max-width:900px;margin:0 auto;padding:30px 24px 70px}
+
+.dhead{display:flex;gap:9px;align-items:center;margin-bottom:11px;flex-wrap:wrap}
+.lvl{padding:4px 11px;border-radius:99px;font-size:11.5px;font-weight:600;
+  background:var(--hardbg);color:var(--hard)}
+.cat{font-size:11.5px;font-weight:600;color:var(--acc)}
+h1{font-size:31px;font-weight:700;line-height:1.32;margin-bottom:13px;letter-spacing:-.3px}
+.lead{font-size:16.5px;color:var(--ink2);line-height:1.78;margin-bottom:26px}
+
+.viewer{height:360px;background:linear-gradient(165deg,#EAF4FB,#D4E7F4);
+  border:1px solid var(--line);border-radius:14px;margin-bottom:32px;
+  display:grid;place-items:center;position:relative;overflow:hidden}
+.viewer .cap{position:absolute;bottom:13px;inset-inline-start:50%;transform:translateX(50%);
+  font-size:12px;color:var(--dim);background:rgba(255,255,255,.82);padding:5px 13px;
+  border-radius:99px}
+
+.sec{margin-bottom:32px}
+.sec h2{font-size:19px;font-weight:600;margin-bottom:13px}
+.sec p{color:var(--ink2);line-height:1.82}
+.sec ul{list-style:none;display:flex;flex-direction:column;gap:10px;margin-top:5px}
+.sec li{padding-inline-start:23px;position:relative;color:var(--ink2);line-height:1.72}
+.sec li::before{content:'';position:absolute;inset-inline-start:0;top:11px;width:6px;height:6px;
+  border-radius:50%;background:var(--acc)}
+
+.how{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-top:6px}
+
+/* الفيديو */
+.vid{position:relative;border-radius:14px;overflow:hidden;border:1px solid var(--line);
+  background:#0B0D12;aspect-ratio:16/9;cursor:pointer}
+.vid video{width:100%;height:100%;object-fit:cover;display:block;background:#0B0D12}
+.vid .wm{position:absolute;bottom:14px;inset-inline-end:16px;color:rgba(255,255,255,.42);
+  font-size:12.5px;font-weight:600;pointer-events:none;z-index:3;
+  text-shadow:0 1px 6px rgba(0,0,0,.6)}
+.vid .play{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}
+.vid .play i{width:64px;height:64px;border-radius:50%;background:rgba(220,38,38,.94);
+  display:grid;place-items:center;font-style:normal;box-shadow:0 6px 24px rgba(0,0,0,.35);
+  transition:.25s}
+.vid:hover .play i{transform:scale(1.08);background:#DC2626}
+.vid .play svg{margin-inline-start:4px}
+.vidnote{font-size:12.5px;color:var(--dim);margin-top:9px;display:flex;align-items:center;gap:7px}
+.step{background:var(--white);border:1px solid var(--line);border-radius:12px;padding:15px 16px}
+.step b{display:block;font-size:13px;color:var(--acc);font-weight:600;margin-bottom:5px}
+.step span{font-size:13.5px;color:var(--ink2);line-height:1.6}
+
+/* ===== السلة ===== */
+.box{background:var(--white);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.boxhead{padding:17px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+.boxhead h2{font-size:17px;font-weight:600}
+.boxhead .n{margin-inline-start:auto;font-size:13px;color:var(--dim)}
+
+.item{border-bottom:1px solid var(--line);padding:15px 20px}
+.item:last-of-type{border-bottom:none}
+.item.off{background:var(--soft)}
+.item.off .nm{color:var(--faint);text-decoration:line-through}
+
+.row1{display:flex;align-items:flex-start;gap:12px}
+.chk{width:21px;height:21px;border:2px solid var(--line);border-radius:6px;flex-shrink:0;
+  margin-top:2px;display:grid;place-items:center;transition:.15s;background:#fff}
+.chk.on{background:var(--acc);border-color:var(--acc)}
+.chk svg{opacity:0;transition:.15s}
+.chk.on svg{opacity:1}
+.mid{flex:1;min-width:0}
+.nm{font-size:15px;font-weight:600;line-height:1.45}
+.dsc{font-size:13px;color:var(--dim);margin-top:2px}
+.req{display:inline-block;font-size:11px;font-weight:600;background:var(--accs);
+  color:var(--acc);padding:2px 8px;border-radius:99px;margin-inline-start:7px;vertical-align:middle}
+.pr{font-size:15px;font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums}
+.pr small{font-size:11.5px;color:var(--dim);font-weight:400;display:block;text-align:end}
+
+.qty{display:flex;align-items:center;gap:2px;margin-top:9px;border:1px solid var(--line);
+  border-radius:7px;width:fit-content;background:#fff}
+.qty button{width:28px;height:28px;color:var(--dim);font-size:15px;font-weight:600}
+.qty button:hover{color:var(--ink);background:var(--soft)}
+.qty span{min-width:30px;text-align:center;font-size:13.5px;font-weight:600}
+
+.alts{margin-top:11px;padding-inline-start:33px}
+.altlbl{font-size:12px;color:var(--dim);font-weight:500;margin-bottom:7px}
+.alt{display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid var(--line);
+  border-radius:9px;margin-bottom:6px;cursor:pointer;transition:.14s;background:#fff}
+.alt:hover{border-color:var(--acc2)}
+.alt.on{border-color:var(--acc);background:var(--accs)}
+.rad{width:16px;height:16px;border:2px solid var(--line);border-radius:50%;flex-shrink:0;
+  display:grid;place-items:center}
+.alt.on .rad{border-color:var(--acc)}
+.alt.on .rad::after{content:'';width:7px;height:7px;border-radius:50%;background:var(--acc)}
+.alt .an{flex:1;font-size:13.5px;font-weight:500}
+.alt .ad{font-size:12px;color:var(--dim);font-weight:400}
+.alt .ap{font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums}
+
+.add{padding:15px 20px;border-top:1px solid var(--line);background:var(--soft)}
+.add .lbl{font-size:12.5px;font-weight:600;color:var(--dim);margin-bottom:9px}
+.addrow{display:flex;align-items:center;gap:11px;padding:9px 12px;background:#fff;
+  border:1px solid var(--line);border-radius:9px;margin-bottom:6px;cursor:pointer;transition:.14s}
+.addrow:hover{border-color:var(--acc2)}
+.addrow.on{border-color:var(--acc);background:var(--accs)}
+.addrow .an{flex:1;font-size:13.5px;font-weight:500}
+.addrow .ad{font-size:12px;color:var(--dim)}
+.addrow .ap{font-size:13.5px;font-weight:600}
+
+.total{padding:18px 20px;background:var(--ink);color:#fff}
+.trow{display:flex;justify-content:space-between;font-size:14px;
+  color:rgba(255,255,255,.62);margin-bottom:7px}
+.trow.big{font-size:21px;font-weight:700;color:#fff;margin:12px 0 0;
+  padding-top:14px;border-top:1px solid rgba(255,255,255,.14)}
+.tnum{font-variant-numeric:tabular-nums}
+
+.cta{padding:18px 20px;background:var(--white)}
+.wabtn{width:100%;background:var(--wa);color:#fff;padding:15px;border-radius:11px;
+  font-size:15.5px;font-weight:700;display:flex;align-items:center;justify-content:center;
+  gap:9px;transition:.15s}
+.wabtn:hover{background:#1EB855}
+.perks{display:flex;flex-wrap:wrap;gap:7px;margin-top:13px;justify-content:center}
+.perk{font-size:12px;color:var(--ok);background:var(--okbg);padding:5px 11px;
+  border-radius:99px;font-weight:500}
+
+.gate{background:linear-gradient(135deg,#5B3DF5,#8B5CF6);border-radius:16px;padding:30px;
+  color:#fff;margin-top:34px}
+.gate h3{font-size:20px;font-weight:700;margin-bottom:9px}
+.gate p{font-size:14.5px;opacity:.92;line-height:1.7;margin-bottom:18px}
+.gate ul{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:20px}
+.gate li{font-size:13.5px;padding-inline-start:22px;position:relative;opacity:.95}
+.gate li::before{content:'✓';position:absolute;inset-inline-start:0;font-weight:700}
+.gate .btn{background:#fff;color:var(--acc);padding:12px 22px;border-radius:9px;
+  font-weight:700;font-size:14.5px;display:inline-block}
+
+.note{font-size:12.5px;color:var(--faint);text-align:center;margin-top:16px}
+
+@media(max-width:620px){
+  h1{font-size:25px}
+  .gate ul{grid-template-columns:1fr}
+  .viewer{height:250px}
+}
+
+.lockwrap{position:relative}
+.lockrows{padding:16px 20px;filter:blur(5px);user-select:none;pointer-events:none}
+.lockrow{height:17px;background:linear-gradient(90deg,var(--soft) 62%,transparent);
+  border-radius:5px;margin-bottom:15px}
+.lockrow:nth-child(even){background:linear-gradient(90deg,var(--soft) 44%,transparent)}
+.lockover{position:absolute;inset:0;display:grid;place-items:center;
+  background:linear-gradient(180deg,rgba(251,251,253,.55),rgba(251,251,253,.94))}
+.lockbox{text-align:center;max-width:330px;padding:0 20px}
+.lockicon{font-size:26px;margin-bottom:7px}
+.lockbox b{display:block;font-size:16px;margin-bottom:6px}
+.lockbox span{font-size:13.5px;color:var(--dim);line-height:1.7}
+.sidenote{margin-top:18px;padding:15px 18px;border:1px solid var(--line);
+  border-inline-start:3px solid var(--acc);border-radius:11px;background:var(--white)}
+.sidenote b{display:block;font-size:13px;color:var(--acc);font-weight:600;margin-bottom:5px}
+.sidenote span{font-size:14px;color:var(--ink2);line-height:1.75}
+</style>
+</head>
+<body>
+
+<div class="dbar"><b>ديمو</b><span>الأسعار مبدئية — بتتحدث لما تجيب أسعار المتجر</span></div>
+
+<header>
+  <div class="hin">
+    <div class="logo"><i>م</i> مشاريع</div>
+    <a href="#" class="wa">تواصل واتساب</a>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="dhead">
+    <span class="lvl" style="background:#FDE8E8;color:#E02424">متقدم</span>
+    <span class="cat">ذكاء اصطناعي · إنترنت الأشياء</span> <span class="cat" style="color:#C27803">🔒 فكرة حصرية</span>
+  </div>
+  <h1>تفريغ الجلسات والمحاضرات بتمييز المتحدثين</h1>
+  <p class="lead">
+    وحدة بتسجّل الجلسة أو المحاضرة بميكروفونين، وبتشيل فترات الصمت فيطلع تسجيل نظيف كله كلام. وبتميّز مين اللي حكي بكل مقطع — القاضي عن المحامي، الدكتور عن الطلاب، رئيس الاجتماع عن الحضور. وبالآخر المسؤول بيراجع وبيوزّع: تسجيل مختصر + محضر أو ملخّص مرتّب جاهز للطباعة.
+  </p>
+
+  <div class="viewer">
+    <svg width="360" height="220" viewBox="0 0 360 220" fill="none">
+      <!-- الطاولة -->
+      <ellipse cx="118" cy="146" rx="86" ry="30" fill="#E8EBF0" stroke="#141824" stroke-width="2"/>
+      <ellipse cx="118" cy="141" rx="86" ry="30" fill="#F4F5F8" stroke="#141824" stroke-width="2"/>
+      <!-- أشخاص -->
+      <g>
+        <circle cx="52" cy="116" r="11" fill="#E8C9AE" stroke="#141824" stroke-width="1.6"/>
+        <path d="M52 128 q-14 4 -14 16 h28 q0 -12 -14 -16" fill="#5B3DF5" opacity=".85"/>
+      </g>
+      <g>
+        <circle cx="118" cy="104" r="11" fill="#E8C9AE" stroke="#141824" stroke-width="1.6"/>
+        <path d="M118 116 q-14 4 -14 16 h28 q0 -12 -14 -16" fill="#2F7D5C" opacity=".85"/>
+      </g>
+      <g>
+        <circle cx="184" cy="116" r="11" fill="#E8C9AE" stroke="#141824" stroke-width="1.6"/>
+        <path d="M184 128 q-14 4 -14 16 h28 q0 -12 -14 -16" fill="#C27803" opacity=".85"/>
+      </g>
+      <!-- الميكروفون -->
+      <rect x="110" y="146" width="16" height="12" rx="3" fill="#2A2F3B" stroke="#141824" stroke-width="1.6"/>
+      <circle cx="118" cy="141" r="5" fill="#3D4354" stroke="#141824" stroke-width="1.4"/>
+      <!-- موجات صوت -->
+      <path d="M130 138 A14 14 0 0 1 130 152" stroke="#5B3DF5" stroke-width="1.8" fill="none" opacity=".6"/>
+      <path d="M138 132 A24 24 0 0 1 138 158" stroke="#5B3DF5" stroke-width="1.8" fill="none" opacity=".3"/>
+      <!-- لوحة الملخّص -->
+      <rect x="216" y="34" width="130" height="152" rx="10" fill="#fff" stroke="#E6E8EE" stroke-width="2"/>
+      <rect x="228" y="46" width="70" height="9" rx="4" fill="#EFEBFF"/>
+      <text x="232" y="76" font-size="9" fill="#141824" font-family="sans-serif">ملخّص الاجتماع</text>
+      <g fill="#F4F5F8">
+        <rect x="228" y="84" width="106" height="7" rx="3"/>
+        <rect x="228" y="96" width="88" height="7" rx="3"/>
+        <rect x="228" y="108" width="98" height="7" rx="3"/>
+      </g>
+      <text x="232" y="134" font-size="9" fill="#141824" font-family="sans-serif">المهام</text>
+      <g>
+        <rect x="228" y="140" width="106" height="14" rx="4" fill="#EFEBFF"/>
+        <circle cx="236" cy="147" r="3" fill="#5B3DF5"/>
+        <rect x="228" y="158" width="106" height="14" rx="4" fill="#EFEBFF"/>
+        <circle cx="236" cy="165" r="3" fill="#5B3DF5"/>
+      </g>
+      <!-- حساسات الغرفة -->
+      <rect x="30" y="34" width="52" height="26" rx="6" fill="#2F7D5C" stroke="#141824" stroke-width="1.6"/>
+      <circle cx="40" cy="47" r="3" fill="#2BE07A"/>
+      <text x="62" y="51" font-size="8" fill="#fff" text-anchor="middle" font-family="sans-serif">٢٤°</text>
+      <path d="M82 47 h120" stroke="#5B3DF5" stroke-width="1.4" stroke-dasharray="4 4" opacity=".4"/>
+    </svg>
+    <div class="cap">رسم توضيحي — المجسم ثلاثي الأبعاد قيد الإعداد</div>
+  </div>
+
+  <div class="sec">
+    <h2>المشكلة</h2>
+    <p>بأي جلسة طويلة — محاضرة، اجتماع، أو جلسة محكمة — التسجيل الخام مش مادة قابلة للاستخدام. ساعة ونص نصها صمت وكلام جانبي، ومحدا بيقدر يرجعلها يدوّر على نقطة وحدة. والمحضر المكتوب باليد بيعتمد على واحد سمع صح وكتب صح، وبالمحاكم هاد مش تفصيل — هاد وثيقة. التسجيل بيصير مادة لما ينتفي ويتقسّم على المتحدثين ويتلخّص، وهاد شغل محدا بيقعد يعمله يدوياً بعد كل جلسة.</p>
+  </div>
+
+  <div class="sec">
+    <h2>كيف يشتغل</h2>
+    <div class="how">
+      <div class="step"><b>١ · التسجيل</b><span>ميكروفونان رقميان بيسجّلان الصوت بجودة كافية لتحويله لنص.</span></div>
+      <div class="step"><b>٢ · تنقية الصوت</b><span>كشف مقاطع الكلام بيشيل الصمت والضجيج، فيقصر التسجيل كثير.</span></div>
+      <div class="step"><b>٣ · تمييز المتحدث</b><span>النظام بيقسّم التسجيل حسب مين حكي، ويفصل الدكتور عن غيره.</span></div>
+      <div class="step"><b>٤ · التفريغ</b><span>كل مقطع بينتحوّل لنص منسوب لصاحبه مع وقته بالتسجيل.</span></div>
+      <div class="step"><b>٥ · التلخيص</b><span>نموذج ذكاء اصطناعي بيطلّع النقاط الرئيسية والقرارات والمهام.</span></div>
+      <div class="step"><b>٦ · التسليم</b><span>المسؤول بيراجع وبيوزّع: تسجيل منقّى + محضر أو ملخّص بشرائح للطباعة.</span></div>
+    </div>
+  </div>
+  <div class="sidenote"><b>ملاحظة</b><span>عنا نموذج تفريغ صوتي مدرّب على اللهجات الأردنية كلها. تواصل معنا عشان تحصل عليه.</span></div>
+
+  <div class="sec" id="vidSec" style="display:none">
+    <h2>شوف الفكرة على أرض الواقع</h2>
+    <div class="vid" id="vid" onclick="playVid()"></div>
+    <div class="vidnote">
+      <span>▸</span>
+      <span>الفيديو يوضّح الفكرة والنتيجة — تفاصيل التنفيذ التقني ضمن الاستشارة</span>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h2>مميزات المشروع</h2>
+    <ul>
+      <li>التسجيل المنقّى بيختصر ساعة ونص لنص ساعة كلام فعلي — قيمة ملموسة فوراً</li>
+      <li>تمييز المتحدث بيفصل كلام المتحدث الرئيسي عن المداخلات — مين قال شو بالضبط</li>
+      <li>ثلاثة قطاعات بمنتج واحد: جامعات · محاكم ومكاتب محاماة · شركات</li>
+      <li>مخرج الشرائح قابل للطباعة — الطالب بيدرس منه مباشرة</li>
+      <li>الميكروفونان بيعطوا اتجاه الصوت، وهاد الشي اللي الموبايل ما بيعمله</li>
+      <li>المسؤول بيراجع قبل التوزيع، فما في نشر تلقائي لكلام غلط</li>
+    </ul>
+  </div>
+
+  <div class="sec">
+    <h2>التحديات المتوقعة</h2>
+    <p style="margin-bottom:10px">هاي العقبات اللي رح تواجهك وقت التنفيذ، حكيناها من
+    الآخر عشان تكون على بيّنة قبل ما تبلّش.</p>
+    <ul>
+      <li>المصطلحات العلمية والأسماء بتحتاج قاموس مخصص لكل مادة</li>
+      <li>تمييز المتحدثين بيضعف لما يتكلموا فوق بعض أو يتشابه صوتهم</li>
+      <li>صدى القاعات الكبيرة بيخرّب الصوت قبل ما يوصل للنموذج</li>
+      <li>اللهجات خارج الأردن بتحتاج توسيع بيانات التدريب</li>
+      <li>خصوصية التسجيل حساسة، وبالجلسات القضائية إلها ضوابط قانونية صارمة</li>
+    </ul>
+    <p style="margin-top:12px;font-size:13.5px;color:var(--dim)">طريقة التعامل مع كل
+    وحدة فيهن مشروحة ضمن الاستشارة.</p>
+  </div>
+
+  <!-- ═══ السلة مقفلة — فكرة حصرية ═══ -->
+  <div class="sec">
+    <h2>قائمة المكونات</h2>
+    <div class="box">
+      <div class="boxhead">
+        <h2>🔒 فكرة حصرية</h2>
+        <span class="n">٧ مجموعة قطع</span>
+      </div>
+      <div class="lockwrap">
+        <div class="lockrows"><div class="lockrow"></div><div class="lockrow"></div><div class="lockrow"></div><div class="lockrow"></div><div class="lockrow"></div><div class="lockrow"></div><div class="lockrow"></div></div>
+        <div class="lockover">
+          <div class="lockbox">
+            <div class="lockicon">🔒</div>
+            <b>قائمة المكونات محجوبة</b>
+            <span>هاي فكرة حصرية. قائمة القطع الدقيقة بالكميات والبدائل،
+            وسلة الطلب الجاهزة، بتيجيك مع الاستشارة.</span>
+          </div>
+        </div>
+      </div>
+      <div class="total">
+        <div class="trow"><span>عدد مجموعات القطع</span><span class="tnum">٧</span></div>
+        <div class="trow big"><span>التكلفة التقريبية</span><span class="tnum">٢٥ إلى ٤٠ د.أ</span></div>
+      </div>
+      <div class="cta">
+        <a href="#" class="wabtn" style="text-decoration:none">افتح قائمة المكونات — استشارة ١٥ د.أ</a>
+        <div class="perks">
+          <span class="perk">✓ القائمة الدقيقة بالكميات</span>
+          <span class="perk">✓ البدائل والأسعار</span>
+          <span class="perk">✓ سلة جاهزة للطلب</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="gate">
+    <h3>محتاج الطريق التقني كامل؟</h3>
+    <p>الاستشارة تعطيك خطة تنفيذ حقيقية تمشي عليها من أول خطوة لآخر وحدة.</p>
+    <ul>
+      <li>طريقة التعامل مع التحديات المذكورة فوق — وحدة وحدة</li>
+      <li>قائمة المكونات الدقيقة بالكميات والبدائل</li>
+      <li>بناء خط المعالجة: كشف الكلام ثم تمييز المتحدث ثم التفريغ</li>
+      <li>ضبط نموذج تمييز المتحدثين وتسجيل بصمة صوت الدكتور</li>
+      <li>تحسين الصوت وتقليل الصدى قبل المعالجة</li>
+      <li>توليد الملخّص وتحويله لشرائح قابلة للطباعة</li>
+      <li>نظام المراجعة والتوزيع حسب القطاع</li>
+      <li>بنية الخادم وحماية التسجيلات</li>
+      <li>المكتبات والأدوات المطلوبة</li>
+      <li>مخطط التوصيل الكامل</li>
+      <li>المصادر والمراجع</li>
+    </ul>
+    <a href="#" class="btn">احجز استشارة على واتساب</a>
+  </div>
+
+  <div class="note">
+    الأسعار من كتالوج متجر معتمد وقابلة للتحديث · القطع المعلّمة "مورّد آخر" تُطلب خارجه
+  </div>
+
+</div>
+
+<script>
+/* ══════════════════════════════════
+   عدّل من هون
+   ══════════════════════════════════ */
+const WHATSAPP  = '962790000000';   // رقمك بصيغة دولية بدون +
+const INSTAGRAM = 'your_page';
+const PROJECT   = 'تفريغ الجلسات والمحاضرات بتمييز المتحدثين';
+
+// ═══ الفيديو ═══
+// حط اسم ملف الفيديو (يكون بنفس مجلد الصفحة أو بمجلد videos)
+// اتركه فاضي وما بيظهر القسم إطلاقاً
+const VIDEO  = '';                    // مثال: 'videos/meet.mp4'
+const POSTER = '';                    // صورة الغلاف — اختيارية
+/* ══════════════════════════════════ */
+
+/* ═══ تهيئة الفيديو ═══ */
+if(VIDEO){
+  document.getElementById('vidSec').style.display='';
+  const v=document.getElementById('vid');
+  v.innerHTML=
+    '<video id="player" '+(POSTER?'poster="'+POSTER+'" ':'')+
+    'preload="metadata" playsinline controlsList="nodownload" '+
+    'oncontextmenu="return false" onended="resetVid()">'+
+    '<source src="'+VIDEO+'" type="video/mp4">'+
+    'متصفحك ما بيدعم تشغيل الفيديو.'+
+    '</video>'+
+    '<div class="play" id="playBtn"><i>'+
+    '<svg width="24" height="24" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg>'+
+    '</i></div>'+
+    '<div class="wm">مشاريع</div>';
+}
+
+function playVid(){
+  const p=document.getElementById('player');
+  if(!p) return;
+  const btn=document.getElementById('playBtn');
+  if(p.paused){
+    p.controls=true;
+    p.play();
+    if(btn) btn.style.display='none';
+  }
+}
+function resetVid(){
+  const btn=document.getElementById('playBtn');
+  if(btn) btn.style.display='';
+}
+
+
+/* السلة مقفلة لهذه الفكرة الحصرية */
+</script>
+</body>
+</html>

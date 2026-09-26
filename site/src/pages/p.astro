@@ -1,0 +1,76 @@
+---
+import Base from '../layouts/Base.astro';
+import Cart from '../components/Cart.astro';
+import Feedback from '../components/Feedback.astro';
+import '../styles/project.css';
+---
+
+<Base title="مشروع — مشاريع" description="مشروع تخرج: الفكرة والقطع والسلة.">
+  <main class="pg">
+    <div class="container" id="root"><p class="note">جارٍ التحميل…</p></div>
+  </main>
+  <template id="tpl-cart"><Cart parts={[]} project="" /></template>
+  <template id="tpl-fbk"><Feedback project="x" title="" /></template>
+</Base>
+
+<script>
+  import { getProjectStore, docFromStatic, type ProjectDoc } from '../projects/store';
+  import { registerModel } from '../model/spec';
+  import { mountViewer } from '../scripts/viewer';
+  import { mountCart } from '../scripts/cart';
+  import { mountFeedback } from '../scripts/feedback';
+  import { WHATSAPP, CONSULT_PRICE } from '../data/config';
+  import { svg } from '../data/icons';
+  import { shareCard } from '../scripts/share';
+  import { guardProject, freeLeftBanner } from '../scripts/paywall';
+
+  const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
+  const root = document.getElementById('root')!;
+  const id = new URLSearchParams(location.search).get('id') ?? '';
+  const KEY = { 'سهل': 'e', 'متوسط': 'm', 'متقدم': 'h' } as const;
+
+  (async () => {
+    let doc: ProjectDoc | null = null;
+    try { doc = await (await getProjectStore()).get(id); } catch (e) { console.warn(e); }
+    if (doc && !(await guardProject(doc.id))) return;
+    if (!doc) { root.innerHTML = '<a class="back" href="/#projects">← كل المشاريع</a><h1>ما لقينا هالمشروع</h1><p class="lead">يمكن انحذف أو لسا ما انتشر.</p>'; return; }
+    const d = doc, preview = d.status !== 'published';
+    document.title = `${d.title} — مشاريع`;
+    registerModel(d.id, d.model ?? undefined);
+    const wa = (t: string) => `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(t)}`;
+
+    root.innerHTML = `
+      <a class="back" href="/#projects">← كل المشاريع</a>
+      ${preview ? '<p class="note"><b>معاينة:</b> هذا المشروع غير منشور بعد، وأنت بس اللي تشوفه.</p>' : ''}
+      <div class="meta"><span class="lvl ${KEY[d.level]}">${esc(d.level)}</span><span>${esc(d.cat)}</span>${d.exclusive ? `<span class="lk">${svg('lock', 14)} فكرة حصرية</span>` : ''}<span class="built" id="built-badge" hidden></span></div>
+      <h1>${esc(d.title)}</h1>
+      <p class="lead">${esc(d.desc)}</p>
+      <button type="button" class="sharebtn" id="share-btn">${svg('send', 16)} شارك على إنستغرام</button>
+      <div class="viewer" data-id="${esc(d.id)}"><canvas></canvas><span class="vhint">اسحب للتدوير · العجلة للتقريب</span><button type="button" class="xbtn" aria-pressed="false">فكّك المجسم</button></div>
+      ${d.problem ? `<section><h2>المشكلة</h2><p>${esc(d.problem)}</p></section>` : ''}
+      ${d.steps.length ? `<section class="wide"><h2>كيف يشتغل</h2><div class="steps">${d.steps.map((s) => `<div class="step"><b>${esc(s[0])}</b><span>${esc(s[1])}</span></div>`).join('')}</div></section>` : ''}
+      ${d.feats.length ? `<section><h2>مميزات المشروع</h2><ul>${d.feats.map((f) => `<li>${esc(f)}</li>`).join('')}</ul></section>` : ''}
+      ${d.chals.length ? `<section><h2>التحديات المتوقعة</h2><p class="note">هاي العقبات اللي رح تواجهها وقت التنفيذ، حكيناها من الآخر عشان تكون على بيّنة قبل ما تبلّش.</p><ul>${d.chals.map((c) => `<li>${esc(c)}</li>`).join('')}</ul><p class="note">بنعطيك حلاً لكل واحدة منها ضمن الاستشارة.</p></section>` : ''}
+      <div id="cart-slot"></div>
+      <div id="fbk-slot"></div>
+      <section class="gate wide"><h2>محتاج حلول للتحديات والطريق التقني كامل؟</h2>
+        <p>بالاستشارة بنعطيك حلاً لكل مشكلة من التحديات المذكورة فوق، مع خطة تنفيذ حقيقية تمشي عليها من أول خطوة لآخر وحدة: التقنيات والمكتبات ومخطط التوصيل والخطة الزمنية ونصائح المناقشة.</p>
+        <ul class="perks"><li>جلسة استشارة</li><li>مستند PDF بالحلول والخطة</li><li>${CONSULT_PRICE} د.أ فقط</li></ul>
+        <a class="pill" href="${wa('مرحباً، بدي أحجز استشارة لمشروع: ' + d.title)}" target="_blank" rel="noopener">احجز استشارة على واتساب <i>←</i></a></section>`;
+
+    root.querySelector('.lead')?.insertAdjacentHTML('afterend', freeLeftBanner());
+    const slot = root.querySelector('#cart-slot')!;
+    if (d.exclusive) {
+      slot.innerHTML = `<section class="locked wide"><h2 class="lk">${svg('lock', 22)} فكرة حصرية من أفكارنا</h2><p>هذه فكرة من أفكارنا نحن، وقمنا بتطويرها بأنفسنا، ولهذا نحافظ على تفاصيلها. قائمة القطع الدقيقة بالكميات والبدائل وسلة الطلب الجاهزة نفتحها لك عند التواصل معنا.</p>${d.range ? `<div class="range"><span>${d.parts.length} مجموعة قطع</span><b>التكلفة التقريبية: ${esc(d.range)}</b></div>` : ''}<a class="pill" href="${wa('مرحباً، بدي أفتح قائمة القطع لمشروع: ' + d.title)}" target="_blank" rel="noopener">تواصل معنا لفتح قائمة القطع <i>←</i></a></section>`;
+    } else if (d.parts.length) {
+      const wrap = document.createElement('section'); wrap.className = 'wide cartwrap';
+      const cart = (document.getElementById('tpl-cart') as HTMLTemplateElement).content.firstElementChild!.cloneNode(true) as HTMLElement;
+      cart.dataset.cart = JSON.stringify({ parts: d.parts, extras: d.extras, project: d.title, wa: WHATSAPP });
+      wrap.appendChild(cart); slot.appendChild(wrap); mountCart(cart);
+    }
+    const fb = (document.getElementById('tpl-fbk') as HTMLTemplateElement).content.firstElementChild!.cloneNode(true) as HTMLElement;
+    fb.dataset.project = d.id; root.querySelector('#fbk-slot')!.appendChild(fb); mountFeedback(fb);
+    mountViewer(root.querySelector<HTMLElement>('.viewer')!, d.id);
+    root.querySelector('#share-btn')?.addEventListener('click', () => shareCard({ title: d.title, level: d.level, domain: d.cat, url: location.href }));
+  })();
+</script>

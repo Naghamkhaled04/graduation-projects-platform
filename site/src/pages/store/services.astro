@@ -1,0 +1,108 @@
+---
+import Base from '../../layouts/Base.astro';
+import '../../styles/store.css';
+import { SERVICES, ar, PRODUCTS } from '../../data/storecats';
+import { svg } from '../../data/icons';
+import { WHATSAPP, CONSULT_PRICE } from '../../data/config';
+
+const ask = (s: string) => `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(`مرحباً، بدي أستفسر عن خدمة: ${s}`)}`;
+
+/** تفاصيل كل خدمة: شو بنعمل بالضبط، وشو بنحتاج منك */
+const DETAIL: Record<string, { does: string[]; need: string[]; note?: string }> = {
+  'توفير القطع': {
+    does: [`${ar(PRODUCTS.length)} قطعة جاهزة بأسعارها`, 'القطعة المش موجودة بنجيبها بالطلب', 'بدائل أرخص أو أدق لكل قطعة'],
+    need: ['قائمة قطعك، أو اسم المشروع من موقعنا'],
+  },
+  'طباعة ثلاثية الأبعاد و CNC': {
+    does: ['علبة لمشروعك أو حامل أو قطعة مخصصة', 'قص وحفر CNC', 'بنساعدك بالتصميم لو ما عندك ملف'],
+    need: ['ملف STL أو رسمة بالمقاسات', 'المادة واللون لو عندك تفضيل'],
+    note: 'السعر حسب الحجم والمادة ووقت الطباعة. بنرد عليك بالسعر قبل ما نبدأ.',
+  },
+  'تصميم وتنفيذ دارات أردوينو': {
+    does: ['اختيار القطع المناسبة لفكرتك', 'تصميم الدارة ومخطط التوصيل', 'تجميع نموذج وتجريبه'],
+    need: ['وصف الفكرة والقطع اللي عندك', 'الميزانية والوقت المتاح'],
+    note: 'هاي منصة طلاب: بنجهّز ونشرح، وشغل المشروع وتسليمه بيضل عليك أنت.',
+  },
+  'تطبيقات ويب وهواتف': {
+    does: ['لوحة تحكم تقرأ بيانات مشروعك', 'تطبيق موبايل يتابع القراءات', 'ربط مع قاعدة بيانات أو سحابة'],
+    need: ['شو البيانات اللي بدك تعرضها', 'ويب ولا موبايل ولا الاثنين'],
+  },
+  'استشارة تقنية': {
+    does: ['المسار التقني خطوة خطوة', 'حل لكل تحدٍّ بمشروعك', 'مستند PDF ونصائح المناقشة'],
+    need: ['المشروع اللي اخترته أو فكرتك'],
+    note: `${CONSULT_PRICE} د.أ للجلسة، أو مجاناً بـ٥٠ نقطة من نشاطك على المنصة.`,
+  },
+};
+---
+
+<Base title="خدماتنا — المتجر" description="توفير القطع، طباعة ثلاثية الأبعاد و CNC، تنفيذ مشاريع أردوينو، تطبيقات، واستشارة تقنية.">
+  <main class="nv">
+    <div class="wrap">
+      <div class="nv-head">
+        <a class="crumb" href="/store">← المتجر</a>
+        <h1>خدماتنا</h1>
+        <p>هاي الخدمات المعروضة بمتجرنا، وشو بنحتاج منك بكل وحدة. إحنا بنجهّز وبنشرح — والتسليم والمناقشة شغلك أنت.</p>
+      </div>
+
+      <div class="srv-list">
+        {SERVICES.map((s) => {
+          const d = DETAIL[s.t];
+          return (
+            <article class="srv-card">
+              <div class="srv-head">
+                <span class="ic"><Fragment set:html={svg(s.icon, 22)} /></span>
+                <div>
+                  <h2>{s.t}</h2>
+                  <p class="lede">{s.d}</p>
+                </div>
+              </div>
+              {d && (
+                <div class="srv-cols">
+                  <div>
+                    <b>شو بنعمل</b>
+                    <ul class="yes">{d.does.map((x) => <li>{x}</li>)}</ul>
+                  </div>
+                  <div>
+                    <b>شو بنحتاج منك</b>
+                    <ul class="need">{d.need.map((x) => <li>{x}</li>)}</ul>
+                  </div>
+                </div>
+              )}
+              {d?.note && <p class="srv-note">{d.note}</p>}
+              <a class="nv-btn" href={ask(s.t)} target="_blank" rel="noopener">استفسر عن هالخدمة</a>
+            </article>
+          );
+        })}
+      </div>
+
+      <div class="nv-cta">
+        <div><b>محتاج شي مش مذكور؟</b><p>احكيلنا شو بدك وبنقلّك إذا بنقدر نعملها وبكم.</p></div>
+        <a class="nv-btn" href={ask('شي غير مذكور')} target="_blank" rel="noopener">راسلنا</a>
+      </div>
+    </div>
+  </main>
+</Base>
+
+<style>
+  .srv-list { display: grid; gap: 16px; }
+  .srv-card { background: #fffdf9; border: 1px solid #e6dccd; border-radius: 18px; padding: clamp(20px, 3vw, 30px);
+    display: grid; gap: 18px; align-content: start; }
+  .srv-head { display: flex; gap: 16px; align-items: flex-start; }
+  .srv-head .ic { flex: none; width: 48px; height: 48px; border-radius: 14px; background: #fff1e3; color: #d9640b;
+    display: grid; place-items: center; }
+  .srv-head h2 { font-size: clamp(19px, 2.4vw, 24px); line-height: 1.3; }
+  .srv-head .lede { color: #7a7168; line-height: 1.85; margin-top: 4px; }
+
+  .srv-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .srv-cols b { display: block; font-size: 14px; margin-bottom: 8px; }
+  .srv-cols ul { list-style: none; display: grid; gap: 7px; }
+  .srv-cols li { font-size: 13.5px; line-height: 1.7; color: #7a7168; padding-inline-start: 22px; position: relative; }
+  .srv-cols li::before { position: absolute; inset-inline-start: 0; top: 0; font-weight: 700; }
+  .yes li::before { content: '✓'; color: #2f7d5c; }
+  .need li::before { content: '•'; color: #fa7b19; font-size: 17px; line-height: 1.2; }
+
+  .srv-note { font-size: 13.5px; line-height: 1.85; color: #7a7168; background: #f7f1e7; border-radius: 12px; padding: 12px 16px; }
+  .srv-card .nv-btn { justify-self: start; }
+
+  @media (max-width: 640px) { .srv-cols { grid-template-columns: 1fr; } .srv-head { gap: 12px; } }
+</style>

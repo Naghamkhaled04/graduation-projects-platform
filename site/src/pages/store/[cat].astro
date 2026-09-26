@@ -1,0 +1,83 @@
+---
+import Base from '../../layouts/Base.astro';
+import '../../styles/store.css';
+import Basket from '../../components/Basket.astro';
+import ProdCard from '../../components/ProdCard.astro';
+import { CATEGORIES, productsOf, PRODUCTS, ar } from '../../data/storecats';
+import { usedBy } from '../../data/projectparts';
+
+export function getStaticPaths() {
+  return CATEGORIES.map((c) => ({ params: { cat: c.slug }, props: { c } }));
+}
+const { c } = Astro.props;
+const items = productsOf(c.cat).sort((a, b) => a.p - b.p);
+---
+
+<Base title={`${c.cat} — المتجر`} description={`${c.blurb}. ${ar(items.length)} قطعة بأسعارها.`}>
+  <main class="nv">
+    <div class="wrap">
+      <div class="nv-head">
+        <a class="crumb" href="/store">← المتجر</a>
+        <h1>{c.cat}</h1>
+        <p>{c.blurb} · {ar(items.length)} قطعة</p>
+      </div>
+
+      <div class="nv-layout">
+        <aside class="nv-side">
+          <h2>الأقسام</h2>
+          <ul>
+            <li><a href="/store/all">كل السلع <span class="n">{ar(PRODUCTS.length)}</span></a></li>
+            {CATEGORIES.map((x) => (
+              <li><a href={`/store/${x.slug}`} class:list={{ on: x.slug === c.slug }}>{x.cat} <span class="n">{ar(x.n)}</span></a></li>
+            ))}
+          </ul>
+        </aside>
+
+        <div>
+          <div class="nv-bar">
+            <input id="q" type="search" placeholder={`ابحث داخل ${c.cat}…`} autocomplete="off" />
+            <select id="sort">
+              <option value="p">الأرخص أولاً</option>
+              <option value="-p">الأغلى أولاً</option>
+              <option value="n">بالاسم</option>
+            </select>
+            <span class="cnt" id="cnt"></span>
+          </div>
+
+          <div class="nv-grid" id="grid">
+            {items.map((p) => <ProdCard p={p} used={usedBy(p.id)} />)}
+          </div>
+          <p class="none" id="none" hidden>ما لقينا قطعة بهالاسم.</p>
+        </div>
+      </div>
+    </div>
+
+    <Basket />
+  </main>
+</Base>
+
+<script>
+  const ar = (n: number) => n.toLocaleString('ar-EG');
+  const grid = document.getElementById('grid')!;
+  const all = [...grid.querySelectorAll<HTMLElement>('.nv-card')];
+  const q = document.getElementById('q') as HTMLInputElement;
+  const sort = document.getElementById('sort') as HTMLSelectElement;
+  const cnt = document.getElementById('cnt')!, none = document.getElementById('none')!;
+
+  function apply() {
+    const t = q.value.trim().toLowerCase();
+    let n = 0;
+    all.forEach((el) => { const ok = !t || el.dataset.search!.includes(t); el.hidden = !ok; if (ok) n++; });
+    cnt.textContent = `${ar(n)} قطعة`; none.hidden = n > 0;
+    const dir = sort.value;
+    [...all].sort((a, b) => {
+      if (dir === 'n') return a.dataset.nm!.localeCompare(b.dataset.nm!);
+      const d = Number(a.dataset.price) - Number(b.dataset.price);
+      return dir === '-p' ? -d : d;
+    }).forEach((el) => grid.appendChild(el));
+  }
+  let deb = 0;
+  q.addEventListener('input', () => { clearTimeout(deb); deb = window.setTimeout(apply, 180); });
+  sort.addEventListener('change', apply);
+  apply();
+</script>

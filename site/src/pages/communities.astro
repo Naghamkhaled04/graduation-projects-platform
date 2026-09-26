@@ -1,0 +1,63 @@
+---
+import Base from '../layouts/Base.astro';
+import '../styles/community.css';
+import { UNIVERSITIES } from '../data/universities';
+import { svg } from '../data/icons';
+---
+
+<Base title="مجتمعات الجامعات — مشاريع" description="مجتمع طلاب كل جامعة: أسئلة تقنية، عرض مشاريع، بحث عن شركاء، ومصادر محلية.">
+  <main class="pf com">
+    <div class="container">
+      <h1>مجتمعات الجامعات</h1>
+      <p class="lead">كل جامعة إلها مجتمعها: تسأل فيه سؤالك التقني، تعرض شغلك، تدوّر على شريك لمشروع التخرج، وتشارك مصادر محلية (وين تلاقي قطعة، أي مدرّس بيفهم بالموضوع).</p>
+
+      <div class="ugrid">
+        {UNIVERSITIES.map((u) => (
+          <a class="c-card mini" href={`/c/${u.slug}`} data-uni={u.slug}>
+            <b>{u.short}</b>
+            <span class="d">{u.name}</span>
+            <span class="n" data-count={u.slug}></span>
+          </a>
+        ))}
+      </div>
+
+      <div class="c-card sec mine" id="my-uni" hidden></div>
+    </div>
+  </main>
+</Base>
+
+<script>
+  import { getBackend } from '../community/backend';
+  import { getCommunities } from '../community/communities';
+  import { uniSlug, UNIVERSITIES } from '../data/universities';
+  import { esc, ar } from '../community/ui';
+  import { svg } from '../data/icons';
+
+  (async () => {
+    const [be, com] = await Promise.all([getBackend(), getCommunities()]);
+    const counts = await com.counts().catch(() => ({} as Record<string, number>));
+    document.querySelectorAll<HTMLElement>('[data-count]').forEach((el) => {
+      const u = UNIVERSITIES.find((x) => x.slug === el.dataset.count)!;
+      const n = counts[u.name] ?? counts[u.slug] ?? 0;
+      el.textContent = n ? `${ar(n)} عضو` : 'كن أول عضو';
+    });
+
+    const p = await be.profile().catch(() => null);
+    const slug = p?.university ? uniSlug(p.university) : null;
+    const box = document.getElementById('my-uni')!;
+    box.hidden = false;
+    box.innerHTML = slug
+      ? `<h3>مجتمعك</h3><p class="c-note">أنت مسجّل بـ${esc(p!.university!)}.</p><a class="c-btn" href="/c/${slug}">${svg('chat', 15)} ادخل مجتمع جامعتك</a>`
+      : `<h3>انضم لمجتمع جامعتك</h3><p class="c-note">حدّد جامعتك بملفك، وبتنضم تلقائياً لمجتمعها.</p><a class="c-btn" href="/settings">${svg('building', 15)} حدّد جامعتك</a>`;
+  })();
+</script>
+
+<style is:global>
+  .com h1 { margin-bottom: 12px; } .com .lead { color: var(--fg-2); font-size: 18px; max-width: 66ch; margin-bottom: 28px; line-height: 1.9; }
+  .com .ugrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+  .com .mini { display: grid; gap: 5px; text-decoration: none; color: inherit; transition: transform .3s, box-shadow .3s; }
+  .com .mini:hover { transform: translateY(-4px); box-shadow: 0 0 0 1px rgba(232,116,59,.5), 0 0 30px rgba(232,116,59,.25); }
+  .com .mini b { font-size: 18px; } .com .mini .d { font-size: 13px; color: var(--fg-2); }
+  .com .mini .n { font-size: 12.5px; color: var(--orange); font-weight: 500; margin-top: 4px; }
+  .com .mine { margin-top: 28px; } .com .mine .c-btn { display: inline-block; text-decoration: none; } .com .c-btn svg { vertical-align: -3px; margin-inline-end: 5px; }
+</style>

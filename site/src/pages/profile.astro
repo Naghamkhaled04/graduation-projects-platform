@@ -1,0 +1,176 @@
+---
+import Base from '../layouts/Base.astro';
+import '../styles/community.css';
+---
+
+<Base title="حسابي — مشاريع" description="ملفك التعريفي كطالب: جامعتك وتخصصك ومشاريعك ونقاطك.">
+  <main class="pf">
+    <div class="container" id="pf-root">
+      <p class="c-note">جارٍ التحميل…</p>
+    </div>
+  </main>
+</Base>
+
+<script>
+  import { getBackend, localAdmin } from '../community/backend';
+  import { gate, esc, ar, stars, date, STATUS, demoBanner } from '../community/ui';
+  import { POINTS, levelOf, LEVELS, reasonLabel } from '../community/rules';
+  import projects from '../data/projects.json';
+  import { svg } from '../data/icons';
+  import { createStore } from '../city/store';
+  import { getSocial } from '../city/social';
+
+  const titleOf = (id: string) => (projects as any[]).find((p) => p.id === id)?.t ?? id;
+  const root = document.getElementById('pf-root')!;
+
+  (async () => {
+    const be = await getBackend();
+    root.innerHTML = `<h1>حسابي</h1>${demoBanner(be)}<div id="gate"></div><div id="body" hidden></div>`;
+    const gateEl = root.querySelector<HTMLElement>('#gate')!, body = root.querySelector<HTMLElement>('#body')!;
+    const s = await gate(gateEl, be, 'سجّل دخولك بالبريد لتشوف ملفك ونقاطك');
+    if (!s) return;
+    gateEl.hidden = true; body.hidden = false;
+
+    async function paint() {
+      const [me, mine, ledger, reds, board, admin, myBuilding] = await Promise.all([be.profile(), be.myFeedback(), be.ledger(), be.myRedemptions(), be.leaderboard(), be.isAdmin(), createStore().then((s) => s.mine()).catch(() => null)]);
+      const bstats = myBuilding ? await getSocial().then((s) => s.stats([myBuilding.id])).then((x) => x[myBuilding.id]).catch(() => null) : null;
+      const okCount = mine.filter((f) => f.status === 'approved').length, photoCount = mine.filter((f) => f.status === 'approved' && f.images.length).length;
+      if (!me) { body.innerHTML = '<p class="c-note">ما لقينا ملفك.</p>'; return; }
+      const lvl = levelOf(me.points), next = LEVELS.find((l) => l.min > me.points);
+      const pct = Math.min(100, Math.round((me.points / POINTS.redeemCost) * 100));
+      body.innerHTML = `
+        <div class="c-card hero">
+          <div class="av">${esc(me.display_name.slice(0, 1))}</div>
+          <div class="who">
+            <h2>${esc(me.display_name)} ${admin ? '<span class="c-badge">أدمن</span>' : ''}</h2>
+            <p>${[me.university, me.major, me.year ? 'سنة ' + ar(me.year) : ''].filter(Boolean).map((x) => esc(String(x))).join(' · ') || '<span class="c-note">أضف جامعتك وتخصصك</span>'}</p>
+            ${me.bio ? `<p class="bio">${esc(me.bio)}</p>` : ''}
+          </div>
+          <div class="pts"><b>${ar(me.points)}</b><small>نقطة</small><span class="lvl">${svg('level', 16, lvl.n)} ${lvl.name}</span>${next ? `<small>${ar(next.min - me.points)} للرتبة القادمة</small>` : ''}</div>
+        </div>
+
+        <div class="kpis">
+          <div class="kpi"><b>${ar(okCount)}</b><span>${svg('chat', 14)} تجربة معتمدة</span></div>
+          <div class="kpi"><b>${ar(photoCount)}</b><span>${svg('camera', 14)} مشروع نفّذته</span></div>
+          ${bstats ? `<div class="kpi"><b>${ar(bstats.likes)}</b><span>${svg('heart', 14)} إعجاب على مبناك</span></div>
+          <div class="kpi"><b>${ar(bstats.visits)}</b><span>${svg('eye', 14)} زيارة لمبناك</span></div>` : ''}
+        </div>
+
+        <div class="c-card sec invite">
+          <div class="itxt">
+            <h3>${svg('medal', 18)} ادعُ صديقك</h3>
+            <p class="c-note">لما صديقك يسجّل من رابطك وننشرله أول تعليق أو تجربة: <b>+${ar(POINTS.invite)} نقاط إلك</b> و<b>+${ar(POINTS.welcome)} إله</b>. بتقدر تدعو حتى ${ar(POINTS.inviteCap)} أصدقاء.</p>
+          </div>
+          <div class="iacts">
+            <input id="ref-link" readonly value="${location.origin}/join?ref=${encodeURIComponent(me.id)}" />
+            <button type="button" class="c-btn" id="ref-copy">انسخ الرابط</button>
+            <button type="button" class="c-btn ghost" id="ref-wa">${svg('phone', 15)} ابعته بواتساب</button>
+          </div>
+        </div>
+
+        <div class="grid2">
+          <div class="c-card">
+            <h3>استشارة مجانية</h3>
+            <p class="c-note">${ar(POINTS.redeemCost)} نقطة = استشارة مجانية. علّق على الأفكار، وارفق صور تنفيذك، وانشر مبناك.</p>
+            <div class="c-bar"><i style="width:${pct}%"></i></div>
+            <small>${ar(Math.min(me.points, POINTS.redeemCost))} من ${ar(POINTS.redeemCost)}</small>
+            <p class="c-err" id="rd-err"></p>
+            <button class="c-btn" id="rd" ${me.points < POINTS.redeemCost ? 'disabled' : ''}>استبدل نقاطي</button>
+            ${reds.map((r) => `<div class="c-row"><span><b dir="ltr">${esc(r.code)}</b> — أرسل الرمز لنا على واتساب</span><span class="c-badge ${r.status}">${STATUS[r.status]}</span></div>`).join('')}
+          </div>
+          <div class="c-card">
+            <h3>كيف تجمع نقاط</h3>
+            <div class="c-row"><span>نشر مبناك بالمدينة</span><span class="c-plus">+${ar(POINTS.building)}</span></div>
+            <div class="c-row"><span>تجربة بصور من تنفيذك للمشروع</span><span class="c-plus">+${ar(POINTS.photoFeedback)}</span></div>
+            <div class="c-row"><span>تعليق على فكرة</span><span class="c-plus">+${ar(POINTS.ideaComment)}</span></div>
+            <p class="c-note">النقاط بتنزل بعد مراجعتنا للمحتوى، مش فوراً.</p>
+            <a class="c-btn ghost" href="/city">ابنِ مبناك بالمدينة</a>
+          </div>
+        </div>
+
+        <div class="c-card sec">
+          <h3>تجاربي على المشاريع</h3>
+          ${mine.length ? mine.map((f) => `<div class="c-row"><span><a href="/projects/${f.project_id}">${esc(titleOf(f.project_id))}</a> <span class="c-stars">${stars(f.rating)}</span></span><span class="c-badge ${f.status}">${STATUS[f.status]}</span></div>`).join('') : '<p class="c-note">لسا ما كتبت أي تجربة. افتح مشروعاً نفّذته أو جرّبته واكتب تجربتك.</p>'}
+        </div>
+
+        <div class="c-card sec">
+          <h3>سجل النقاط</h3>
+          ${ledger.length ? ledger.map((l) => `<div class="c-row"><span>${esc(reasonLabel(l.reason))} <small class="c-note">${date(l.created_at)}</small></span><span class="${l.delta > 0 ? 'c-plus' : 'c-minus'}">${l.delta > 0 ? '+' : ''}${ar(l.delta)}</span></div>`).join('') : '<p class="c-note">لا حركة بعد.</p>'}
+        </div>
+
+        <div class="c-card sec">
+          <h3>لوحة الترتيب</h3>
+          ${board.map((u, i) => `<div class="c-row"><span><b>${ar(i + 1)}</b> <a class="ulink" href="/u?id=${encodeURIComponent(u.id)}" title="الملف العام">${esc(u.display_name)}</a> <small class="c-note">${esc([u.university, u.major].filter(Boolean).join(' · '))}</small></span><span>${svg('level', 14, levelOf(u.points).n)} <b>${ar(u.points)}</b></span></div>`).join('')}
+        </div>
+
+        <div class="c-card sec foot">
+          <a class="c-btn ghost" href="/settings">الإعدادات</a>
+          <a class="c-btn ghost" href="/u?id=${encodeURIComponent(me.id)}">ملفي العام</a>
+          ${myBuilding ? `<a class="c-btn" href="/city?u=${encodeURIComponent(me.id)}">افتح مبناك بالمدينة</a>` : ''}
+          ${admin ? '<a class="c-btn" href="/admin">لوحة الأدمن</a>' : ''}
+          ${be.mode === 'local' ? `<button class="c-btn ghost" id="demo-admin">${admin ? 'إيقاف' : 'تجربة'} وضع الأدمن (معاينة)</button>` : `<button class="c-btn ghost" id="out">تسجيل الخروج</button>`}
+        </div>`;
+
+      const refUrl = `${location.origin}/join?ref=${encodeURIComponent(me.id)}`;
+      body.querySelector('#ref-copy')?.addEventListener('click', async (e) => {
+        const b = e.currentTarget as HTMLButtonElement;
+        try { await navigator.clipboard.writeText(refUrl); b.textContent = 'انتسخ'; setTimeout(() => (b.textContent = 'انسخ الرابط'), 1500); }
+        catch { (body.querySelector('#ref-link') as HTMLInputElement).select(); }
+      });
+      body.querySelector('#ref-wa')?.addEventListener('click', () => {
+        const msg = `لقيت موقع فيه أفكار مشاريع تخرج جاهزة بقطعها وأسعارها، وفيه مجتمع لجامعتنا.\nسجّل من هون وبتاخد نقاط ترحيب:\n${refUrl}`;
+        window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank', 'noopener');
+      });
+      body.querySelector('#rd')?.addEventListener('click', async () => {
+        try { const c = await be.redeem(); alert(`رمزك: ${c}\nأرسله لنا على واتساب لنحجز استشارتك المجانية.`); await paint(); } catch (e: any) { body.querySelector('#rd-err')!.textContent = e.message; }
+      });
+      body.querySelector('#demo-admin')?.addEventListener('click', () => { localAdmin(!admin); paint(); });
+      body.querySelector('#out')?.addEventListener('click', async () => { await be.signOut(); location.reload(); });
+    }
+    await paint();
+  })();
+</script>
+
+<style is:global>
+  .pf h1 { font-size: clamp(32px, 5vw, 52px); margin-bottom: 20px; }
+  .pf .container { max-width: 860px; }
+  .pf .hero { display: grid; grid-template-columns: auto 1fr auto; gap: 20px; align-items: center; }
+  .pf .av { width: 72px; height: 72px; border-radius: 50%; background: var(--green); color: var(--cream); display: grid; place-items: center; font-size: 30px; font-weight: 700; box-shadow: 0 0 0 4px var(--cream), 0 0 0 6px var(--orange); }
+  .pf .who h2 { font-size: 24px; } .pf .who p { color: var(--fg-2); margin-top: 4px; } .pf .bio { line-height: 1.9; }
+  .pf .pts { text-align: center; display: grid; gap: 2px; } .pf .pts b { font-size: 40px; line-height: 1; color: var(--orange); } .pf .pts .lvl { font-weight: 700; }
+  .pf .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+  .pf .sec { margin-top: 16px; } .pf h3 { margin-bottom: 10px; }
+
+  /* ---- هيرو الحساب ---- */
+  .pf .hero { position: relative; overflow: hidden; background: var(--green); color: var(--cream); border-radius: 30px; padding: 30px; box-shadow: 0 0 0 1px rgba(232,116,59,.35), 0 0 60px -20px rgba(232,116,59,.35); }
+  .pf .hero::after { content: ''; position: absolute; inset-inline-end: -80px; top: -120px; width: 320px; height: 320px; border-radius: 50%; background: radial-gradient(circle, rgba(232,116,59,.5), transparent 70%); pointer-events: none; }
+  .pf .hero .av { width: 86px; height: 86px; font-size: 36px; background: var(--orange); color: #fff; box-shadow: 0 0 0 4px rgba(255,255,255,.14), 0 0 34px rgba(232,116,59,.6); }
+  .pf .hero h1, .pf .hero h2 { font-size: clamp(24px, 3.4vw, 34px); line-height: 1.25; }
+  .pf .hero .who p { opacity: .82; margin-top: 6px; } .pf .hero .bio { opacity: .68; font-size: 14px; margin-top: 8px; line-height: 1.9; max-width: 48ch; }
+  .pf .hero .ulink { color: var(--cream); }
+  .pf .hero .pts { position: relative; text-align: center; background: rgba(0,0,0,.22); border-radius: 22px; padding: 16px 22px; display: grid; gap: 2px; align-content: center; }
+  .pf .hero .pts b { font-size: 40px; line-height: 1; color: var(--orange); }
+  .pf .hero .pts small { opacity: .7; } .pf .hero .lvl { display: inline-flex; align-items: center; gap: 6px; justify-content: center; font-size: 13px; margin-top: 6px; opacity: .9; }
+  .pf .hero .c-note { color: rgba(247,239,227,.55); }
+  /* ---- شريط الأرقام ---- */
+  .pf .invite { display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; background: linear-gradient(135deg, #fff4ec, var(--cream)); box-shadow: 0 0 0 1px rgba(232,116,59,.35); }
+  .pf .invite h3 { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .pf .invite .itxt { flex: 1; min-width: 240px; } .pf .invite .c-note b { color: var(--orange); }
+  .pf .invite .iacts { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .pf .invite input { font: 400 13px var(--font); direction: ltr; width: min(260px, 60vw); padding: 10px 14px; border-radius: 999px; border: 1px solid rgba(15,61,62,.2); background: #fff; color: var(--fg-2); }
+  .pf .invite .c-btn svg { vertical-align: -3px; margin-inline-end: 4px; }
+  .pf .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin-top: 16px; }
+  .pf .kpi { background: #fff; border-radius: 20px; padding: 16px 18px; display: grid; gap: 3px; box-shadow: 0 0 0 1px rgba(15,61,62,.06); }
+  .pf .kpi b { font-size: 26px; line-height: 1; } .pf .kpi span { font-size: 12.5px; color: var(--fg-2); display: inline-flex; align-items: center; gap: 6px; }
+  .pf .kpi svg { color: var(--orange); }
+  @media (max-width: 700px) { .pf .hero { grid-template-columns: auto 1fr; } .pf .hero .pts { grid-column: 1 / -1; } }
+  .pf .bdg { display: grid; gap: 4px; justify-items: start; padding: 14px; border-radius: 18px; background: var(--cream); opacity: .55; }
+  .pf .bdg.on { opacity: 1; background: #fff4ec; box-shadow: 0 0 0 1px rgba(232,116,59,.45), 0 0 22px rgba(232,116,59,.18); }
+  .pf .bdg .bi { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: rgba(15,61,62,.08); color: var(--green); }
+  .pf .bdg.on .bi { background: var(--orange); color: #fff; }
+  .pf .bdg small { color: var(--fg-2); font-size: 12px; line-height: 1.6; } .pf .bdg em { font-style: normal; font-size: 12px; font-weight: 700; color: var(--orange); }
+  .pf .bdg em.pg { color: var(--fg-2); font-weight: 400; }
+  .pf .ulink { color: inherit; text-decoration: none; border-bottom: 1px dotted currentColor; }
+  .pf .foot { display: flex; gap: 10px; flex-wrap: wrap; } .pf a.c-btn { text-decoration: none; display: inline-block; }
+  @media (max-width: 680px) { .pf .hero { grid-template-columns: 1fr; text-align: center; justify-items: center; } .pf .grid2 { grid-template-columns: 1fr; } }
+</style>

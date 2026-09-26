@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>سلة المشروع — تجربة</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#141824;--ink2:#3D4354;--dim:#767C8C;--faint:#A8ADBA;
+  --line:#E6E8EE;--soft:#F4F5F8;--paper:#FBFBFD;--white:#fff;
+  --acc:#5B3DF5;--acc2:#7C63F7;--accs:#EFEBFF;
+  --wa:#25D366;--ok:#0E9F6E;--okbg:#DEF7EC;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'IBM Plex Sans Arabic',sans-serif;background:var(--paper);
+  color:var(--ink);line-height:1.65;font-size:15px;-webkit-font-smoothing:antialiased}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+a{color:inherit;text-decoration:none}
+
+.dbar{background:var(--ink);color:#fff;padding:9px 24px;font-size:12.5px}
+.dbar b{font-weight:600}
+.dbar span{color:var(--faint);margin-inline-start:12px}
+
+.wrap{max-width:760px;margin:0 auto;padding:32px 24px 70px}
+.head{margin-bottom:24px}
+.head .tag{font-size:12px;font-weight:600;color:var(--acc);letter-spacing:.02em}
+.head h1{font-size:27px;font-weight:700;line-height:1.35;margin:5px 0 8px}
+.head p{font-size:14.5px;color:var(--dim)}
+
+.box{background:var(--white);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.boxhead{padding:16px 20px;border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:10px}
+.boxhead h2{font-size:16.5px;font-weight:600}
+.boxhead .n{margin-inline-start:auto;font-size:13px;color:var(--dim)}
+
+.item{border-bottom:1px solid var(--line);padding:15px 20px}
+.item:last-of-type{border-bottom:none}
+.item.off{background:var(--soft)}
+.item.off .row1 .nm{color:var(--faint);text-decoration:line-through}
+
+.row1{display:flex;align-items:flex-start;gap:12px}
+.chk{width:21px;height:21px;border:2px solid var(--line);border-radius:6px;flex-shrink:0;
+  margin-top:2px;display:grid;place-items:center;transition:.15s;background:#fff}
+.chk.on{background:var(--acc);border-color:var(--acc)}
+.chk svg{opacity:0;transition:.15s}
+.chk.on svg{opacity:1}
+.mid{flex:1;min-width:0}
+.nm{font-size:15px;font-weight:600;line-height:1.45}
+.dsc{font-size:13px;color:var(--dim);margin-top:2px}
+.req{display:inline-block;font-size:11px;font-weight:600;background:var(--accs);
+  color:var(--acc);padding:2px 8px;border-radius:99px;margin-inline-start:7px;
+  vertical-align:middle}
+.pr{font-size:15px;font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums}
+.pr small{font-size:11.5px;color:var(--dim);font-weight:400;display:block;text-align:end}
+
+.qty{display:flex;align-items:center;gap:2px;margin-top:9px;
+  border:1px solid var(--line);border-radius:7px;width:fit-content;background:#fff}
+.qty button{width:28px;height:28px;color:var(--dim);font-size:15px;font-weight:600}
+.qty button:hover{color:var(--ink);background:var(--soft)}
+.qty span{min-width:30px;text-align:center;font-size:13.5px;font-weight:600}
+
+.alts{margin-top:11px;padding-inline-start:33px}
+.altlbl{font-size:12px;color:var(--dim);font-weight:500;margin-bottom:7px}
+.alt{display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid var(--line);
+  border-radius:9px;margin-bottom:6px;cursor:pointer;transition:.14s;background:#fff}
+.alt:hover{border-color:var(--acc2)}
+.alt.on{border-color:var(--acc);background:var(--accs)}
+.rad{width:16px;height:16px;border:2px solid var(--line);border-radius:50%;flex-shrink:0;
+  display:grid;place-items:center}
+.alt.on .rad{border-color:var(--acc)}
+.alt.on .rad::after{content:'';width:7px;height:7px;border-radius:50%;background:var(--acc)}
+.alt .an{flex:1;font-size:13.5px;font-weight:500}
+.alt .ad{font-size:12px;color:var(--dim);font-weight:400}
+.alt .ap{font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums}
+
+.add{padding:14px 20px;border-top:1px solid var(--line);background:var(--soft)}
+.add .lbl{font-size:12.5px;font-weight:600;color:var(--dim);margin-bottom:9px}
+.addrow{display:flex;align-items:center;gap:11px;padding:9px 12px;background:#fff;
+  border:1px solid var(--line);border-radius:9px;margin-bottom:6px;cursor:pointer;transition:.14s}
+.addrow:hover{border-color:var(--acc2)}
+.addrow.on{border-color:var(--acc);background:var(--accs)}
+.addrow .an{flex:1;font-size:13.5px;font-weight:500}
+.addrow .ad{font-size:12px;color:var(--dim)}
+.addrow .ap{font-size:13.5px;font-weight:600}
+
+.total{padding:18px 20px;background:var(--ink);color:#fff}
+.trow{display:flex;justify-content:space-between;font-size:14px;
+  color:rgba(255,255,255,.62);margin-bottom:7px}
+.trow.big{font-size:20px;font-weight:700;color:#fff;margin:12px 0 0;
+  padding-top:14px;border-top:1px solid rgba(255,255,255,.14)}
+.tnum{font-variant-numeric:tabular-nums}
+
+.cta{padding:18px 20px;background:var(--white)}
+.wabtn{width:100%;background:var(--wa);color:#fff;padding:15px;border-radius:11px;
+  font-size:15.5px;font-weight:700;display:flex;align-items:center;justify-content:center;
+  gap:9px;transition:.15s}
+.wabtn:hover{background:#1EB855}
+.perks{display:flex;flex-wrap:wrap;gap:7px;margin-top:13px;justify-content:center}
+.perk{font-size:12px;color:var(--ok);background:var(--okbg);padding:5px 11px;
+  border-radius:99px;font-weight:500}
+
+.foot{text-align:center;margin-top:20px;font-size:13px;color:var(--dim)}
+.foot a{color:var(--acc);font-weight:600}
+</style>
+</head>
+<body>
+
+<div class="dbar"><b>ديمو</b><span>شيّك، بدّل، وأضف — والمجموع بيتحدث لحظياً</span></div>
+
+<div class="wrap">
+  <div class="head">
+    <div class="tag">إنترنت الأشياء · سهل</div>
+    <h1>سلة مشروع: كشف تسرب الغاز</h1>
+    <p>كل القطع المطلوبة بمكان واحد. شيّل اللي عندك، وبدّل اللي بدك.</p>
+  </div>
+
+  <div class="box">
+    <div class="boxhead">
+      <h2>القطع الأساسية</h2>
+      <span class="n" id="cnt"></span>
+    </div>
+    <div id="items"></div>
+
+    <div class="add">
+      <div class="lbl">إضافات اختيارية</div>
+      <div id="extras"></div>
+    </div>
+
+    <div class="total">
+      <div class="trow"><span>عدد القطع</span><span class="tnum" id="tq">0</span></div>
+      <div class="trow"><span>التوصيل داخل عمّان</span><span>مجاني</span></div>
+      <div class="trow big"><span>المجموع</span><span class="tnum" id="tp">0 د.أ</span></div>
+    </div>
+
+    <div class="cta">
+      <button class="wabtn" onclick="order()">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M17.5 14.4c-.3-.2-1.7-.8-2-.9-.3-.1-.5-.2-.7.1-.2.3-.7.9-.9 1.1-.2.2-.3.2-.6.1-1.7-.9-2.9-1.6-4-3.5-.3-.5.3-.5.9-1.6.1-.2 0-.4 0-.5 0-.2-.7-1.6-.9-2.2-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.5s1.1 2.9 1.2 3.1c.1.2 2.1 3.2 5.1 4.5 1.9.8 2.6.9 3.5.7.6-.1 1.7-.7 1.9-1.4.2-.7.2-1.2.2-1.4-.1-.2-.3-.3-.6-.5M12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2"/>
+        </svg>
+        أكّد الطلب على واتساب
+      </button>
+      <div class="perks">
+        <span class="perk">✓ قطع مفحوصة</span>
+        <span class="perk">✓ تجهيز ٢-٣ أيام</span>
+        <span class="perk">✓ ضمان استبدال ٧ أيام</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">
+    عندك سؤال؟ راسلنا على <a href="#" id="igLink">إنستغرام</a>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════
+   عدّل بياناتك من هون
+   ══════════════════════════════════ */
+const WHATSAPP = '962790000000';        // رقمك بصيغة دولية بدون +
+const INSTAGRAM = 'your_page';          // اسم حساب إنستغرام
+const PROJECT = 'كشف تسرب الغاز مع إغلاق تلقائي';
+/* ══════════════════════════════════ */
+
+// القطع الأساسية — كل قطعة ممكن يكون لها بدائل
+const PARTS=[
+ {id:'mcu', nm:'لوحة التحكم', req:true, qty:1,
+  opts:[
+   {k:'esp32', nm:'ESP32 DevKit', d:'واي فاي + بلوتوث · الأنسب للمشروع', p:18, def:true},
+   {k:'esp8266',nm:'ESP8266 NodeMCU', d:'واي فاي فقط · أرخص وكافي', p:12},
+   {k:'unowifi',nm:'Arduino UNO + WiFi', d:'أسهل للمبتدئ · أغلى', p:26}
+  ]},
+
+ {id:'gas', nm:'حساس الغاز', req:true, qty:1,
+  opts:[
+   {k:'mq5', nm:'MQ-5', d:'غاز الطبخ LPG · الأنسب', p:9, def:true},
+   {k:'mq2', nm:'MQ-2', d:'دخان + غاز · متعدد الاستخدام', p:7},
+   {k:'mq9', nm:'MQ-9', d:'أول أكسيد الكربون + LPG · أدق', p:14}
+  ]},
+
+ {id:'valve', nm:'صمام الإغلاق', req:true, qty:1,
+  opts:[
+   {k:'sol12', nm:'صمام كهربائي ١٢ فولت', d:'إغلاق فوري · مقاس ½ إنش', p:22, def:true},
+   {k:'servo', nm:'محرك سيرفو MG996R', d:'أرخص · يحتاج تركيب ميكانيكي', p:11}
+  ]},
+
+ {id:'relay', nm:'مرحّل ريلاي', req:true, qty:1,
+  opts:[
+   {k:'r1', nm:'ريلاي قناة واحدة', d:'يكفي للصمام', p:4, def:true},
+   {k:'r2', nm:'ريلاي قناتين', d:'لو بدك تضيف صفارة أو مروحة', p:6}
+  ]},
+
+ {id:'psu', nm:'مزود الطاقة', req:true, qty:1,
+  opts:[
+   {k:'ad12', nm:'محوّل ١٢ فولت ٢ أمبير', d:'يشغّل الصمام واللوحة', p:8, def:true},
+   {k:'bat', nm:'بطارية ١٢ فولت + شاحن', d:'يشتغل وقت انقطاع الكهرباء', p:19}
+  ]},
+
+ {id:'wires', nm:'لوحة تجارب وأسلاك', req:false, qty:1,
+  opts:[
+   {k:'kit', nm:'لوحة تجارب + ٤٠ سلك', d:'شيلها لو عندك', p:4, def:true}
+  ]}
+];
+
+// إضافات اختيارية
+const EXTRAS=[
+ {k:'buzz', nm:'صفارة إنذار', d:'تنبيه صوتي عند التسرب', p:2},
+ {k:'oled', nm:'شاشة OLED مقاس ٠.٩٦', d:'تعرض القراءة الحية', p:7},
+ {k:'case', nm:'علبة حماية بلاستيكية', d:'شكل نهائي أنظف للمناقشة', p:6},
+ {k:'fan',  nm:'مروحة تهوية ١٢ فولت', d:'تصريف الغاز تلقائياً', p:5},
+ {k:'sim',  nm:'وحدة SIM800L', d:'إرسال SMS عند الخطر', p:16}
+];
+
+/* ══════ الحالة ══════ */
+const state={};
+PARTS.forEach(p=>{
+  state[p.id]={on:true, qty:p.qty, pick:(p.opts.find(o=>o.def)||p.opts[0]).k};
+});
+const extraOn={};
+EXTRAS.forEach(e=>extraOn[e.k]=false);
+
+const AR=n=>n.toLocaleString('ar-EG');
+const check=`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+
+function render(){
+  document.getElementById('items').innerHTML=PARTS.map(p=>{
+    const st=state[p.id];
+    const sel=p.opts.find(o=>o.k===st.pick);
+    const multi=p.opts.length>1;
+    return `
+<div class="item ${st.on?'':'off'}">
+  <div class="row1">
+    <div class="chk ${st.on?'on':''}" onclick="tog('${p.id}')">${check}</div>
+    <div class="mid">
+      <div class="nm">${sel.nm}${p.req?'<span class="req">أساسي</span>':''}</div>
+      <div class="dsc">${sel.d}</div>
+      ${st.on?`<div class="qty">
+        <button onclick="q('${p.id}',-1)">−</button>
+        <span>${AR(st.qty)}</span>
+        <button onclick="q('${p.id}',1)">+</button>
+      </div>`:''}
+    </div>
+    <div class="pr">${AR(sel.p*st.qty)} د.أ<small>${AR(sel.p)} للقطعة</small></div>
+  </div>
+  ${st.on&&multi?`<div class="alts">
+    <div class="altlbl">بدائل متاحة</div>
+    ${p.opts.map(o=>`
+      <div class="alt ${o.k===st.pick?'on':''}" onclick="pick('${p.id}','${o.k}')">
+        <div class="rad"></div>
+        <div class="an">${o.nm}<div class="ad">${o.d}</div></div>
+        <div class="ap">${AR(o.p)} د.أ</div>
+      </div>`).join('')}
+  </div>`:''}
+</div>`;
+  }).join('');
+
+  document.getElementById('extras').innerHTML=EXTRAS.map(e=>`
+    <div class="addrow ${extraOn[e.k]?'on':''}" onclick="tex('${e.k}')">
+      <div class="rad" style="border-radius:5px"></div>
+      <div class="an">${e.nm}<div class="ad">${e.d}</div></div>
+      <div class="ap">+${AR(e.p)} د.أ</div>
+    </div>`).join('');
+
+  let total=0,count=0,active=0;
+  PARTS.forEach(p=>{
+    const st=state[p.id];
+    if(!st.on)return;
+    const sel=p.opts.find(o=>o.k===st.pick);
+    total+=sel.p*st.qty; count+=st.qty; active++;
+  });
+  EXTRAS.forEach(e=>{if(extraOn[e.k]){total+=e.p;count++}});
+
+  document.getElementById('tq').textContent=AR(count)+' قطعة';
+  document.getElementById('tp').textContent=AR(total)+' د.أ';
+  document.getElementById('cnt').textContent=AR(active)+' من '+AR(PARTS.length)+' مفعّلة';
+}
+
+function tog(id){
+  const p=PARTS.find(x=>x.id===id);
+  if(p.req && state[id].on){
+    if(!confirm('هاي قطعة أساسية للمشروع. متأكد بدك تشيلها؟')) return;
+  }
+  state[id].on=!state[id].on; render();
+}
+function pick(id,k){ state[id].pick=k; render() }
+function q(id,d){
+  state[id].qty=Math.max(1,Math.min(9,state[id].qty+d)); render();
+}
+function tex(k){ extraOn[k]=!extraOn[k]; render() }
+
+function order(){
+  let lines=[],total=0;
+  PARTS.forEach(p=>{
+    const st=state[p.id];
+    if(!st.on)return;
+    const sel=p.opts.find(o=>o.k===st.pick);
+    lines.push(`• ${sel.nm} × ${st.qty} — ${sel.p*st.qty} د.أ`);
+    total+=sel.p*st.qty;
+  });
+  const ex=EXTRAS.filter(e=>extraOn[e.k]);
+  if(ex.length){
+    lines.push('');
+    lines.push('إضافات:');
+    ex.forEach(e=>{lines.push(`• ${e.nm} — ${e.p} د.أ`);total+=e.p});
+  }
+
+  const msg=`مرحبا 👋
+بدي أطلب سلة مشروع:
+*${PROJECT}*
+
+${lines.join('\n')}
+
+المجموع: *${total} د.أ*
+
+الاسم:
+الجامعة:
+العنوان:`;
+
+  window.open(`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(msg)}`,'_blank');
+}
+
+document.getElementById('igLink').href='https://instagram.com/'+INSTAGRAM;
+render();
+</script>
+</body>
+</html>

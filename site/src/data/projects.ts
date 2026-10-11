@@ -15,6 +15,7 @@ export interface Project {
   bom: string[][]; // [الاسم، الكمية، السعر، قسم المتجر]
   leg?: string[][];
   x?: boolean; // حصرية
+  sw?: boolean; // مشروع برمجي: بدون قطع، التقنيات بدل قائمة القطع
 }
 
 export const projects = raw as Project[];

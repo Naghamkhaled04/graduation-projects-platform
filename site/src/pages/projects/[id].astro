@@ -33,7 +33,11 @@ const problem: string = d.problem || p.prob;
 const feats: string[] = d.feats?.length ? d.feats : p.feat;
 const steps: string[][] = d.steps ?? [];
 const chals: string[] = d.chals ?? [];
-const waLink = `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(`مرحباً، بدي أحجز استشارة لمشروع: ${p.t}`)}`;
+// مشاريع قريبة بالفكرة أو القطع، مع سطر يشرح الفرق — حتى يختار الطالب الصح ويأخذ أفكاراً من الباقي
+const related = ((d.rel ?? []) as { id: string; why: string }[])
+  .map((x) => ({ r: byId(x.id)!, why: x.why }))
+  .filter((x) => !!x.r);
+const waLink =`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(`مرحباً، بدي أحجز استشارة لمشروع: ${p.t}`)}`;
 const waParts = `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(`مرحباً، بدي أفتح قائمة القطع لمشروع: ${p.t}`)}`;
 ---
 
@@ -81,7 +85,34 @@ const waParts = `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(`مرحبا
         </section>
       )}
 
-      {p.x ? (
+      {related.length > 0 && (
+        <section class="wide">
+          <h2>مشاريع شبيهة</h2>
+          <p class="note">قريبة من هذا المشروع بالفكرة أو بالقطع. اقرأ الفرق قبل ما تقرّر — وخُد منها أفكار تضيفها على مشروعك.</p>
+          <div class="rels">
+            {related.map(({ r, why }) => (
+              <a class="relc" href={`/projects/${r.id}`}>
+                <span class="relh"><b>{r.t}</b><span class={`lvl ${r.l}`}>{r.ln}</span></span>
+                <span class="relw">{why}</span>
+                <span class="relm">{r.c} · {r.cost} د.أ <i>←</i></span>
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {p.sw ? (
+        <section class="wide">
+          <h2>التقنيات المقترحة</h2>
+          <p class="note">مشروع برمجي — ما في قطع تُشترى. هاي التقنيات اللي بننصح فيها، وبتقدر تبدّل أي وحدة بما بتتقنه.</p>
+          <div class="stack">
+            {((d.stack ?? []) as [string, string[]][]).map(([grp, items]) => (
+              <div class="stk"><b>{grp}</b><div class="sitems">{items.map((i) => <span>{i}</span>)}</div></div>
+            ))}
+          </div>
+          <a class="pill" href={waLink} target="_blank" rel="noopener">احجز استشارة للمسار التقني <i>←</i></a>
+        </section>
+      ) : p.x ? (
         <section class="locked wide">
           <h2 class="lk"><Fragment set:html={svg('lock', 22)} /> فكرة حصرية من أفكارنا</h2>
           <p>هذه فكرة من أفكارنا نحن، وقمنا بتطويرها بأنفسنا، ولهذا نحافظ على تفاصيلها. قائمة القطع الدقيقة بالكميات والبدائل وسلة الطلب الجاهزة نفتحها لك عند التواصل معنا.</p>
@@ -90,7 +121,10 @@ const waParts = `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(`مرحبا
           <a class="pill" href={waParts} target="_blank" rel="noopener">تواصل معنا لفتح قائمة القطع <i>←</i></a>
         </section>
       ) : (
-        <section class="wide cartwrap"><Cart parts={parts} extras={extras} project={p.t} /></section>
+        <section class="wide cartwrap">
+          {d.availnote && <p class="avail">{d.availnote}</p>}
+          <Cart parts={parts} extras={extras} project={p.t} />
+        </section>
       )}
 
       <Feedback project={p.id} title={p.t} />
@@ -147,6 +181,24 @@ const waParts = `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(`مرحبا
   .steps { display: grid; gap: 10px; counter-reset: s; }
   .step { display: grid; gap: 4px; background: #fff; border-radius: 18px; padding: 16px 20px; box-shadow: 0 0 0 1px rgba(15,61,62,.06); border-inline-start: 4px solid var(--orange); }
   .step b { font-size: 16px; } .step span { color: var(--fg-2); font-size: 14.5px; line-height: 1.8; }
+  .stack { display: grid; gap: 10px; margin-bottom: 20px; }
+  .stk { display: grid; gap: 8px; background: #fff; border-radius: 18px; padding: 15px 20px;
+    box-shadow: 0 0 0 1px rgba(15,61,62,.06); border-inline-start: 4px solid var(--green); }
+  .stk b { font-size: 15px; }
+  .sitems { display: flex; flex-wrap: wrap; gap: 7px; }
+  .sitems span { font-size: 13.5px; padding: 5px 13px; border-radius: 999px; background: var(--cream-2); color: var(--green); }
+  .avail { margin: 44px 0 -34px; padding: 11px 18px; border-radius: 14px; width: fit-content;
+    background: rgba(47,125,92,.12); color: var(--green); font-size: 14px; }
+  .avail::before { content: '✓ '; color: #2F7D5C; font-weight: 600; }
+  .rels { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); }
+  .relc { display: grid; gap: 8px; align-content: start; background: #fff; border-radius: 20px; padding: 18px 20px; text-decoration: none; color: inherit;
+    box-shadow: 0 0 0 1px rgba(15,61,62,.06); transition: box-shadow .2s, transform .2s; }
+  .relc:hover, .relc:focus-visible { box-shadow: 0 0 0 1px rgba(232,116,59,.45), 0 10px 24px -14px rgba(10,46,48,.4); transform: translateY(-2px); }
+  .relh { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .relh b { font-size: 16px; line-height: 1.35; }
+  .relw { color: var(--fg-2); font-size: 14.5px; line-height: 1.8; }
+  .relm { font-size: 13.5px; color: var(--green); }
+  .relm i { font-style: normal; color: var(--orange); }
   .locked, .gate { padding: 28px; border-radius: 26px; }
   .locked { background: var(--cream-2); }
   .locked .pill { margin-top: 16px; }

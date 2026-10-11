@@ -2185,5 +2185,101 @@ export function buildScene(id){
     wire([[-4.4,8.3,2.2],[1,5,1],[6.6,2,.4]],0x5B3DF5,.045);
   }
 
+
+  if(id==='road'){
+    B(30,.5,11,0x4A5162,0,.25,0,.85,.05);                        // الطريق
+    for(let i=-6;i<=6;i++) B(1.7,.03,.34,0xF2F3F5,i*2.3,.52,0,.9,0);
+    B(30,.14,.34,0xE8C33B,0,.52,4.6,.9,0);
+    B(30,.14,.34,0xE8C33B,0,.52,-4.6,.9,0);
+    const hole=(x,z,r,conf)=>{                                   // حفرة
+      const h=new THREE.Mesh(new THREE.CylinderGeometry(r,r*.62,.42,18),mat(0x1A1D24,.95,0));
+      h.position.set(x,.3,z);g.add(h);
+      for(let i=1;i<=3;i++){
+        const o=.4*conf-i*.08*conf;
+        if(o<=0) continue;
+        const ring=new THREE.Mesh(new THREE.TorusGeometry(r+i*.5,.05,8,28),
+          new THREE.MeshStandardMaterial({color:conf>.6?0xE02424:0xC27803,transparent:true,opacity:o,
+            emissive:conf>.6?0xB01818:0x8A5A02,emissiveIntensity:.5}));
+        ring.rotation.x=-Math.PI/2;ring.position.set(x,.55,z);g.add(ring);
+      }
+    };
+    hole(-6,1.6,1.05,1);  hole(3.4,-1.8,.8,1);  hole(9.4,2.2,.5,.45);
+    B(5.6,1.9,2.9,0x1B3A6B,-11.4,1.7,0,.45,.2);                   // السيارة
+    B(3.4,1.4,2.6,0x14264A,-11.6,3.3,0,.4,.25);
+    for(const [wx,wz] of [[-13.4,1.4],[-13.4,-1.4],[-9.6,1.4],[-9.6,-1.4]])
+      C(.78,.78,.5,0x2A2F3B,wx,.95,wz,16,.75,.1).rotation.x=Math.PI/2;
+    B(1.5,.9,1,0xF2F3F5,-11.4,4.6,0,.6,.05);                      // الوحدة
+    B(1.1,.5,.07,0x0C1C14,-11.4,4.7,.52,.3,.05);
+    led=S(.16,0x22C55E,-11.4,4.2,.52,0x1FA35A);
+    C(.06,.06,1.6,0x2A2F3B,-10.6,5.4,0,8,.4,.3);
+    S(.15,0x5B3DF5,-10.6,6.3,0,0x3E27C4);
+    for(let i=0;i<9;i++){                                          // أثر الاهتزاز
+      const hgt=[.3,.3,2.4,.5,.3,.3,1.9,.4,.3][i];
+      B(.3,hgt,.06,hgt>1?0xE02424:0x2FD68A,-7.4+i*1.9,6.6+hgt/2,-4.2,.5,.1);
+    }
+    B(18,.06,.06,0x3D4354,0,6.6,-4.2,.5,.1);
+    B(7.4,.3,5,0xE4E6EA,6,8.2,4.6,.85,0);                          // الخريطة
+    const path=[[2.6,8.5,3],[4.4,8.5,4.4],[6.4,8.5,4],[8.8,8.5,5.4]];
+    wire(path,0x5B9BD5,.07);
+    S(.3,0xE02424,4.4,8.7,4.4,0xB01818);
+    S(.3,0xE02424,8.8,8.7,5.4,0xB01818);
+    S(.24,0xC27803,6.4,8.65,4,0x8A5A02);
+  }
+
+  if(id==='forestg'){
+    B(32,.4,22,0x5C4A2E,0,.2,0,.95,0);
+    const tree=(x,z,s)=>{                                          // شجر
+      C(.55*s,.8*s,6*s,0x6B4A2F,x,3*s,z,12,.9,0);
+      for(let i=0;i<4;i++)
+        S(1.7*s+Math.random()*.5*s,[0x2E5E2A,0x3A7033][i%2],x+(Math.random()-.5)*2.6*s,5.6*s+i*1.1*s,z+(Math.random()-.5)*2.6*s);
+    };
+    tree(-13,6,1); tree(-6,-7,.9); tree(2,7,1.05); tree(10,-6,.95); tree(14,5,.85); tree(-2,-2,.8);
+    const node=(x,z,alert)=>{                                      // عقدة
+      C(.3,.38,7,0x9AA1AF,x,3.5,z,12,.4,.5);
+      B(2,2.4,1.2,0xF2F3F5,x,7.8,z,.7,.05);
+      B(1.4,.8,.1,0x0C1C14,x,8.2,z+.66,.3,.05);
+      const pan=new THREE.Mesh(new THREE.BoxGeometry(2.6,.2,1.7),mat(0x1B3A6B,.28,.5));
+      pan.position.set(x,9.6,z-.3);pan.rotation.x=-.5;pan.castShadow=true;g.add(pan);
+      B(.7,.6,.4,0x2F7D5C,x-.75,6.9,z+.5,.55,.1);                  // ميكروفون
+      B(.6,.55,.4,0xC27803,x+.75,6.9,z+.5,.55,.1);                 // دخان
+      C(.06,.06,3,0x2A2F3B,x+1.1,10,z,8,.4,.3);
+      const l=S(.17,alert?0xE02424:0x22C55E,x,7.1,z+.66,alert?0xB01818:0x1FA35A);
+      if(alert) for(let i=1;i<=3;i++){
+        const w=new THREE.Mesh(new THREE.TorusGeometry(i*1.2,.05,8,28),
+          new THREE.MeshStandardMaterial({color:0xE8743B,transparent:true,opacity:.42-i*.1,emissive:0xC2541F,emissiveIntensity:.55}));
+        w.position.set(x-1.4,6.9,z+.5);w.rotation.y=Math.PI/2.4;g.add(w);
+      }
+      return {x,z,l};
+    };
+    const n1=node(-10,0,true), n2=node(-1,3.4,false), n3=node(8,-1,false);
+    led=n1.l;
+    for(const [a,b] of [[n1,n2],[n2,n3]])                           // قفزات الشبكة
+      for(let i=1;i<=3;i++){
+        const mx=(a.x+b.x)/2, mz=(a.z+b.z)/2;
+        const w=new THREE.Mesh(new THREE.TorusGeometry(i*.95,.045,8,26),
+          new THREE.MeshStandardMaterial({color:0x5B3DF5,transparent:true,opacity:.34-i*.08,emissive:0x3E27C4,emissiveIntensity:.5}));
+        w.position.set(mx,11.2,mz);w.rotation.y=Math.PI/2;g.add(w);
+      }
+    wire([[-10+1.1,11.4,0],[-1+1.1,11.8,3.4],[8+1.1,11.4,-1],[15.4,8.6,3.4]],0x5B3DF5,.055);
+    C(.4,.5,9,0x8F96A3,15.4,4.5,3.4,14,.4,.5);                      // البوابة
+    B(2.6,2.4,1.5,0x2A2F3B,15.4,10,3.4,.55,.15);
+    B(1.9,1.1,.1,0x0C1C14,15.4,10.3,4.2,.3,.05);
+    for(let i=0;i<3;i++) B(1.4,.14,.05,i===0?0xE02424:0x2FD68A,15.4,10.6-i*.4,4.26,.5,.1);
+    S(.2,0xE02424,15.4,8.9,4.2,0xB01818);
+    C(.75,.75,.8,0xC27803,15.4,11.6,3.4,16,.5,.3);                  // صفّارة
+    C(1.1,1.3,4.4,0x3D4354,19.4,2.6,6,16,.7,0);                     // حارس
+    S(.95,0xE8C9AE,19.4,5.5,6);
+    B(1.4,.3,.9,0x2F7D5C,20.8,4.4,6.4,.6,.05);
+    for(let i=0;i<5;i++){                                            // صوت الحدث
+      const f=S(.4+Math.random()*.25,[0xE8743B,0xFFD166][i%2],-14+(Math.random()-.5)*2,
+        1.2+Math.random()*1.4,-1+(Math.random()-.5)*2,[0xC2541F,0xE8A33B][i%2]);
+    }
+    for(let i=1;i<=3;i++){
+      const sm=new THREE.Mesh(new THREE.SphereGeometry(.6+i*.3,12,12),
+        new THREE.MeshStandardMaterial({color:0x9AA1AF,transparent:true,opacity:.26-i*.055}));
+      sm.position.set(-14+i*.3,3+i*1.3,-1);g.add(sm);
+    }
+  }
+
   return {group:g,led,extra};
 }

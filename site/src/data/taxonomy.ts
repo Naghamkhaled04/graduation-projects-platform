@@ -69,6 +69,8 @@ export const TAGS: Record<string, string[]> = {
   kneebr: ["صحي", "صناعي وتشغيل"],
   kafo: ["صحي"],
   pellet: ["طاقة", "بيئة ومياه", "زراعي"],
+  olive: ["زراعي", "بيئة ومياه"],
+  speech: ["صحي", "ذكاء اصطناعي وبرمجة"],
 };
 export const tagsOf = (id: string, fallback?: string[]) => TAGS[id] ?? fallback ?? ['أخرى'];
 

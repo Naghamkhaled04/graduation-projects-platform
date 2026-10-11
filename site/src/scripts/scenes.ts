@@ -1973,5 +1973,77 @@ export function buildScene(id){
     wire([[1.8,1.6,3.6],[4.6,1.4,3.5],[7,1.2,3.4]],0x5B3DF5,.04);
   }
 
+
+  if(id==='olive'){
+    B(24,.4,16,0xC9B98A,0,.2,0,.95,0);
+    const tree=(x,z,s,dry)=>{
+      C(.5*s,.75*s,4*s,0x6B4A2F,x,2*s,z,12,.9,0);
+      const cl=dry?[0x8A9A5B,0xA3A86B]:[0x4E7D3A,0x5F9447];
+      for(let i=0;i<5;i++){
+        const r=1.5*s+Math.random()*.6*s;
+        S(r,cl[i%2],x+(Math.random()-.5)*2.4*s,4*s+Math.random()*1.8*s,z+(Math.random()-.5)*2.4*s);
+      }
+    };
+    tree(-8,-3,1,false); tree(-7.5,3.4,.95,false); tree(0,-2,1.05,true); tree(1,3.6,.9,false);
+    tree(8,-3.4,1,true); tree(8.5,3,.95,false);
+    for(const [hx,hz] of [[0,-2],[8,-3.4]]){                    // هالة الإجهاد
+      for(let i=1;i<=3;i++){
+        const r=new THREE.Mesh(new THREE.TorusGeometry(1.6+i*.75,.05,8,30),
+          new THREE.MeshStandardMaterial({color:0xE02424,transparent:true,opacity:.34-i*.08,emissive:0xB01818,emissiveIntensity:.5}));
+        r.position.set(hx,5.2,hz);g.add(r);
+      }
+    }
+    C(.34,.42,8,0x9AA1AF,-3.4,4.2,6.6,14,.4,.5);                 // عمود العقدة
+    B(2.2,2.6,1.3,0xF2F3F5,-3.4,9,6.6,.7,.05);                   // علبة العقدة
+    B(1.6,.9,.1,0x0C1C14,-3.4,9.4,7.3,.3,.05);
+    led=S(.17,0x22C55E,-3.4,8.1,7.3,0x1FA35A);
+    B(1,.8,.5,0xE02424,-2.1,9.9,7.1,.5,.15);                     // حساس الأشعة
+    C(.42,.42,.3,0x2A2F3B,-1.75,9.9,7.1,14,.3,.4).rotation.z=Math.PI/2;
+    const beam=new THREE.Mesh(new THREE.ConeGeometry(1.5,7,16,1,true),
+      new THREE.MeshStandardMaterial({color:0xE02424,transparent:true,opacity:.11,side:THREE.DoubleSide}));
+    beam.rotation.z=Math.PI/2.1;beam.rotation.y=.5;beam.position.set(.6,8.2,4.4);g.add(beam);
+    B(.8,1.1,.4,0x2F7D5C,-4.6,9.9,7.1,.6,.1);                    // حساس الهواء
+    const pan=new THREE.Mesh(new THREE.BoxGeometry(3.4,.22,2.2),mat(0x1B3A6B,.28,.5));
+    pan.position.set(-3.4,11.2,6);pan.rotation.x=-.5;pan.castShadow=true;g.add(pan);
+    C(.06,.06,3.4,0x2A2F3B,-2.2,11.4,6.6,8,.4,.3);
+    S(.18,0x5B3DF5,-2.2,13.2,6.6,0x3E27C4);
+    for(let i=1;i<=3;i++){
+      const w=new THREE.Mesh(new THREE.TorusGeometry(i*1.1,.04,8,26),
+        new THREE.MeshStandardMaterial({color:0x5B3DF5,transparent:true,opacity:.32-i*.08,emissive:0x3E27C4,emissiveIntensity:.45}));
+      w.position.set(-2.2,13.2,6.6);w.rotation.y=Math.PI/2;g.add(w);
+    }
+    S(1.9,0xFFD166,11,15,-7,0xE8A33B);
+  }
+
+  if(id==='speech'){
+    B(20,.4,14,0xEDEFEA,0,.2,0,.93,0);
+    B(7.4,5.4,.7,0xF7F8FA,0,4.4,0,.6,.05);                       // جسم الجهاز
+    B(6.4,4.4,.12,0x141824,0,4.6,.42,.4,.1);
+    B(6,4,.06,0x0C1C14,0,4.6,.5,.3,.05);
+    C(1.1,1.1,.1,0xE8C9AE,-1.6,5.6,.56,22,.5,.05);               // صورة الكلمة
+    S(.2,0x2A2F3B,-1.9,5.8,.6); S(.2,0x2A2F3B,-1.3,5.8,.6);
+    B(3.4,.5,.05,0x2FD68A,1.4,5.8,.56,.5,.1);                    // الكلمة
+    for(let i=0;i<4;i++) B(.62,.5,.05,[0x22C55E,0x22C55E,0xE8743B,0x22C55E][i],-2.4+i*1.6,3.2,.56,.5,.1);  // درجات الأصوات
+    for(let i=0;i<4;i++) B(.62,[1.2,1.5,.5,1.35][i],.04,[0x1E7A4C,0x1E7A4C,0xC2541F,0x1E7A4C][i],-2.4+i*1.6,2.2+[1.2,1.5,.5,1.35][i]/2,.54,.5,.1);
+    B(1.4,.9,.5,0x2F7D5C,-4.4,7.6,0,.55,.1);                     // الميكروفون
+    for(let i=0;i<5;i++) S(.08,0x1B5E42,-4.4+i*.01,7.6,.3);
+    C(.3,.34,3.2,0x9AA1AF,-4.4,6,0,12,.4,.5);
+    C(.6,.6,.4,0x3D4354,4.4,7.6,0,18,.5,.3);                     // السماعة
+    led=S(.18,0x22C55E,3.2,2.2,.5,0x1FA35A);
+    C(.95,1.1,3.4,0x5B9BD5,-7.4,2.1,3.4,16,.7,0);                // الطفل
+    S(.95,0xE8C9AE,-7.4,4.9,3.4);
+    for(let i=1;i<=4;i++){                                       // موجة نطق الطفل
+      const w=new THREE.Mesh(new THREE.TorusGeometry(.6+i*.55,.045,8,26),
+        new THREE.MeshStandardMaterial({color:0x5B3DF5,transparent:true,opacity:.42-i*.085,emissive:0x3E27C4,emissiveIntensity:.5}));
+      w.position.set(-6.4,5,3);w.rotation.y=Math.PI/2.5;g.add(w);
+    }
+    B(4.6,3,.22,0x141824,7.6,3.4,-3,.5,.1);                      // شاشة الأخصائي
+    B(4,2.4,.07,0x0C1C14,7.6,3.4,-2.86,.3,.05);
+    const curve=[[5.9,2.6,-2.8],[6.8,3,-2.8],[7.7,3.5,-2.8],[8.6,4.2,-2.8]];
+    wire(curve,0x2FD68A,.055);
+    for(const [cx,cy] of [[5.9,2.6],[6.8,3],[7.7,3.5],[8.6,4.2]]) S(.14,0x2FD68A,cx,cy,-2.76,0x1E7A4C);
+    C(1.3,1.6,.5,0x2A2F3B,0,.4,0,24,.6,.2);
+  }
+
   return {group:g,led,extra};
 }

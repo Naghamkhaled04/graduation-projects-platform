@@ -1727,11 +1727,11 @@ export function buildScene(id){
 
 
   // المشاريع البرمجية: مشهد واحد بتنويعة حسب المعرّف — شاشات ومسار بيانات بدل قطع إلكترونية
-  const SW = {cvrank:0,uniqa:1,wafid:2,voiceid:3,signcom:4,onco:5,pharma:6,intern:7,events:8,craft:9};
+  const SW = {cvrank:0,uniqa:1,wafid:2,voiceid:3,signcom:4,onco:5,pharma:6,intern:7,events:8,craft:9,sepsis:10,vdeep:11,cyberops:12};
   if(id in SW){
     const v=SW[id];
     const PAL=[0x5B3DF5,0x2F7D5C,0xE8743B,0xC27803,0x1B3A6B,0xB03030,0x3FA06A,0x8B5E34,0xC9D92E,0xE02424];
-    const A=PAL[v], Bc=PAL[(v+3)%10], Cc=PAL[(v+6)%10];
+    const A=PAL[v%10], Bc=PAL[(v+3)%10], Cc=PAL[(v+6)%10];
     B(26,.4,16,0xEDEFEA,0,.2,0,.93,0);
     // الشاشة الرئيسية
     B(13,8.4,.5,0x141824,0,6.2,-2,.5,.12);
@@ -1807,6 +1807,170 @@ export function buildScene(id){
     S(.16,0x22C55E,10,4.1,.78,0x1FA35A);
     B(5.4,.3,3.4,0x8F96A3,8.6,.35,5.4,.85,0);                    // طاولة الاستقبال
     S(1.8,0xFFD166,-13,16,-7,0xE8A33B);
+  }
+
+
+  if(id==='guide'){
+    B(26,.4,18,0xF0F2F4,0,.2,0,.9,0);
+    for(let i=-3;i<=3;i++) B(.06,.02,18,0xD8DDE5,i*3.4,.41,0,.9,0);
+    B(3.4,9,2.6,0xF7F8FA,0,5,0,.65,.05);                       // جسم الروبوت
+    B(3.6,.5,2.8,0x9AA1AF,0,2.2,0,.6,.3);
+    B(3.6,.5,2.8,0x9AA1AF,0,7.6,0,.6,.3);
+    B(2.4,1.8,.2,0x141824,0,6.2,1.4,.5,.1);                    // شاشة اللمس
+    B(2,1.4,.06,0x0C1C14,0,6.2,1.52,.3,.05);
+    S(.3,0x5B9BD5,0,6.4,1.56);
+    B(1.5,.14,.05,0x2FD68A,0,5.7,1.56,.5,.1);
+    B(2.6,2,2.2,0xF2F3F5,0,10.4,0,.65,.05);                    // الرأس
+    C(.42,.42,.3,0x0A0A0A,0,10.8,1.15,16,.2,.4).rotation.x=Math.PI/2;   // كاميرا
+    S(.15,0x22C55E,.8,11.4,1.05,0x1FA35A);
+    S(.15,0x22C55E,-.8,11.4,1.05,0x1FA35A);
+    const lds=C(1.1,1.1,.6,0x2A2F3B,0,11.9,0,24,.5,.3);        // ماسح ليزري
+    C(1.2,1.2,.16,0x5B3DF5,0,12.25,0,24,.4,.3);
+    const scan=new THREE.Mesh(new THREE.CircleGeometry(7,40,0,Math.PI*2),
+      new THREE.MeshStandardMaterial({color:0x5B3DF5,transparent:true,opacity:.09,side:THREE.DoubleSide}));
+    scan.rotation.x=-Math.PI/2;scan.position.set(0,11.9,0);g.add(scan);
+    for(let i=1;i<=3;i++){
+      const r=new THREE.Mesh(new THREE.TorusGeometry(i*2.3,.045,8,44),
+        new THREE.MeshStandardMaterial({color:0x5B3DF5,transparent:true,opacity:.3-i*.07,emissive:0x3E27C4,emissiveIntensity:.45}));
+      r.rotation.x=-Math.PI/2;r.position.set(0,11.9,0);g.add(r);
+    }
+    for(const wx of [-2.1,2.1]) C(1.15,1.15,.75,0x2A2F3B,wx,1.15,0,20,.75,.1).rotation.z=Math.PI/2;
+    C(.4,.4,.4,0x6B7384,0,.5,-1.6,14,.5,.4);                   // عجلة توجيه
+    B(.9,.5,.5,0x2F7D5C,-1.3,8.5,1.35,.55,.1);                 // ميكروفون
+    for(let i=0;i<4;i++) S(.09,0x1B5E42,-1.3,8.5,1.6+i*.01);
+    C(.5,.5,.3,0x3D4354,1.3,8.5,1.35,16,.5,.3);                // سماعة
+    led=S(.2,0xE8743B,0,2.9,1.35,0xC2541F);
+    C(.95,1.15,4.4,0x4A5162,7.4,2.6,3.4,16,.7,0);              // زائر
+    S(.9,0xE8C9AE,7.4,5.5,3.4);
+    for(let i=1;i<=3;i++){
+      const w=new THREE.Mesh(new THREE.TorusGeometry(i*.7,.04,8,24),
+        new THREE.MeshStandardMaterial({color:0xE8743B,transparent:true,opacity:.4-i*.1,emissive:0xC2541F,emissiveIntensity:.5}));
+      w.position.set(6.3,5,3.4);w.rotation.y=Math.PI/2.4;g.add(w);
+    }
+    B(.4,8,7,0xDDE3EA,-11,4,0,.9,0);                            // جدار زجاجي
+  }
+
+  if(id==='glove'){
+    B(18,.4,14,0xE4E6EA,0,.2,0,.92,0);
+    B(3.4,1.1,4.2,0x2A2F3B,0,2.4,0,.85,0);                      // الكف
+    const fing=[[-1.25,5.6],[-.42,6.2],[.42,6.1],[1.25,5.4]];
+    fing.forEach(([fx,fh],i)=>{
+      const f=C(.34,.3,fh,0x2A2F3B,fx,2.4+fh/2,.6,10,.85,0);
+      f.rotation.x=-.18+i*.05;
+      for(let s=0;s<3;s++) B(.5,.07,.5,0xC9A227,fx,3.2+s*1.5,1.05+s*.1,.4,.5);  // شريط الحساس
+    });
+    const th=C(.38,.34,3,0x2A2F3B,-1.9,3.1,1.5,10,.85,0); th.rotation.z=.75;
+    for(let s=0;s<2;s++) B(.5,.07,.5,0xC9A227,-2.3-s*.3,3+s*.9,1.9,.4,.5);
+    B(2,.3,1.5,0x2F7D5C,0,3.1,-1.3,.62,.05);                    // Arduino على ظهر الكف
+    B(1,.25,.8,0x1B3A6B,1.4,3.15,-1.3,.5,.2);                   // بلوتوث
+    led=S(.15,0x22C55E,-.8,3.35,-1.3,0x1FA35A);
+    C(.75,.75,2,0x6B7384,0,3.1,-2.9,16,.5,.35).rotation.z=Math.PI/2;  // بطارية
+    for(const [fx,fh] of fing) wire([[fx,3.4,1.05],[fx*.6,3.3,-.4],[0,3.3,-1.3]],0xC9A227,.035);
+    B(3.2,5.8,.35,0x141824,6.6,4,1.4,.45,.15);                  // الموبايل
+    B(2.8,5.1,.08,0xE9F3EC,6.6,4,1.6,.3,.05);
+    B(2.2,.9,.06,0x22C55E,6.9,5.8,1.66,.5,.05);
+    B(2.2,.9,.06,0xFFFFFF,6.3,4.5,1.66,.5,.05);
+    for(let i=0;i<4;i++){                                       // موجة صوت خارجة
+      const w=new THREE.Mesh(new THREE.TorusGeometry(.7+i*.6,.045,8,26),
+        new THREE.MeshStandardMaterial({color:0xE8743B,transparent:true,opacity:.42-i*.09,emissive:0xC2541F,emissiveIntensity:.5}));
+      w.position.set(9,7.4,1.4);w.rotation.y=Math.PI/2.6;g.add(w);
+    }
+    wire([[1.4,3.3,-1.1],[4,4,0],[5.6,4.2,1.2]],0x5B3DF5,.04);
+  }
+
+  if(id==='kneebr'){
+    C(1.5,1.7,7,0xE8C9AE,0,10.4,0,20,.75,0);                    // الفخذ
+    C(1.35,1.2,7,0xE8C9AE,0,3,1.2,20,.75,0);                    // الساق
+    S(1.75,0xE8C9AE,0,6.6,.5);                                  // المفصل
+    const shell=(y,h,z)=>{ const m=new THREE.Mesh(new THREE.CylinderGeometry(2.05,2.05,h,22,1,true,-1,3.4),
+        mat(0xF2F3F5,.6,.05)); m.position.set(0,y,z); m.castShadow=true; g.add(m); };
+    shell(10.4,5.4,0); shell(3.2,5.2,1.2);                      // صدفتا الجبيرة
+    for(const [sy,sz] of [[12.4,0],[8.6,0],[4.8,1.2],[1.6,1.2]]){
+      const st=new THREE.Mesh(new THREE.TorusGeometry(2.1,.22,8,24),mat(0x2A2F3B,.85,0));
+      st.rotation.x=Math.PI/2;st.position.set(0,sy,sz);g.add(st);
+    }
+    B(1.5,1.3,.7,0xC27803,2.3,6.6,.5,.55,.15);                  // سيرفو تقييد المفصل
+    C(.75,.75,.35,0x9AA1AF,2.3,6.6,1,16,.4,.6);
+    B(1.3,1.1,.5,0x5B3DF5,-2.3,6.6,.5,.5,.15);                  // حساس زاوية
+    S(.14,0x8B7BF8,-2.3,7.2,.7,0x5B3DF5);
+    B(1,.8,.4,0x5B3DF5,-2.1,8.8,.3,.5,.15);                     // زاوية احتياطي
+    B(.9,.7,.4,0xE02424,1.8,8.6,1.4,.5,.15);                    // حرارة
+    led=S(.15,0xE02424,1.8,9.1,1.6,0xB01818);
+    B(2,1.9,.9,0x3D4354,0,13.2,1.5,.5,.2);                      // وحدة التحكم
+    B(1.5,1,.07,0x0C1C14,0,13.3,1.98,.3,.05);
+    B(1.1,.14,.05,0x2FD68A,0,13.5,2.03,.5,.1);
+    const tec=B(1.6,.3,1.6,0x9AA1AF,0,6.6,2.1,.4,.65);          // وحدة التبريد
+    for(let i=0;i<6;i++) B(1.5,.5,.1,0xB8BDC6,0,7+i*.18,2.3,.4,.65);
+    for(let i=1;i<=3;i++){
+      const c=new THREE.Mesh(new THREE.TorusGeometry(.9+i*.5,.04,8,22),
+        new THREE.MeshStandardMaterial({color:0x5B9BD5,transparent:true,opacity:.34-i*.08,emissive:0x2F6FA8,emissiveIntensity:.4}));
+      c.position.set(0,7.4,2.6);g.add(c);
+    }
+    B(1.4,.9,.6,0x2F7D5C,-1.9,2,1.9,.55,.1);                    // خلية الوزن
+  }
+
+  if(id==='kafo'){
+    B(18,.4,14,0xE9EBEE,0,.2,0,.92,0);
+    C(1.45,1.6,7.4,0xE8C9AE,0,10.6,0,20,.75,0);
+    C(1.3,1.1,7,0xE8C9AE,0,3.2,.9,20,.75,0);
+    S(1.65,0xE8C9AE,0,6.8,.4);
+    B(2.6,1,3.4,0xE8C9AE,0,.6,2.2,.8,0);                        // القدم
+    const shell=(y,h,z,r)=>{ const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,22,1,true,-1.1,3.6),
+        mat(0xF7F8FA,.55,.05)); m.position.set(0,y,z); m.castShadow=true; g.add(m); return m; };
+    shell(10.6,6.4,0,1.95); shell(3.2,6,.9,1.8); shell(.9,1.4,2.2,1.7);
+    for(const [sy,sz] of [[12.8,0],[8.8,0],[5.2,.9],[1.9,.9]]){ // أحزمة
+      const st=new THREE.Mesh(new THREE.TorusGeometry(1.98,.2,8,24),mat(0x2A2F3B,.9,0));
+      st.rotation.x=Math.PI/2;st.position.set(0,sy,sz);g.add(st);
+      B(.9,.55,.3,0x9AA1AF,1.9,sy,sz,.5,.5);
+    }
+    for(const sx of [-2.2,2.2]){                                 // قضيبا الجانب
+      C(.22,.22,6,0xC9CFD8,sx,10.4,.2,12,.5,.1);
+      C(.22,.22,5.6,0xC9CFD8,sx,3.4,1,12,.5,.1);
+      const ring=new THREE.Mesh(new THREE.TorusGeometry(.85,.26,10,22),mat(0x2F7D5C,.45,.35));  // قفل حلقي
+      ring.position.set(sx,6.8,.5);g.add(ring);
+      C(.95,.95,.45,0xF2F3F5,sx,6.8,.5,20,.5,.1).rotation.z=Math.PI/2;
+    }
+    led=S(.2,0x22C55E,2.2,7.9,.5,0x1FA35A);
+    S(.2,0x22C55E,-2.2,7.9,.5,0x1FA35A);
+    B(3.4,.3,2.4,0x8F96A3,7.4,.35,-3.4,.85,0);                   // طابعة ثلاثية الأبعاد مبسّطة
+    for(const px of [6,8.8]) C(.17,.17,6,0xB8BDC6,px,3.3,-3.4,10,.4,.5);
+    B(3.2,.35,.35,0x9AA1AF,7.4,5.4,-3.4,.4,.5);
+    B(.8,.9,.8,0x2A2F3B,7.4,4.8,-3.4,.5,.2);
+    B(2,.5,1.6,0xF2F3F5,7.4,.75,-3.4,.6,.05);
+  }
+
+  if(id==='pellet'){
+    B(24,.4,16,0xC9CFD8,0,.2,0,.9,0);
+    B(6,.5,5,0x2A2F3B,-4,.45,0,.6,.3);                           // منصة الغرفة
+    const ch=new THREE.Mesh(new THREE.CylinderGeometry(2.4,2.4,6,24,1,true),mat(0x6B7384,.5,.5));
+    ch.position.set(-4,3.9,0);g.add(ch);                         // غرفة الاحتراق
+    C(2.5,2.5,.3,0x4A5162,-4,7,0,24,.5,.5);
+    C(.85,.85,3.4,0x3D4354,-4,9,0,18,.5,.4);                     // المدخنة
+    for(let i=1;i<=3;i++){
+      const sm=new THREE.Mesh(new THREE.SphereGeometry(.55+i*.22,12,12),
+        new THREE.MeshStandardMaterial({color:0x9AA1AF,transparent:true,opacity:.3-i*.06}));
+      sm.position.set(-4+i*.4,11+i*1.1,0);g.add(sm);
+    }
+    for(let i=0;i<9;i++){                                        // اللهب والحبيبات
+      const fl=S(.42+Math.random()*.3,[0xE8743B,0xFFD166,0xE02424][i%3],
+        -4+(Math.random()-.5)*2.4,1.6+Math.random()*2.2,(Math.random()-.5)*2.4,[0xC2541F,0xE8A33B,0xB01818][i%3]);
+    }
+    for(let i=0;i<7;i++) C(.3,.3,.72,0x8B5E34,6.4+(i%4)*.78,.75,-4+Math.floor(i/4)*.85,10,.85,0);  // حبيبات
+    B(3,.3,2.4,0xE4E6EA,7,.5,-4,.85,0);
+    C(.14,.14,5.4,0x9AA1AF,-1.1,3,0,10,.4,.6);                   // مزدوجة حرارية
+    B(.8,.7,.5,0xC27803,-1.1,6,0,.5,.2);
+    B(2.2,.8,2,0x2F7D5C,-4,.15,0,.55,.1);                        // خلية الوزن
+    B(1.2,1,.6,0x5B3DF5,1.8,1.1,3.6,.5,.15);                     // حساسات الغاز
+    C(.55,.55,.5,0x9AA1AF,1.8,1.9,3.6,16,.4,.5);
+    B(1.2,1,.6,0x5B3DF5,3.4,1.1,3.6,.5,.15);
+    C(.55,.55,.5,0x9AA1AF,3.4,1.9,3.6,16,.4,.5);
+    C(1.1,1.1,.4,0x3D4354,-4,2,-3.2,18,.5,.4).rotation.x=Math.PI/2;  // مروحة التهوية
+    breadboard(7.6,3.4);
+    led=esp32(7.6,.7,3.4);
+    B(2.3,.3,1.5,0x2A2F3B,11.4,1.1,3.4,.55,.1);
+    B(1.9,.1,1.1,0x0C1C14,11.4,1.3,3.4,.3,.05);
+    wire([[-1.1,6,0],[3,3.4,2],[7.6,1.4,3.4]],0xC27803,.045);
+    wire([[1.8,1.6,3.6],[4.6,1.4,3.5],[7,1.2,3.4]],0x5B3DF5,.04);
   }
 
   return {group:g,led,extra};

@@ -130,7 +130,7 @@
  "صافرة إنذار ١٢ فولت": "intermittent-beep-alarm-buzzer-sfm-27-dc-3-24v",
  "صمام إغلاق الغاز": "dc-12v-electric-solenoid-valve",
  "صمام إغلاق كهربائي": "dc-12v-electric-solenoid-valve",
- "صمام كهربائي": "dc-12v-electric-solenoid-valve",
+ "صمام كهربائي": "dc-37v-normally-open-solenoid-valve",
  "صمام كهربائي للري": "dc-12v-electric-solenoid-valve",
  "صمام كهربائي ١٢ فولت": "dc-12v-electric-solenoid-valve",
  "فوتوترانزستور TCRT5000": "tcrt5000-reflective-optical-sensor",
@@ -276,5 +276,10 @@
  "خيط طباعة PLA": "pla-filament",
  "مزدوجة حرارية MAX6675 نوع K": "max6675-module-k-type-thermocouple-sensor-can-measure-1024-degrees",
  "MQ-2 دخان وغازات": "mq-2-smoke-and-flammable-gas",
- "RTC DS3231": "rtc-ds3231sn"
+ "RTC DS3231": "rtc-ds3231sn",
+ "وحدة كشف ضوئية": "ir-infrared-obstacle-avoidance-module",
+ "باعث ليزري KY-008": "ky-008-laser-transmitter-module",
+ "زر ضغط كبير": "arm-lever-16mm-250v-5a-spdt-3-pin-momentary-plastic-micro-limit-switch",
+ "حساس توصيلية TDS": "analog-tds-total-dissolved-solids-sensor-meter-3355v-compatible-for-water-quality-testing",
+ "حساس قرب معدني": "inductive-proximity-sensor-nc-lj12a3-4-zax-UKxyQmp8"
 }

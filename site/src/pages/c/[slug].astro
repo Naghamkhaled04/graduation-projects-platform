@@ -11,7 +11,7 @@ export function getStaticPaths() {
 const { u } = Astro.props;
 ---
 
-<Base title={`مجتمع ${u.name} — مشاريع`} description={`مجتمع طلاب ${u.name}: أسئلة تقنية، عرض مشاريع، شركاء، ومصادر.`}>
+<Base title={u.kind === 'uni' ? `مجتمع ${u.name} — مشاريع` : `${u.name} — مشاريع`} description={u.desc}>
   <main class="pf feed" data-uni={u.name} data-slug={u.slug} data-kind={u.kind}>
     <div class="container">
       <a class="back" href="/communities">← كل المجتمعات</a>
@@ -39,7 +39,7 @@ const { u } = Astro.props;
   import { getBackend } from '../../community/backend';
   import { getCommunities, KINDS, MOD_ONLY, kindLabel, kindIcon, demoMod, type Post, type PostKind } from '../../community/communities';
   import { uniSlug, UNIVERSITIES } from '../../data/universities';
-  import { linkMentions, mentionedUnis } from '../../data/spaces';
+  import { linkMentions, mentionedUnis, PINNED } from '../../data/spaces';
   import { esc, ar, date, STATUS } from '../../community/ui';
   import { svg } from '../../data/icons';
 
@@ -65,7 +65,7 @@ const { u } = Astro.props;
     const acts = document.getElementById('facts')!;
     acts.innerHTML = `${member ? `<button type="button" class="c-btn" id="new-post">${svg('plus', 15)} اكتب منشور</button>` : (kind === 'uni' ? `<a class="c-btn" href="/settings">${svg('building', 15)} انضم لهالمجتمع</a>`
          : kind === 'news' ? '' : `<a class="c-btn" href="/join">${svg('lock', 15)} سجّل دخولك للمشاركة</a>`)}
-      ${member && !canMod ? `<button type="button" class="c-btn ghost" id="apply-mod">قدّم لتكون مشرفاً</button>` : ''}
+      ${member && !canMod && kind === 'uni' ? `<button type="button" class="c-btn ghost" id="apply-mod">قدّم لتكون مشرفاً</button>` : ''}
       ${canMod ? `<span class="c-badge modb">${svg('medal', 13)} أنت مشرف هون</span>` : ''}
       ${be.mode === 'local' && member ? `<button type="button" class="c-btn ghost" id="demo-mod">${canMod ? 'إيقاف' : 'تجربة'} وضع المشرف</button>` : ''}`;
 
@@ -159,21 +159,40 @@ const { u } = Astro.props;
       const list = all.filter((p) => (!filter || p.kind === filter)
         && (!uniFilter || mentionedUnis(p.title + ' ' + p.body).includes(uniFilter))
         && (p.status === 'approved' || canMod || p.user_id === 'me'));
-      postsEl.innerHTML = list.length ? list.map((p) => `
-        <article class="c-card post" data-id="${p.id}">
-          <div class="ptop"><span class="kind">${svg(kindIcon(p.kind), 14)} ${esc(kindLabel(p.kind))}</span>
-            <b>${esc(p.author ?? 'طالب')}</b><small>${date(p.created_at)}</small>
-            ${p.status !== 'approved' ? `<span class="c-badge ${p.status}">${STATUS[p.status]}</span>` : ''}</div>
-          <h3>${esc(p.title)}</h3>
-          ${p.due ? `<p class="due">${svg('medal', 14)} التسليم: ${esc(p.due)}</p>` : ''}
-          <p class="body">${linkMentions(esc(p.body))}</p>
-          <div class="pfoot">
-            <button type="button" class="link" data-open="${p.id}">${svg('chat', 14)} ${p.replies ? ar(p.replies) + ' رد' : 'رد'}</button>
-            ${canMod && p.status === 'pending' ? `<button type="button" class="c-btn sm" data-ok="${p.id}">اعتماد</button><button type="button" class="c-btn ghost sm" data-no="${p.id}">رفض</button>` : ''}
-          </div>
+      const card = (o: { id: string; av: string; who: string; sub: string; when: string; badge: string;
+                         kind: string; title: string; due?: string | null; body: string; foot: string; pin?: boolean }) => `
+        <article class="c-card post${o.pin ? ' pinned' : ''}" data-id="${o.id}">
+          <header class="ptop">
+            <span class="av">${esc(o.av)}</span>
+            <span class="who"><b>${esc(o.who)}</b><small>${o.sub}</small></span>
+            ${o.pin ? `<span class="pinb">${svg('medal', 12)} مثبّت</span>` : ''}
+            ${o.badge}
+          </header>
+          <h3>${esc(o.title)}</h3>
+          ${o.due ? `<p class="due">${svg('medal', 14)} التسليم: ${esc(o.due)}</p>` : ''}
+          <p class="body">${o.body}</p>
+          <div class="pfoot">${o.foot}</div>
           <div class="replies" hidden></div>
-        </article>`).join('')
-        : emptyState();
+        </article>`;
+
+      // بوست الفريق المثبّت: بيفتح المساحة بدل ما تبلّش فاضية
+      const pin = PINNED[kind] ?? PINNED.uni;
+      const pinned = (!filter && !uniFilter) ? card({
+        id: 'pin', av: 'م', who: 'فريق مشاريع', sub: 'من إدارة المنصة', when: '', badge: '',
+        kind: '', title: pin.title, body: esc(pin.body).replace(/\n/g, '<br>'), foot: '', pin: true,
+      }) : '';
+
+      postsEl.innerHTML = pinned + (list.length ? list.map((p) => card({
+        id: p.id,
+        av: (p.author ?? 'ط').trim().slice(0, 1),
+        who: p.author ?? 'طالب',
+        sub: `${svg(kindIcon(p.kind), 13)} ${esc(kindLabel(p.kind))} · ${date(p.created_at)}`,
+        when: date(p.created_at),
+        badge: p.status !== 'approved' ? `<span class="c-badge ${p.status}">${STATUS[p.status]}</span>` : '',
+        kind: p.kind, title: p.title, due: p.due, body: linkMentions(esc(p.body)),
+        foot: `<button type="button" class="link" data-open="${p.id}">${svg('chat', 14)} ${p.replies ? ar(p.replies) + ' رد' : 'رد'}</button>`
+          + (canMod && p.status === 'pending' ? `<button type="button" class="c-btn sm" data-ok="${p.id}">اعتماد</button><button type="button" class="c-btn ghost sm" data-no="${p.id}">رفض</button>` : ''),
+      })).join('') : emptyState());
       syncKinds();
     }
 
@@ -280,7 +299,22 @@ const { u } = Astro.props;
   .feed .kp span small { color: var(--fg-2); font-size: 12px; line-height: 1.6; }
   .feed .kp input:checked + span { background: #fff4ec; border-color: var(--orange); }
   .feed .post { margin-bottom: 14px; }
-  .feed .ptop { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 13px; margin-bottom: 8px; }
+  /* بطاقة المنشور: صورة رمزية واسم وسطر فرعي — شكل تدفّق مألوف */
+  .feed .ptop { display: flex; gap: 11px; align-items: center; font-size: 13px; margin-bottom: 11px; }
+  .feed .av { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%;
+    background: var(--green); color: var(--cream); font-size: 17px; font-weight: 500; }
+  .feed .who { display: grid; gap: 2px; min-width: 0; flex: 1; }
+  .feed .who b { font-size: 14.5px; color: var(--green); }
+  .feed .who small { display: flex; align-items: center; gap: 5px; font-size: 12.5px; color: var(--fg-2); }
+  .feed .who small svg { opacity: .7; }
+  .feed .pinb { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; padding: 3px 9px;
+    border-radius: 999px; background: var(--mint); color: var(--green); }
+  .feed .post.pinned { border-inline-start: 4px solid var(--orange); }
+  .feed .post.pinned .av { background: var(--orange); }
+  .feed .post h3 { font-size: 17px; margin-bottom: 7px; }
+  .feed .post .body { white-space: pre-line; }
+  .feed .pfoot:empty { display: none; }
+  .feed .post .pfoot { margin-top: 12px; padding-top: 11px; border-top: 1px solid rgba(15,61,62,.08); }
   .feed .kind { background: var(--mint); color: var(--green); padding: 3px 11px; border-radius: 999px; font-size: 12.5px; }
   .feed .ptop small { color: var(--fg-2); } .feed .post h3 { font-size: 18px; margin-bottom: 6px; }
   .feed .post .body { color: var(--fg-2); line-height: 1.9; white-space: pre-wrap; overflow-wrap: anywhere; }

@@ -31,6 +31,10 @@ create table public.profiles (
   points       int  not null default 0,
   created_at   timestamptz not null default now()
 );
+-- البريد الجامعي: للعرض على الإدارة ولاستنتاج الجامعة. غير مؤكّد —
+-- حساب الطالب على بريده الشخصي ليصله كود الاستعادة دائماً.
+alter table public.profiles add column if not exists uni_email text check (char_length(uni_email) <= 120);
+
 alter table public.profiles enable row level security;
 
 create or replace function public.is_admin() returns boolean

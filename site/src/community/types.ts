@@ -3,6 +3,8 @@ export interface Profile {
   year?: number | null; bio?: string | null; role: 'student' | 'admin'; points: number;
   /** خاص: لا يظهر لأحد، للتحقق من الانتماء للجامعة فقط */
   student_id?: string | null;
+  /** بريد الجامعة: تظهره الإدارة وتُستنتج منه الجامعة. ليس بريد الحساب */
+  uni_email?: string | null;
   /** من دعاه، ولا يُحتسب إلا مرة واحدة عند أول محتوى معتمد */
   referred_by?: string | null;
   invite_paid?: boolean;

@@ -164,8 +164,113 @@ class LocalTeams implements Teams {
   }
 }
 
+/** نفس الواجهة على سوبابيس. الصلاحيات بالقاعدة (RLS): الفريق يرى شغله وحده */
+class CloudTeams implements Teams {
+  mode = 'cloud' as const;
+  constructor(private sb: any) {}
+  private need<T>(r: { data: T; error: any }): T { if (r.error) throw new Error(r.error.message); return r.data; }
+  private async uid() { return (await this.sb.auth.getSession()).data.session?.user.id as string | undefined; }
+  private async teamId() { return (await this.sb.rpc('my_team')).data as string | null; }
+  private async me(t: Team) { const u = await this.uid(); return t.members.find((m) => m.id === u || m.me)?.name ?? 'أنت'; }
+  private async log(team_id: string, what: string, who: string) {
+    await this.sb.from('team_activity').insert({ team_id, who, what });
+  }
+  /** كل شي بنداء واحد: الفريق وأعضاؤه ومهامه وروابطه وملاحظاتها وسجلّه */
+  async get(): Promise<Team | null> {
+    const id = await this.teamId(); if (!id) return null;
+    const u = await this.uid();
+    const [t, mem, tasks, links, act] = await Promise.all([
+      this.sb.from('teams').select('*').eq('id', id).single(),
+      this.sb.from('team_members').select('*').eq('team_id', id).order('joined_at'),
+      this.sb.from('team_tasks').select('*').eq('team_id', id).order('created_at', { ascending: false }),
+      this.sb.from('team_links').select('*,team_notes(*)').eq('team_id', id).order('created_at', { ascending: false }),
+      this.sb.from('team_activity').select('*').eq('team_id', id).order('at', { ascending: false }).limit(40),
+    ]);
+    const row = this.need(t);
+    return {
+      id: row.id, name: row.name, project: row.project,
+      members: (mem.data ?? []).map((m: any) => ({
+        id: m.id, name: m.name, roles: m.roles ?? [], skills: m.skills ?? [], wants: m.wants ?? [],
+        ...(m.user_id && m.user_id === u ? { me: true } : {}),
+      })),
+      tasks: (tasks.data ?? []).map((k: any) => ({
+        id: k.id, title: k.title, assignee: k.assignee, status: k.status, due: k.due, created_at: k.created_at,
+      })),
+      links: (links.data ?? []).map((l: any) => ({
+        id: l.id, title: l.title, url: l.url, author: l.author, created_at: l.created_at,
+        notes: (l.team_notes ?? []).slice().sort((a: any, b: any) => a.created_at.localeCompare(b.created_at))
+          .map((n: any) => ({ id: n.id, author: n.author, body: n.body, created_at: n.created_at })),
+      })),
+      activity: (act.data ?? []).map((a: any) => ({ id: a.id, who: a.who, what: a.what, at: a.at })),
+    };
+  }
+  async create(name: string, project: string | null, myName: string) {
+    if (!(await this.uid())) throw new Error('AUTH');
+    const n = clean(name, 60) || 'فريقي', who = clean(myName, 40) || 'أنت';
+    this.need(await this.sb.rpc('create_team', { nm: n, proj: project, my_name: who }));
+    return (await this.get())!;
+  }
+  /** المغادرة = حذف صفّي أنا. آخر عضو يغادر ينحذف الفريق معه (trigger) */
+  async leave() {
+    const u = await this.uid(); if (!u) return;
+    this.need(await this.sb.from('team_members').delete().eq('user_id', u));
+  }
+  async addMember(name: string) {
+    const n = clean(name, 40); if (n.length < 2) throw new Error('اكتب اسم العضو');
+    const id = await this.teamId(); if (!id) throw new Error('ما في فريق');
+    this.need(await this.sb.from('team_members').insert({ team_id: id, name: n }));
+    await this.log(id, `أضاف ${n} للفريق`, await this.me((await this.get())!));
+  }
+  async removeMember(id: string) {
+    const u = await this.uid();
+    const m = (await this.sb.from('team_members').select('user_id,name').eq('id', id).single()).data;
+    if (m?.user_id && m.user_id === u) throw new Error('ما بتقدر تشيل حالك — استعمل «غادر الفريق»');
+    this.need(await this.sb.from('team_members').delete().eq('id', id));
+  }
+  async setMember(id: string, patch: Partial<Pick<Member, 'roles' | 'skills' | 'wants'>>) {
+    const p: any = {};
+    if (patch.roles) p.roles = patch.roles.slice(0, 4);
+    if (patch.skills) p.skills = patch.skills;
+    if (patch.wants) p.wants = patch.wants;
+    this.need(await this.sb.from('team_members').update(p).eq('id', id));
+  }
+  async addTask(title: string, assignee: string | null, due: string | null) {
+    const ti = clean(title, 120); if (ti.length < 3) throw new Error('اكتب المهمة');
+    const id = await this.teamId(); if (!id) throw new Error('ما في فريق');
+    this.need(await this.sb.from('team_tasks').insert({ team_id: id, title: ti, assignee, due: due || null }));
+    await this.log(id, `أضاف مهمة: ${ti}`, await this.me((await this.get())!));
+  }
+  async setTask(id: string, patch: Partial<Pick<Task, 'status' | 'assignee' | 'due' | 'title'>>) {
+    this.need(await this.sb.from('team_tasks').update(patch).eq('id', id));
+    if (patch.status === 'done') {
+      const t = (await this.get())!;
+      await this.log(t.id, `خلّص: ${t.tasks.find((x) => x.id === id)?.title ?? 'مهمة'}`, await this.me(t));
+    }
+  }
+  async removeTask(id: string) { this.need(await this.sb.from('team_tasks').delete().eq('id', id)); }
+  async addLink(title: string, url: string) {
+    const u = safeUrl(url); if (!u) throw new Error('الرابط لازم يبلّش بـ http أو https');
+    const t = await this.get(); if (!t) throw new Error('ما في فريق');
+    const ti = clean(title, 100) || 'رابط شغل', who = await this.me(t);
+    this.need(await this.sb.from('team_links').insert({ team_id: t.id, title: ti, url: u, author: who }));
+    await this.log(t.id, `رفع رابط: ${ti}`, who);
+  }
+  async removeLink(id: string) { this.need(await this.sb.from('team_links').delete().eq('id', id)); }
+  async addNote(linkId: string, body: string) {
+    const b = clean(body, 400); if (b.length < 2) throw new Error('اكتب ملاحظتك');
+    const t = await this.get(); if (!t) throw new Error('ما في فريق');
+    const who = await this.me(t);
+    this.need(await this.sb.from('team_notes').insert({ link_id: linkId, author: who, body: b }));
+    await this.log(t.id, `علّق على: ${t.links.find((l) => l.id === linkId)?.title ?? 'رابط'}`, who);
+  }
+}
+
 let cached: Promise<Teams> | null = null;
 export function getTeams(): Promise<Teams> {
-  cached ??= Promise.resolve(new LocalTeams());
+  cached ??= (async () => {
+    const url = import.meta.env.PUBLIC_SUPABASE_URL, key = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+    if (url && key) { const { createClient } = await import('@supabase/supabase-js'); return new CloudTeams(createClient(url, key)); }
+    return new LocalTeams();
+  })();
   return cached;
 }

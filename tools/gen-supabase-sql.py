@@ -24,6 +24,9 @@ def head(st):
 def idempotent(st):
     h = head(st)
     if h.lower().startswith('drop '): return st          # مكتوبة محمية أصلاً
+    # إضافة جدول لمنشور البث توقع لو كان مضافاً — نتجاهل التكرار وحده
+    if h.lower().startswith('alter publication'):
+        return 'do $do$ begin\n  ' + st.rstrip() + '\nexception when duplicate_object then null; end $do$;'
     st = re.sub(r'\bcreate table (?!if not exists)', 'create table if not exists ', st, 1, re.I)
     m = re.match(r'create (unique )?index on ([\w.]+)\s*\(([^)]*)\)', h, re.I)
     if m:

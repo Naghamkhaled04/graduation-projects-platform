@@ -42,6 +42,7 @@ import '../styles/community.css';
     const com = await getCommunities();
     const spaceName = (slug: string) => ALL_SPACES.find((x) => x.slug === slug)?.name ?? slug;
     let thread: string | null = null;   // خيط الرسائل المفتوح
+    let unsub: (() => void) | null = null;   // اشتراك البث على الخيط المفتوح
     async function paint() {
       const [fb, rd, us, docs, pend, mods, thr] = await Promise.all([
         be.adminPendingFeedback(), be.adminRedemptions(), be.adminUsers(), pstore.listAll(),
@@ -115,7 +116,19 @@ import '../styles/community.css';
           ${all.map((r) => { const d = byId.get(r.id); const hidden = d && d.status === 'hidden'; return `<div class="c-row"><span><b>${esc(r.title)}</b> <small class="c-note" dir="ltr">${esc(r.id)}</small></span><span>${badge(d, r.fixed)} <button class="c-btn ghost sm" data-edit="${r.id}">تعديل</button>${hidden ? ` <button class="c-btn ghost sm" data-show="${r.id}">إظهار</button>` : r.fixed ? ` <button class="c-btn ghost sm" data-hide="${r.id}">إخفاء</button>` : ''}</span></div>`; }).join('')}</div>`;
       }
       b.innerHTML = `<div class="tabs">${tabs.map(([k, n, c]) => `<button class="c-btn ${k === tab ? '' : 'ghost'}" data-tab="${k}">${n}${c ? ` (${ar(c)})` : ''}</button>`).join('')}</div><div class="c-list">${inner}</div>`;
+      const c = b.querySelector('.chat'); if (c) c.scrollTop = c.scrollHeight;
+      // بث لحظي على الخيط المفتوح وحده
+      unsub?.(); unsub = null;
+      if (tab === 'ms' && thread) unsub = await be.onMessages(thread, () => paint());
     }
+    // Enter يبعث الرد
+    b.addEventListener('keydown', (e) => {
+      const k = e as KeyboardEvent;
+      if ((e.target as HTMLElement).id === 'rp' && k.key === 'Enter') {
+        e.preventDefault();
+        (b.querySelector('[data-reply]') as HTMLElement)?.click();
+      }
+    });
     b.addEventListener('input', (e) => {
       const t = e.target as HTMLInputElement;
       if (t.id !== 'pj-q') return;
@@ -139,8 +152,9 @@ import '../styles/community.css';
         else if (t.hasAttribute('data-back')) { thread = null; }
         else if (t.dataset.reply) {
           const i = document.getElementById('rp') as HTMLInputElement;
-          if (!i?.value.trim()) return;
-          await be.adminReply(t.dataset.reply, i.value);
+          const v = i?.value.trim(); if (!v) return;
+          i.value = '';
+          await be.adminReply(t.dataset.reply, v);
         }
         else if (t.hasAttribute('data-export')) {
           t.textContent = 'جارٍ التجميع…';

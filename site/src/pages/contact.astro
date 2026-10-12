@@ -33,13 +33,23 @@ import '../styles/community.css';
       // الخيط ينزل لآخر رسالة متل أي محادثة
       const c = b.querySelector('.chat'); if (c) c.scrollTop = c.scrollHeight;
     }
-    b.addEventListener('click', async (e) => {
-      if ((e.target as HTMLElement).id !== 'go') return;
+    const send = async () => {
       const t = document.getElementById('bd') as HTMLTextAreaElement;
-      try { await be.sendMessage(t.value); await paint(); }
-      catch (x: any) { alert(x.message); }
+      const v = t.value.trim(); if (!v) return;
+      t.value = ''; t.disabled = true;
+      try { await be.sendMessage(v); await paint(); }
+      catch (x: any) { t.value = v; alert(x.message); }
+      finally { t.disabled = false; (document.getElementById('bd') as HTMLTextAreaElement)?.focus(); }
+    };
+    b.addEventListener('click', (e) => { if ((e.target as HTMLElement).id === 'go') send(); });
+    // Enter يبعث، وShift+Enter سطر جديد — متل أي شات
+    b.addEventListener('keydown', (e) => {
+      const k = e as KeyboardEvent;
+      if ((e.target as HTMLElement).id === 'bd' && k.key === 'Enter' && !k.shiftKey) { e.preventDefault(); send(); }
     });
     await paint();
+    // رد الإدارة بيوصل بلا تحديث الصفحة
+    await be.onMessages(null, () => { paint(); });
   })();
 </script>
 

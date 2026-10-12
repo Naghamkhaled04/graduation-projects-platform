@@ -6,13 +6,16 @@ const groups = [
     { href: '/', icon: 'home', label: 'الرئيسية' },
     { href: '/#projects', icon: 'box', label: 'المشاريع' },
     { href: '/store', icon: 'store', label: 'المتجر' },
-  ] },
-  { title: 'المجتمع', items: [
-    { href: '/team', icon: 'users', label: 'مساحة فريقي' },
-    { href: '/communities', icon: 'chat', label: 'مجتمعات الجامعات' },
     { href: '/about', icon: 'building', label: 'من نحن' },
-    { href: '/contact', icon: 'send', label: 'راسل الإدارة' },
+  ] },
+  // «مجتمعي» تُحقن بين المجتمعات ومساحة فريقي — لذلك المجموعة مقسومة قسمين
+  { title: 'المجتمع', items: [
+    { href: '/communities', icon: 'chat', label: 'مجتمعات الجامعات' },
+  ] },
+  { title: '', items: [
+    { href: '/team', icon: 'users', label: 'مساحة فريقي' },
     { href: '/ambassador', icon: 'medal', label: 'كن سفيراً' },
+    { href: '/contact', icon: 'send', label: 'راسل الإدارة' },
   ] },
 ];
 ---
@@ -40,10 +43,11 @@ const groups = [
   </a>
 
   <nav id="d-nav">
-    {groups.map((g) => (
+    {groups.map((g, n) => (
       <div class="grp">
-        <span class="gt">{g.title}</span>
+        {g.title && <span class="gt">{g.title}</span>}
         {g.items.map((i) => <a href={i.href} {...(i.ext ? { target: '_blank', rel: 'noopener' } : {})}><Fragment set:html={svg(i.icon, 17)} /> {i.label}{i.ext && <span class="ext">↗</span>}</a>)}
+        {n === 1 && <div id="d-my" />}
       </div>
     ))}
     <div class="grp" id="d-acct"></div>
@@ -98,6 +102,7 @@ const groups = [
     const be = await getBackend();
     const [s, p, admin] = await Promise.all([be.session(), be.profile().catch(() => null), be.isAdmin().catch(() => false)]);
     const acct = document.getElementById('d-acct')!, foot = document.getElementById('d-foot')!;
+    const my = document.getElementById('d-my')!;   // خانة «مجتمعي» بين المجتمعات ومساحة فريقي
     const item = (href: string, icon: string, label: string) => `<a href="${href}">${svg(icon, 17)} ${label}</a>`;
 
     // «مجتمعي» بتظهر للكل — الزائر بيشوف الدعوة والمسجّل بيشوف حالته
@@ -120,7 +125,8 @@ const groups = [
     </div>`;
 
     if (!s || !p) {
-      acct.innerHTML = `${myBlock}<span class="gt">حسابي</span>${item('/join', 'lock', 'تسجيل الدخول أو حساب جديد')}`;
+      my.innerHTML = myBlock;
+      acct.innerHTML = `<span class="gt">حسابي</span>${item('/join', 'lock', 'تسجيل الدخول أو حساب جديد')}`;
       document.getElementById('d-me')!.setAttribute('href', '/join');
       const t0 = document.getElementById('mytog'), s0 = document.getElementById('mysub');
       t0?.addEventListener('click', () => { const o = s0!.hidden; s0!.hidden = !o; t0.setAttribute('aria-expanded', String(o)); });
@@ -133,7 +139,8 @@ const groups = [
     document.getElementById('d-name')!.textContent = p.display_name;
     document.getElementById('d-sub')!.innerHTML = `${svg('level', 12, lvl.n)} ${lvl.name} · ${ar(p.points)} نقطة`;
 
-    acct.innerHTML = `${myBlock}
+    my.innerHTML = myBlock;
+    acct.innerHTML = `
       <span class="gt">حسابي</span>
       ${item('/profile', 'medal', 'نقاطي وتجاربي')}
       ${item('/u?id=' + encodeURIComponent(p.id), 'eye', 'ملفي العام')}

@@ -46,6 +46,10 @@ drop policy if exists "messages delete admin" on public.messages;
 create policy "messages delete admin" on public.messages for delete to authenticated
   using (public.is_admin());
 
+-- بث لحظي: الرسالة تظهر عند الطرف الثاني بلا تحديث الصفحة.
+-- الصلاحيات نفسها تنطبق على البث، فلا يصل للطالب إلا خيطه.
+alter publication supabase_realtime add table public.messages;
+
 -- قائمة الخيوط للأدمن: آخر رسالة وعدد غير المقروء، بنداء واحد
 create or replace function public.admin_threads()
 returns table (user_id uuid, name text, last_body text, last_at timestamptz, unread bigint)

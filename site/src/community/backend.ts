@@ -48,6 +48,8 @@ export interface Backend {
   adminSetRole(userId: string, role: 'student' | 'admin'): Promise<void>;
   /** معرّفات حسابات الفريق، لعرض الشارة جنب الاسم */
   adminIds(): Promise<Set<string>>;
+  /** بث لحظي للرسائل. userId فارغ = خيطي أنا. يرجّع دالة إلغاء الاشتراك */
+  onMessages(userId: string | null, cb: () => void): Promise<() => void>;
 }
 
 const clean = (s: string, n: number) => s.replace(/[<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, n);
@@ -173,6 +175,7 @@ class LocalBackend implements Backend {
   async adminExport() { return { ...(this.st() as any) }; }
   async adminSetRole() {}
   async adminIds() { return new Set<string>(); }
+  async onMessages() { return () => {}; }
   private msgs(): Msg[] { return ((this.st() as any).messages ?? []) as Msg[]; }
 }
 
@@ -300,6 +303,14 @@ class CloudBackend implements Backend {
   async adminIds() {
     const r = await this.sb.rpc('public_roles');
     return new Set<string>((r.data ?? []).map((x: any) => x.id));
+  }
+  async onMessages(userId: string | null, cb: () => void) {
+    const uid = userId ?? (await this.uid());
+    if (!uid) return () => {};
+    const ch = this.sb.channel('msg:' + uid)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `user_id=eq.${uid}` }, cb)
+      .subscribe();
+    return () => { this.sb.removeChannel(ch); };
   }
 }
 

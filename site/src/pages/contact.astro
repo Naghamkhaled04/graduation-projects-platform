@@ -1,0 +1,57 @@
+---
+import Base from '../layouts/Base.astro';
+import '../styles/community.css';
+---
+
+<Base title="راسل الإدارة — مشاريع" description="ابعت رسالتك لفريق المنصة وتابع الرد بنفس الصفحة.">
+  <main class="ms">
+    <div class="container" id="ms-root"><p class="c-note">جارٍ التحميل…</p></div>
+  </main>
+</Base>
+
+<script>
+  import { getBackend } from '../community/backend';
+  import { gate, esc, date } from '../community/ui';
+
+  const root = document.getElementById('ms-root')!;
+  (async () => {
+    const be = await getBackend();
+    root.innerHTML = '<h1>راسل الإدارة</h1><div id="g"></div><div id="b" hidden></div>';
+    const g = root.querySelector<HTMLElement>('#g')!, b = root.querySelector<HTMLElement>('#b')!;
+    if (!(await gate(g, be, 'سجّل دخولك عشان تراسل الإدارة'))) return;
+    g.hidden = true; b.hidden = false;
+
+    async function paint() {
+      const msgs = await be.myMessages();
+      b.innerHTML = `<div class="c-card">
+        <p class="c-note">سؤال، اقتراح، مشكلة بطلب، أو تعديل على مشروع — اكتبه هون وبنرد عليك بنفس الصفحة.</p>
+        <div class="chat">${msgs.length
+          ? msgs.map((m) => `<div class="bub ${m.from_admin ? 'them' : ''}">${m.from_admin ? '<span class="c-team">★ فريق المنصة</span>' : ''}<p>${esc(m.body)}</p><small>${date(m.created_at)}</small></div>`).join('')
+          : '<p class="c-note">ما بعثت شي بعد. اكتب أول رسالة تحت.</p>'}</div>
+        <div class="send"><textarea id="bd" rows="3" placeholder="اكتب رسالتك…"></textarea><button class="c-btn" id="go">إرسال</button></div>
+      </div>`;
+      // الخيط ينزل لآخر رسالة متل أي محادثة
+      const c = b.querySelector('.chat'); if (c) c.scrollTop = c.scrollHeight;
+    }
+    b.addEventListener('click', async (e) => {
+      if ((e.target as HTMLElement).id !== 'go') return;
+      const t = document.getElementById('bd') as HTMLTextAreaElement;
+      try { await be.sendMessage(t.value); await paint(); }
+      catch (x: any) { alert(x.message); }
+    });
+    await paint();
+  })();
+</script>
+
+<style is:global>
+  .ms { padding: 120px 0 100px; } .ms .container { max-width: 760px; }
+  .ms h1 { font-size: clamp(28px, 5vw, 42px); margin-bottom: 18px; }
+  .ms .chat { display: grid; gap: 10px; margin: 16px 0; max-height: 58vh; overflow-y: auto; }
+  .ms .bub { background: var(--mint); border-radius: 16px 16px 4px 16px; padding: 11px 14px; max-width: 78%; justify-self: end; }
+  .ms .bub.them { background: #fff; border-radius: 16px 16px 16px 4px; justify-self: start; box-shadow: 0 0 0 1px rgba(15,61,62,.08); }
+  .ms .bub p { margin: 4px 0 0; line-height: 1.85; white-space: pre-wrap; }
+  .ms .bub small { display: block; margin-top: 5px; opacity: .55; font-size: 11.5px; }
+  .ms .send { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: end; }
+  .ms .send textarea { font: 400 15px var(--font); padding: 11px 14px; border-radius: 14px; border: 1px solid rgba(15,61,62,.18); background: #fff; color: var(--green); resize: vertical; }
+  .ms .send textarea:focus { outline: none; border-color: var(--orange); }
+</style>

@@ -40,7 +40,7 @@ const { u } = Astro.props;
   import { getCommunities, KINDS, MOD_ONLY, kindLabel, kindIcon, type Post, type PostKind } from '../../community/communities';
   import { uniSlug, UNIVERSITIES } from '../../data/universities';
   import { linkMentions, mentionedUnis, PINNED } from '../../data/spaces';
-  import { esc, ar, date, STATUS } from '../../community/ui';
+  import { esc, ar, date, STATUS, adminBadge } from '../../community/ui';
   import { svg } from '../../data/icons';
 
   const root = document.querySelector<HTMLElement>('.feed')!;
@@ -50,6 +50,7 @@ const { u } = Astro.props;
 
   (async () => {
     const [be, com] = await Promise.all([getBackend(), getCommunities()]);
+    const ADMINS = await be.adminIds();   // لعرض شارة «فريق المنصة» جنب أسماء الفريق
     const p = await be.profile().catch(() => null);
     member = kind === 'uni' ? (!!p?.university && uniSlug(p.university) === slug) : !!p;
     if (kind === 'news') member = member && (await com.canModerate(uni).catch(() => false));
@@ -159,11 +160,11 @@ const { u } = Astro.props;
         && (!uniFilter || mentionedUnis(p.title + ' ' + p.body).includes(uniFilter))
         && (p.status === 'approved' || canMod || p.user_id === 'me'));
       const card = (o: { id: string; av: string; who: string; sub: string; when: string; badge: string;
-                         kind: string; title: string; due?: string | null; body: string; foot: string; pin?: boolean }) => `
+                         kind: string; title: string; due?: string | null; body: string; foot: string; pin?: boolean; team?: boolean }) => `
         <article class="c-card post${o.pin ? ' pinned' : ''}" data-id="${o.id}">
           <header class="ptop">
             <span class="av">${esc(o.av)}</span>
-            <span class="who"><b>${esc(o.who)}</b><small>${o.sub}</small></span>
+            <span class="who"><b>${esc(o.who)}${adminBadge(!!o.team)}</b><small>${o.sub}</small></span>
             ${o.pin ? `<span class="pinb">${svg('medal', 12)} مثبّت</span>` : ''}
             ${o.badge}
           </header>
@@ -177,14 +178,14 @@ const { u } = Astro.props;
       // بوست الفريق المثبّت: بيفتح المساحة بدل ما تبلّش فاضية
       const pin = PINNED[kind] ?? PINNED.uni;
       const pinned = (!filter && !uniFilter) ? card({
-        id: 'pin', av: 'م', who: 'فريق مشاريع', sub: 'من إدارة المنصة', when: '', badge: '',
+        id: 'pin', av: 'م', who: 'فريق مشاريع', team: true, sub: 'من إدارة المنصة', when: '', badge: '',
         kind: '', title: pin.title, body: esc(pin.body).replace(/\n/g, '<br>'), foot: '', pin: true,
       }) : '';
 
       postsEl.innerHTML = pinned + (list.length ? list.map((p) => card({
         id: p.id,
         av: (p.author ?? 'ط').trim().slice(0, 1),
-        who: p.author ?? 'طالب',
+        who: p.author ?? 'طالب', team: ADMINS.has(p.user_id),
         sub: `${svg(kindIcon(p.kind), 13)} ${esc(kindLabel(p.kind))} · ${date(p.created_at)}`,
         when: date(p.created_at),
         badge: p.status !== 'approved' ? `<span class="c-badge ${p.status}">${STATUS[p.status]}</span>` : '',
@@ -252,7 +253,7 @@ const { u } = Astro.props;
       const art = postsEl.querySelector(`.post[data-id="${id}"]`); if (!art) return;
       const box = art.querySelector<HTMLElement>('.replies')!;
       const rs = await com.replies(id).catch(() => []);
-      box.innerHTML = `${rs.map((r) => `<div class="rp"><b>${esc(r.author ?? 'طالب')}</b>${r.mine || canMod ? `<button class="x" data-rdel="${r.id}" aria-label="حذف">×</button>` : ''}<div>${esc(r.body)}</div></div>`).join('')}
+      box.innerHTML = `${rs.map((r) => `<div class="rp"><b>${esc(r.author ?? 'طالب')}${adminBadge(ADMINS.has(r.user_id))}</b>${r.mine || canMod ? `<button class="x" data-rdel="${r.id}" aria-label="حذف">×</button>` : ''}<div>${esc(r.body)}</div></div>`).join('')}
         ${member ? `<div class="rform"><input class="rin" maxlength="600" placeholder="اكتب ردك…" /><button type="button" class="c-btn sm" data-rsend="${id}">رد</button></div><p class="c-err rerr"></p>` : '<p class="c-note">حدّد جامعتك بملفك لترد.</p>'}`;
     }
 

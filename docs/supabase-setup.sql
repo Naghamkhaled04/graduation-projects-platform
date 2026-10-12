@@ -2,17 +2,16 @@
 -- إعداد قاعدة بيانات منصة مشاريع التخرج — سوبابيس
 --
 -- الصقيه كله بـ SQL Editor واضغطي Run. آمن للإعادة.
--- مولَّد من docs/*.md — عدّلي المصدر وأعيدي التوليد.
--- مستثنى: المدينة الذكية (ملغاة)، والنسخة القديمة من جداول
--- المجتمع في community-backend.md (كانت تمنع النشر بالمجتمع العام).
+-- مولَّد: python tools/gen-supabase-sql.py — عدّلي docs/*.md لا هذا الملف.
+-- مستثنى: المدينة الذكية (ملغاة)، والنسخة القديمة من جداول المجتمع.
 -- ============================================================
 
 -- ------------------------------------------------------------
--- بداية نظيفة: شيلي التعليق وشغّلي هالسطر لحاله أولاً.
--- **بيمسح كل البيانات** — استعمليه قبل ما يصير عندك مستخدمون.
+-- بداية نظيفة: شيلي التعليق وشغّلي السطر لحاله أولاً.
+-- **بيمسح كل البيانات** — قبل ما يصير عندك مستخدمون.
 --
--- drop table if exists public.team_notes, public.team_links, public.team_tasks,
---   public.team_activity, public.team_members, public.teams,
+-- drop table if exists public.messages, public.team_notes, public.team_links,
+--   public.team_tasks, public.team_activity, public.team_members, public.teams,
 --   public.uni_replies, public.uni_posts, public.uni_moderators,
 --   public.redemptions, public.feedback, public.points_ledger,
 --   public.projects, public.profiles cascade;
@@ -594,3 +593,99 @@ create policy "activity read"   on public.team_activity for select using (public
 drop policy if exists "activity insert" on public.team_activity;
 create policy "activity insert" on public.team_activity for insert to authenticated
   with check (public.is_team_member(team_id));
+
+-- ==========================================================
+-- ٤. رسائل الطلاب والإدارة
+-- المصدر: docs/messages-sql.md
+-- ==========================================================
+
+create table if not exists public.messages (
+  id         uuid primary key default gen_random_uuid(),
+  -- صاحب الخيط: الطالب. يبقى هو نفسه سواء كتب الطالب أو ردّ الأدمن
+  user_id    uuid not null references public.profiles(id) on delete cascade,
+  from_admin boolean not null default false,
+  body       text not null check (char_length(body) between 2 and 2000),
+  read_at    timestamptz,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists messages_thread on public.messages (user_id, created_at);
+
+-- للأدمن: ترتيب الخيوط بآخر رسالة
+create index if not exists messages_recent on public.messages (created_at desc);
+
+alter table public.messages enable row level security;
+
+-- الطالب يقرأ خيطه، والأدمن يقرأ الكل
+drop policy if exists "messages read" on public.messages;
+
+drop policy if exists "messages read" on public.messages;
+create policy "messages read" on public.messages for select to authenticated
+  using (user_id = auth.uid() or public.is_admin());
+
+-- الطالب يكتب باسمه فقط وبخيطه، والأدمن يكتب بأي خيط بعلامة from_admin
+drop policy if exists "messages insert" on public.messages;
+
+drop policy if exists "messages insert" on public.messages;
+create policy "messages insert" on public.messages for insert to authenticated
+  with check (
+    (user_id = auth.uid() and from_admin = false)
+    or (public.is_admin() and from_admin = true)
+  );
+
+-- التعليم كمقروء فقط، ولا أحد يعدّل نص رسالة بعد إرسالها
+drop policy if exists "messages mark read" on public.messages;
+
+drop policy if exists "messages mark read" on public.messages;
+create policy "messages mark read" on public.messages for update to authenticated
+  using (user_id = auth.uid() or public.is_admin())
+  with check (user_id = auth.uid() or public.is_admin());
+
+drop policy if exists "messages delete admin" on public.messages;
+
+drop policy if exists "messages delete admin" on public.messages;
+create policy "messages delete admin" on public.messages for delete to authenticated
+  using (public.is_admin());
+
+-- قائمة الخيوط للأدمن: آخر رسالة وعدد غير المقروء، بنداء واحد
+create or replace function public.admin_threads()
+returns table (user_id uuid, name text, last_body text, last_at timestamptz, unread bigint)
+language sql stable security definer set search_path = public as $$
+  select m.user_id,
+         coalesce(p.display_name, 'طالب'),
+         (select body from messages x where x.user_id = m.user_id order by created_at desc limit 1),
+         max(m.created_at),
+         count(*) filter (where m.read_at is null and m.from_admin = false)
+    from messages m left join profiles p on p.id = m.user_id
+   where public.is_admin()
+   group by m.user_id, p.display_name
+   order by max(m.created_at) desc
+   limit 200;
+$$;
+
+-- ==========================================================
+-- ٥. صلاحيات الأدمن
+-- المصدر: docs/admin-sql.md
+-- ==========================================================
+
+create or replace function public.admin_set_role(uid uuid, r text) returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  if not public.is_admin() then raise exception 'للأدمن فقط'; end if;
+  if r not in ('student','admin') then raise exception 'دور غير معروف'; end if;
+  -- آخر أدمن لا ينزّل نفسه، وإلا ضاعت اللوحة على الجميع
+  if r = 'student' and uid = auth.uid()
+     and (select count(*) from profiles where role = 'admin') <= 1
+    then raise exception 'إنت آخر أدمن — رقّي حداً غيرك أولاً';
+  end if;
+  update profiles set role = r where id = uid;
+end; $$;
+
+-- اسم ودور أي حساب: لعرض شارة «فريق المنصة» جنب الاسم
+create or replace function public.public_roles()
+returns table (id uuid, role text)
+language sql stable security definer set search_path = public as $$
+  select id, role from profiles where role = 'admin';
+$$;
+
+grant execute on function public.public_roles() to anon, authenticated;

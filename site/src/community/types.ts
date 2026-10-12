@@ -17,3 +17,7 @@ export interface PendingBuilding { id: string; name: string; sign: string; owner
 export interface Session { id: string; email?: string }
 
 export interface FeedbackInput { project_id: string; rating: number; comment: string; images: string[] /* data URLs مضغوطة */ }
+
+/** خيط واحد لكل طالب مع الإدارة */
+export interface Msg { id: string; user_id: string; from_admin: boolean; body: string; read_at: string | null; created_at: string }
+export interface Thread { user_id: string; name: string; last_body: string; last_at: string; unread: number }

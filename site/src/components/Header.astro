@@ -101,19 +101,27 @@ const groups = [
     // «مجتمعي» بتظهر للكل — الزائر بيشوف الدعوة والمسجّل بيشوف حالته
     const mySlug = p?.university ? uniSlug(p.university) : null;
     const myUni = mySlug ? UNIVERSITIES.find((u) => u.slug === mySlug) : null;
-    const row = (href: string, icon: string, label: string, tag: string, join = false, cls = '') =>
-      `<a href="${href}" class="mycom${join ? ' join' : ''}${cls ? ' ' + cls : ''}">${svg(icon, 17)} <span>${label}</span><em>${tag}</em></a>`;
-    const myBlock = `<span class="gt">مجتمعي</span>
-      ${row('/c/general', 'users', 'المجتمع العام', s ? 'عضو' : 'سجّل', !s)}
-      ${myUni
-        ? row(`/c/${myUni.slug}`, 'chat', `مجتمع ${myUni.short}`, 'عضو')
-        : row(s ? '/settings' : '/join', 'chat', 'انضم لمجتمع جامعتك', 'مطلوب', true)}
-      ${row('/c/news', 'medal', 'الإعلانات', s ? 'تتابعها' : 'سجّل', !s, 'news')}
-      ${item('/communities', 'box', 'كل الجامعات')}`;
+    const row = (href: string, icon: string, label: string, tag: string, join = false) =>
+      `<a href="${href}" class="mysub-a">${svg(icon, 16)} <span>${label}</span><em class="${join ? 'join' : ''}">${tag}</em></a>`;
+    // خانة وحدة بالقائمة، والثلاث مساحات بتنفتح جوّاها
+    const myBlock = `<div class="mygrp">
+      <button type="button" class="mytog" id="mytog" aria-expanded="false">
+        ${svg('chat', 17)} <span>مجتمعي</span><i class="chv" aria-hidden="true">⌄</i>
+      </button>
+      <div class="mysub" id="mysub" hidden>
+        ${row('/c/general', 'users', 'المجتمع العام', s ? 'عضو' : 'سجّل', !s)}
+        ${myUni
+          ? row(`/c/${myUni.slug}`, 'chat', `مجتمع ${myUni.short}`, 'عضو')
+          : row(s ? '/settings' : '/join', 'chat', 'انضم لمجتمع جامعتك', 'مطلوب', true)}
+        ${row('/c/news', 'medal', 'الإعلانات', s ? 'تتابعها' : 'سجّل', !s)}
+      </div>
+    </div>`;
 
     if (!s || !p) {
       acct.innerHTML = `${myBlock}<span class="gt">حسابي</span>${item('/join', 'lock', 'تسجيل الدخول أو حساب جديد')}`;
       document.getElementById('d-me')!.setAttribute('href', '/join');
+      const t0 = document.getElementById('mytog'), s0 = document.getElementById('mysub');
+      t0?.addEventListener('click', () => { const o = s0!.hidden; s0!.hidden = !o; t0.setAttribute('aria-expanded', String(o)); });
       foot.innerHTML = '<p>سجّل دخولك لتنضم لمجتمع جامعتك وتجمع نقاط على تجاربك.</p>';
       return;
     }
@@ -129,21 +137,37 @@ const groups = [
       ${item('/u?id=' + encodeURIComponent(p.id), 'eye', 'ملفي العام')}
       ${item('/settings', 'flask', 'الإعدادات')}
       ${admin ? item('/admin', 'building', 'لوحة الأدمن') : ''}`;
+    const tog = document.getElementById('mytog'), sub = document.getElementById('mysub');
+    tog?.addEventListener('click', () => {
+      const open = sub!.hidden;
+      sub!.hidden = !open;
+      tog.setAttribute('aria-expanded', String(open));
+    });
+
     foot.innerHTML = be.mode === 'cloud' ? `<button type="button" id="d-out">${svg('send', 16)} تسجيل الخروج</button>` : '<p>وضع تجريبي: بياناتك بمتصفحك فقط.</p>';
     foot.querySelector('#d-out')?.addEventListener('click', async () => { await be.signOut(); location.reload(); });
   })();
 </script>
 
 <style is:global>
-  /* خانة مجتمعي بالدرج: بتميّز المجتمع عن باقي الروابط */
-  .drawer .mycom { display: flex; align-items: center; gap: 12px; padding: 11px 12px; border-radius: 13px;
-    background: var(--mint); color: var(--green); text-decoration: none; font: 500 14.5px var(--font); }
-  .drawer .mycom span { flex: 1; }
-  .drawer .mycom em { font-style: normal; font-size: 11.5px; padding: 3px 9px; border-radius: 999px; background: rgba(15,61,62,.1); }
-  .drawer .mycom + .mycom { margin-top: 6px; }
-  .drawer .mycom.news { background: var(--cream-2); }
-  .drawer .mycom.join { background: rgba(232,116,59,.14); color: #a8481c; }
-  .drawer .mycom.join em { background: rgba(232,116,59,.22); }
+  /* مجتمعي: خانة زي باقي الروابط، والمساحات بتنفتح جوّاها */
+  .drawer .mytog { display: flex; align-items: center; gap: 12px; width: 100%; padding: 11px 12px; border: 0;
+    border-radius: 13px; background: transparent; color: var(--green); font: 400 14.5px var(--font); cursor: pointer; transition: background .2s, color .2s; }
+  .drawer .mytog:hover { background: var(--cream-2); color: var(--orange); }
+  .drawer .mytog svg { flex: none; opacity: .75; }
+  .drawer .mytog span { flex: 1; text-align: start; }
+  .drawer .mytog .chv { font-style: normal; font-size: 13px; opacity: .5; transition: transform .25s; }
+  .drawer .mytog[aria-expanded='true'] .chv { transform: rotate(180deg); }
+  .drawer .mysub { display: grid; gap: 2px; padding: 2px 0 6px; margin-inline-start: 14px;
+    border-inline-start: 2px solid var(--mint); }
+  .drawer .mysub[hidden] { display: none; }
+  .drawer .mysub-a { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 11px;
+    text-decoration: none; color: var(--green); font-size: 14px; transition: background .2s; }
+  .drawer .mysub-a:hover { background: var(--cream-2); }
+  .drawer .mysub-a svg { flex: none; opacity: .7; }
+  .drawer .mysub-a span { flex: 1; }
+  .drawer .mysub-a em { font-style: normal; font-size: 11px; padding: 3px 8px; border-radius: 999px; background: var(--mint); color: var(--green); }
+  .drawer .mysub-a em.join { background: rgba(232,116,59,.18); color: #a8481c; }
   #hdr { position: fixed; inset: 0 0 auto 0; z-index: 50; display: flex; justify-content: space-between; align-items: center; gap: 14px; padding: 14px var(--gutter); pointer-events: none; transition: background .3s, box-shadow .3s, padding .3s; }
   #hdr > * { pointer-events: auto; }
   #hdr.solid { background: color-mix(in srgb, var(--hdr-bg) 84%, transparent); backdrop-filter: blur(16px); box-shadow: 0 1px 0 rgba(127,127,127,.16); padding-block: 9px; }

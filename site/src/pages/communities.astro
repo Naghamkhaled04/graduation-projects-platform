@@ -2,6 +2,7 @@
 import Base from '../layouts/Base.astro';
 import '../styles/community.css';
 import { UNIVERSITIES } from '../data/universities';
+import { SPACES } from '../data/spaces';
 import { svg } from '../data/icons';
 ---
 
@@ -41,29 +42,18 @@ import { svg } from '../data/icons';
         </div>
       </div>
 
-      <!-- مجتمعي: الثلاث مساحات بمكان واحد، وحالة الانضمام جوّا كل صف -->
-      <section class="mycoms">
-        <h2>مجتمعي</h2>
-        <div class="mrows">
-          <a class="mrow" href="/c/general">
-            <span class="mi"><Fragment set:html={svg('users', 18)} /></span>
-            <span class="mt"><b>المجتمع العام</b><em>كل الجامعات — اسأل واذكر أي جامعة بـ@</em></span>
-            <span class="ms" id="st-general">…</span>
-          </a>
+      <div class="c-card sec mine" id="my-uni" hidden></div>
 
-          <a class="mrow" id="row-uni" href="/settings">
-            <span class="mi"><Fragment set:html={svg('chat', 18)} /></span>
-            <span class="mt"><b id="uni-name">مجتمع جامعتي</b><em id="uni-sub">حدّد جامعتك عشان تنضم لمجتمعها</em></span>
-            <span class="ms join" id="st-uni">انضم</span>
+      <div class="spaces">
+        {SPACES.map((sp) => (
+          <a class="c-card sp" href={`/c/${sp.slug}`}>
+            <span class="si"><Fragment set:html={svg(sp.icon, 19)} /></span>
+            <b>{sp.name}</b>
+            <span class="d">{sp.desc}</span>
+            <span class="go">ادخل ←</span>
           </a>
-
-          <a class="mrow" href="/c/news">
-            <span class="mi"><Fragment set:html={svg('medal', 18)} /></span>
-            <span class="mt"><b>الإعلانات</b><em>مشاريع جديدة وعروض قطع ومواعيد — من الفريق</em></span>
-            <span class="ms" id="st-news">…</span>
-          </a>
-        </div>
-      </section>
+        ))}
+      </div>
 
       <h2 class="ut">مجتمع كل جامعة</h2>
       <div class="ugrid">
@@ -102,48 +92,28 @@ import { svg } from '../data/icons';
       el.textContent = n ? `${ar(n)} عضو` : 'كن أول عضو';
     });
 
-    const [session, p] = await Promise.all([be.session().catch(() => null), be.profile().catch(() => null)]);
+    const p = await be.profile().catch(() => null);
     const slug = p?.university ? uniSlug(p.university) : null;
-    const uni = slug ? UNIVERSITIES.find((x) => x.slug === slug) : null;
-
-    // المساحتان العامتان: عضو لما يكون مسجّل دخول، وإلا بتصير دعوة
-    const set = (id: string, txt: string, join: boolean) => {
-      const el = document.getElementById(id)!;
-      el.textContent = txt; el.classList.toggle('join', join);
-    };
-    set('st-general', session ? 'عضو' : 'سجّل للمشاركة', !session);
-    set('st-news', session ? 'تتابعها' : 'سجّل لتتابعها', !session);
-
-    if (uni) {
-      document.getElementById('uni-name')!.textContent = `مجتمع ${uni.short}`;
-      document.getElementById('uni-sub')!.textContent = `${uni.name} — طلاب كليتك`;
-      document.getElementById('row-uni')!.setAttribute('href', `/c/${uni.slug}`);
-      set('st-uni', 'عضو', false);
-    }
+    const box = document.getElementById('my-uni')!;
+    box.hidden = false;
+    box.innerHTML = slug
+      ? `<h3>مجتمعك</h3><p class="c-note">أنت مسجّل بـ${esc(p!.university!)}.</p><a class="c-btn" href="/c/${slug}">${svg('chat', 15)} ادخل مجتمع جامعتك</a>`
+      : `<h3>انضم لمجتمع جامعتك</h3><p class="c-note">حدّد جامعتك بملفك وبتنضم تلقائياً. بعدها بتقدر:</p>
+         <ul class="perks2"><li>تنشر سؤال أو تعرض شغلك</li><li>تدوّر على شريك لمشروع التخرج</li><li>ترد على الطلاب وتجمع نقاط</li></ul>
+         <a class="c-btn" href="/settings">${svg('building', 15)} حدّد جامعتك</a>`;
   })();
 </script>
 
 <style is:global>
   .com h1 { margin-bottom: 12px; } .com .lead { color: var(--fg-2); font-size: 18px; max-width: 66ch; margin-bottom: 28px; line-height: 1.9; }
-  /* مجتمعي: الثلاث مساحات كصفوف ببطاقة وحدة، وحالة الانضمام بطرف كل صف */
-  .com .mycoms { margin-bottom: 32px; }
-  .com .mycoms h2 { font-size: 21px; margin-bottom: 12px; }
-  .com .mrows { background: #fff; border-radius: 24px; padding: 8px; display: grid; gap: 2px;
-    box-shadow: 0 0 0 1px rgba(15,61,62,.06), 0 16px 40px -30px rgba(15,61,62,.35); }
-  .com .mrow { display: grid; grid-template-columns: 42px 1fr auto; align-items: center; gap: 13px;
-    padding: 14px 15px; border-radius: 17px; text-decoration: none; color: inherit; transition: background .2s; }
-  .com .mrow:hover { background: var(--cream); }
-  .com .mi { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 14px; background: var(--mint); color: var(--green); }
-  .com .mt { display: grid; gap: 3px; min-width: 0; }
-  .com .mt b { font-size: 16px; }
-  .com .mt em { font-style: normal; font-size: 13px; color: var(--fg-2); line-height: 1.6; }
-  .com .ms { flex: none; font-size: 12.5px; font-weight: 500; padding: 5px 12px; border-radius: 999px;
-    background: var(--mint); color: var(--green); white-space: nowrap; }
-  .com .ms.join { background: rgba(232,116,59,.16); color: #a8481c; }
-  @media (max-width: 560px) {
-    .com .mrow { grid-template-columns: 36px 1fr; row-gap: 8px; }
-    .com .ms { grid-column: 2; justify-self: start; }
-  }
+  /* المساحتان العامتان: أبرز من بطاقات الجامعات */
+  .com .spaces { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 14px; margin-bottom: 30px; }
+  .com .sp { display: grid; gap: 7px; text-decoration: none; color: inherit; border-inline-start: 4px solid var(--orange);
+    transition: transform .25s, box-shadow .25s; }
+  .com .sp:hover { transform: translateY(-3px); box-shadow: 0 0 0 1px rgba(232,116,59,.45), 0 0 28px rgba(232,116,59,.2); }
+  .com .sp .si { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 13px; background: var(--mint); color: var(--green); }
+  .com .sp b { font-size: 18px; } .com .sp .d { font-size: 13.5px; color: var(--fg-2); line-height: 1.75; }
+  .com .sp .go { font-size: 13.5px; color: var(--orange); font-weight: 500; }
   .com .ut { font-size: 21px; margin-bottom: 14px; }
   .com .ugrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
   .com .mini { display: grid; gap: 5px; text-decoration: none; color: inherit; transition: transform .3s, box-shadow .3s; }
@@ -213,4 +183,6 @@ import { svg } from '../data/icons';
   .com .hcard b { font-size: 15.5px; } .com .hcard span:last-child { font-size: 13.5px; color: var(--fg-2); line-height: 1.75; }
   .com .mini .n { font-size: 12.5px; color: var(--orange); font-weight: 500; margin-top: 4px; }
   .com .mine { margin-bottom: 26px; }
+  .com .perks2 { list-style: none; padding: 0; margin: 10px 0 16px; display: grid; gap: 6px; font-size: 14px; color: var(--fg-2); }
+  .com .perks2 li::before { content: '✓ '; color: var(--orange); font-weight: 600; } .com .mine .c-btn { display: inline-block; text-decoration: none; } .com .c-btn svg { vertical-align: -3px; margin-inline-end: 5px; }
 </style>

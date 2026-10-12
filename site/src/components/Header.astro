@@ -98,8 +98,21 @@ const groups = [
     const acct = document.getElementById('d-acct')!, foot = document.getElementById('d-foot')!;
     const item = (href: string, icon: string, label: string) => `<a href="${href}">${svg(icon, 17)} ${label}</a>`;
 
+    // «مجتمعي» بتظهر للكل — الزائر بيشوف الدعوة والمسجّل بيشوف حالته
+    const mySlug = p?.university ? uniSlug(p.university) : null;
+    const myUni = mySlug ? UNIVERSITIES.find((u) => u.slug === mySlug) : null;
+    const row = (href: string, icon: string, label: string, tag: string, join = false, cls = '') =>
+      `<a href="${href}" class="mycom${join ? ' join' : ''}${cls ? ' ' + cls : ''}">${svg(icon, 17)} <span>${label}</span><em>${tag}</em></a>`;
+    const myBlock = `<span class="gt">مجتمعي</span>
+      ${row('/c/general', 'users', 'المجتمع العام', s ? 'عضو' : 'سجّل', !s)}
+      ${myUni
+        ? row(`/c/${myUni.slug}`, 'chat', `مجتمع ${myUni.short}`, 'عضو')
+        : row(s ? '/settings' : '/join', 'chat', 'انضم لمجتمع جامعتك', 'مطلوب', true)}
+      ${row('/c/news', 'medal', 'الإعلانات', s ? 'تتابعها' : 'سجّل', !s, 'news')}
+      ${item('/communities', 'box', 'كل الجامعات')}`;
+
     if (!s || !p) {
-      acct.innerHTML = `<span class="gt">حسابي</span>${item('/join', 'lock', 'تسجيل الدخول أو حساب جديد')}`;
+      acct.innerHTML = `${myBlock}<span class="gt">حسابي</span>${item('/join', 'lock', 'تسجيل الدخول أو حساب جديد')}`;
       document.getElementById('d-me')!.setAttribute('href', '/join');
       foot.innerHTML = '<p>سجّل دخولك لتنضم لمجتمع جامعتك وتجمع نقاط على تجاربك.</p>';
       return;
@@ -110,16 +123,7 @@ const groups = [
     document.getElementById('d-name')!.textContent = p.display_name;
     document.getElementById('d-sub')!.innerHTML = `${svg('level', 12, lvl.n)} ${lvl.name} · ${ar(p.points)} نقطة`;
 
-    // مجتمعي: خانة مستقلة باسم جامعته لو حدّدها، وإلا دعوة للانضمام
-    const mySlug = p.university ? uniSlug(p.university) : null;
-    const myUni = mySlug ? UNIVERSITIES.find((u) => u.slug === mySlug) : null;
-    acct.innerHTML = `<span class="gt">مجتمعي</span>
-      <a href="/c/general" class="mycom">${svg('users', 17)} <span>المجتمع العام</span><em>الكل</em></a>
-      ${myUni
-        ? `<a href="/c/${myUni.slug}" class="mycom">${svg('chat', 17)} <span>مجتمع ${myUni.short}</span><em>عضو</em></a>`
-        : `<a href="/settings" class="mycom join">${svg('chat', 17)} <span>انضم لمجتمع جامعتك</span><em>مطلوب</em></a>`}
-      <a href="/c/news" class="mycom news">${svg('medal', 17)} <span>الإعلانات</span><em id="news-dot"></em></a>
-      ${item('/communities', 'box', 'كل الجامعات')}
+    acct.innerHTML = `${myBlock}
       <span class="gt">حسابي</span>
       ${item('/profile', 'medal', 'نقاطي وتجاربي')}
       ${item('/u?id=' + encodeURIComponent(p.id), 'eye', 'ملفي العام')}

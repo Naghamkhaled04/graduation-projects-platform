@@ -1,16 +1,15 @@
 -- ============================================================
 -- إعداد قاعدة بيانات منصة مشاريع التخرج — سوبابيس
 --
--- الصقيه كله بـ SQL Editor واضغطي Run. آمن للإعادة:
--- الموجود بينتخطّى، والسياسات والمحفّزات بتنستبدل.
+-- الصقيه كله بـ SQL Editor واضغطي Run. آمن للإعادة.
 -- مولَّد من docs/*.md — عدّلي المصدر وأعيدي التوليد.
--- جداول المدينة الذكية مستثناة (الميزة ملغاة).
+-- مستثنى: المدينة الذكية (ملغاة)، والنسخة القديمة من جداول
+-- المجتمع في community-backend.md (كانت تمنع النشر بالمجتمع العام).
 -- ============================================================
 
 -- ------------------------------------------------------------
--- بداية نظيفة (اختياري): لو الجداول انبنت قبل بشكل مختلف،
--- شيلي التعليق عن السطر وشغّليه لحاله أولاً. **بيمسح كل البيانات.**
--- لا تشغّليه بعد ما يصير عندك مستخدمون حقيقيون.
+-- بداية نظيفة: شيلي التعليق وشغّلي هالسطر لحاله أولاً.
+-- **بيمسح كل البيانات** — استعمليه قبل ما يصير عندك مستخدمون.
 --
 -- drop table if exists public.team_notes, public.team_links, public.team_tasks,
 --   public.team_activity, public.team_members, public.teams,
@@ -18,7 +17,6 @@
 --   public.redemptions, public.feedback, public.points_ledger,
 --   public.projects, public.profiles cascade;
 -- ------------------------------------------------------------
-
 
 -- ==========================================================
 -- ١. الحسابات والنقاط والتقييمات
@@ -54,6 +52,8 @@ create policy "own profile insert" on public.profiles for insert to authenticate
 drop policy if exists "own profile update" on public.profiles;
 create policy "own profile update" on public.profiles for update to authenticated
   using (id = auth.uid()) with check (id = auth.uid());
+
+grant update (display_name, university, major, year, bio) on public.profiles to authenticated;
 
 -- إنشاء ملف تلقائياً عند التسجيل
 create or replace function public.handle_new_user() returns trigger
@@ -177,6 +177,8 @@ begin
   return c;
 end $$;
 
+grant execute on function public.redeem() to authenticated;
+
 -- ============ تعديل نقاط يدوي (للأدمن فقط) ============
 create or replace function public.admin_adjust_points(uid uuid, d int, why text) returns void
 language plpgsql security definer set search_path = public as $$
@@ -184,6 +186,8 @@ begin
   if not is_admin() then raise exception 'غير مسموح'; end if;
   perform award(uid, d, 'admin: ' || left(why, 60), gen_random_uuid());
 end $$;
+
+grant execute on function public.admin_adjust_points(uuid,int,text) to authenticated;
 
 -- ============ المشاريع (تُدار من لوحة الأدمن) ============
 create table if not exists public.projects (
@@ -223,110 +227,6 @@ create policy "fb images delete own" on storage.objects for delete to authentica
 update public.profiles set role = 'admin'
 where id = (select id from auth.users where email = 'بريدكم@example.com');
 
--- ============ مشرفو الجامعات ============
-create table if not exists public.uni_moderators (
-  uni        text not null,
-  user_id    uuid not null default auth.uid() references profiles(id) on delete cascade,
-  why        text,
-  status     text not null default 'pending' check (status in ('pending','active','rejected')),
-  created_at timestamptz not null default now(),
-  primary key (uni, user_id)
-);
-
-alter table public.uni_moderators enable row level security;
-
-drop policy if exists "mods read active" on public.uni_moderators;
-create policy "mods read active" on public.uni_moderators for select
-  using (status = 'active' or user_id = auth.uid() or is_admin());
-
-drop policy if exists "mods apply" on public.uni_moderators;
--- الطالب يقدّم طلبه فقط، والحالة تبقى pending مهما أرسل
-create policy "mods apply" on public.uni_moderators for insert to authenticated
-  with check (user_id = auth.uid() and status = 'pending');
-
-drop policy if exists "mods admin" on public.uni_moderators;
-create policy "mods admin" on public.uni_moderators for update to authenticated
-  using (is_admin()) with check (is_admin());
-
--- المشرف يجب أن يكون من نفس الجامعة فعلاً
-create or replace function public.is_moderator_of(u text) returns boolean
-language sql stable security definer set search_path = public as $$
-  select is_admin() or exists (
-    select 1 from uni_moderators m join profiles p on p.id = m.user_id
-    where m.user_id = auth.uid() and m.uni = u and m.status = 'active' and p.university = u)
-$$;
-
--- ============ منشورات المجتمع ============
-create table if not exists public.uni_posts (
-  id          uuid primary key default gen_random_uuid(),
-  uni         text not null,
-  user_id     uuid not null default auth.uid() references profiles(id) on delete cascade,
-  kind        text not null check (kind in ('question','showcase','partner','resource')),
-  title       text not null check (char_length(title) between 6 and 100),
-  body        text not null check (char_length(body) between 15 and 1200),
-  status      text not null default 'pending' check (status in ('pending','approved','rejected')),
-  reply_count int not null default 0,
-  created_at  timestamptz not null default now()
-);
-
-alter table public.uni_posts enable row level security;
-
-create index if not exists on public.uni_posts (uni, status, created_at desc);
-
-drop policy if exists "posts read" on public.uni_posts;
-create policy "posts read" on public.uni_posts for select
-  using (status = 'approved' or user_id = auth.uid() or is_moderator_of(uni));
-
-drop policy if exists "posts insert" on public.uni_posts;
--- ينشر فقط من جامعته، ودائماً pending
-create policy "posts insert" on public.uni_posts for insert to authenticated with check (
-  user_id = auth.uid() and status = 'pending'
-  and uni = (select university from profiles where id = auth.uid()));
-
-drop policy if exists "posts moderate" on public.uni_posts;
-create policy "posts moderate" on public.uni_posts for update to authenticated
-  using (is_moderator_of(uni)) with check (is_moderator_of(uni));
-
-drop policy if exists "posts delete own" on public.uni_posts;
-create policy "posts delete own" on public.uni_posts for delete to authenticated
-  using (user_id = auth.uid() or is_moderator_of(uni));
-
--- ============ الردود ============
-create table if not exists public.uni_replies (
-  id         uuid primary key default gen_random_uuid(),
-  post_id    uuid not null references uni_posts(id) on delete cascade,
-  user_id    uuid not null default auth.uid() references profiles(id) on delete cascade,
-  body       text not null check (char_length(body) between 2 and 600),
-  created_at timestamptz not null default now()
-);
-
-alter table public.uni_replies enable row level security;
-
-create index if not exists on public.uni_replies (post_id, created_at);
-
-drop policy if exists "replies read" on public.uni_replies;
-create policy "replies read" on public.uni_replies for select using (true);
-
-drop policy if exists "replies insert" on public.uni_replies;
-create policy "replies insert" on public.uni_replies for insert to authenticated with check (
-  user_id = auth.uid()
-  and (select uni from uni_posts where id = post_id) = (select university from profiles where id = auth.uid()));
-
-drop policy if exists "replies delete" on public.uni_replies;
-create policy "replies delete" on public.uni_replies for delete to authenticated using (
-  user_id = auth.uid() or is_moderator_of((select uni from uni_posts where id = post_id)));
-
-create or replace function public.bump_replies() returns trigger language plpgsql as $$
-begin
-  update uni_posts set reply_count = (select count(*) from uni_replies where post_id = coalesce(new.post_id, old.post_id))
-   where id = coalesce(new.post_id, old.post_id);
-  return null;
-end $$;
-
-drop trigger if exists trg_bump_replies on public.uni_replies;
-create trigger trg_bump_replies after insert or delete on public.uni_replies
-  for each row execute function public.bump_replies();
-
 -- ============ عدد أعضاء كل مجتمع ============
 create or replace function public.community_counts()
 returns table (uni text, n bigint)
@@ -334,6 +234,8 @@ language sql stable security definer set search_path = public as $$
   select university, count(*) from profiles
   where university is not null and university <> '' group by university
 $$;
+
+grant execute on function public.community_counts() to anon, authenticated;
 
 alter table public.profiles
   add column referred_by uuid references profiles(id) on delete set null,

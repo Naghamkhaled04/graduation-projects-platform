@@ -52,7 +52,7 @@ const { u } = Astro.props;
     canMod = await com.canModerate(uni).catch(() => false);
 
     const mods = await com.moderators(uni).catch(() => []);
-    document.getElementById('mods')!.textContent = mods.length ? 'المشرفون: ' + mods.map((m) => m.name).join('، ') : 'ما في مشرف لهالمجتمع بعد.';
+    document.getElementById('mods')!.textContent = mods.length ? 'المشرفون: ' + mods.map((m) => m.name).join('، ') : 'لسه ما في مشرف — أول عضو نشِط بياخدها.';
 
     const acts = document.getElementById('facts')!;
     acts.innerHTML = `${member ? `<button type="button" class="c-btn" id="new-post">${svg('plus', 15)} اكتب منشور</button>` : `<a class="c-btn" href="/profile">انضم: حدّد جامعتك بملفك</a>`}
@@ -69,7 +69,10 @@ const { u } = Astro.props;
       catch (e: any) { alert(e.message === 'AUTH' ? 'سجّل دخولك أولاً' : e.message); }
     });
 
-    document.getElementById('kinds')!.addEventListener('click', (e) => {
+    // الفلاتر بتختفي لما ما يكون في شي تفلتره — صفوف أزرار فوق فراغ بتبيّن الصفحة مكسورة
+    const kindsEl = document.getElementById('kinds')!;
+    const syncKinds = () => { kindsEl.hidden = all.length === 0; };
+    kindsEl.addEventListener('click', (e) => {
       const b = (e.target as HTMLElement).closest<HTMLElement>('.k'); if (!b) return;
       document.querySelectorAll('.k').forEach((x) => x.classList.toggle('on', x === b));
       filter = b.dataset.k ?? ''; paint();
@@ -133,8 +136,40 @@ const { u } = Astro.props;
           </div>
           <div class="replies" hidden></div>
         </article>`).join('')
-        : `<p class="c-note">ما في منشورات ${filter ? 'بهالنوع' : 'بعد'}. ${member ? 'كن أول واحد.' : 'حدّد جامعتك بملفك للمشاركة.'}</p>`;
+        : emptyState();
+      syncKinds();
     }
+
+    /** مواضيع بداية: الصفحة الفاضية لازم تقترح شو تكتب، مش تعتذر إنه ما في شي */
+    const STARTERS: [PostKind, string, string][] = [
+      ['partner', 'أدوّر على شريك لمشروع التخرج', 'اكتب تخصصك وشو بتتقن وشو بتدوّر عليه'],
+      ['q', 'أي لوحة أنسب لمشروعي؟', 'احكي فكرتك وميزانيتك والطلاب بيرشدوك'],
+      ['res', 'وين بتلاقوا القطع بالمدينة؟', 'شارك محل أو مورّد جرّبته'],
+      ['work', 'هاد شغلي — رأيكم؟', 'اعرض مشروعك وخذ ملاحظات قبل المناقشة'],
+    ];
+    function emptyState() {
+      if (filter) return `<p class="c-note">ما في منشورات بهالنوع بعد.</p>`;
+      return `<div class="c-card empty">
+        <h3>${svg('chat', 19)} المجتمع لسه ببدايته</h3>
+        <p class="c-note">أول منشور بيفتح الباب. هاي مواضيع بيسأل عنها الطلاب كل فصل${member ? ' — اضغط على أي وحدة وبتفتحلك نموذج الكتابة' : ''}:</p>
+        <div class="starters">${STARTERS.map(([k, t, d]) =>
+          `<button type="button" class="starter" data-starter="${k}" data-title="${esc(t)}"><b>${esc(t)}</b><span>${esc(d)}</span></button>`).join('')}</div>
+        ${member ? '' : `<p class="c-note join">حدّد جامعتك بملفك عشان تقدر تشارك.</p><a class="c-btn" href="/profile">حدّد جامعتك</a>`}
+      </div>`;
+    }
+
+    // موضوع البداية بيفتح النموذج معبّى — فالطالب بيكمّل بدل ما يبلّش من ورقة بيضا
+    postsEl.addEventListener('click', (e) => {
+      const b = (e.target as HTMLElement).closest<HTMLElement>('[data-starter]'); if (!b) return;
+      if (!member) { location.href = '/profile'; return; }
+      composeEl.hidden = false; paintCompose();
+      const k = composeEl.querySelector<HTMLInputElement>(`input[name=kind][value="${b.dataset.starter}"]`);
+      if (k) { k.checked = true; k.dispatchEvent(new Event('change', { bubbles: true })); }
+      const ti = composeEl.querySelector<HTMLInputElement>('#np-title');
+      if (ti) { ti.value = b.dataset.title ?? ''; }
+      composeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      (composeEl.querySelector('#np-body') as HTMLTextAreaElement | null)?.focus();
+    });
 
     postsEl.addEventListener('click', async (e) => {
       const t = (e.target as HTMLElement).closest<HTMLElement>('[data-open],[data-ok],[data-no],[data-rdel],[data-rsend]'); if (!t) return;
@@ -173,6 +208,18 @@ const { u } = Astro.props;
   .feed .c-btn svg, .feed .modb svg { vertical-align: -3px; margin-inline-end: 4px; }
   .feed .modb { background: rgba(232,116,59,.16); color: #a8481c; }
   .feed .kinds { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+  .feed .kinds[hidden] { display: none; }
+  /* الحالة الفاضية: مواضيع بداية بدل اعتذار */
+  .feed .empty h3 { display: flex; align-items: center; gap: 9px; font-size: 20px; margin-bottom: 8px; }
+  .feed .empty h3 svg { color: var(--orange); }
+  .feed .starters { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 16px; }
+  @media (max-width: 620px) { .feed .starters { grid-template-columns: 1fr; } }
+  .feed .starter { display: grid; gap: 4px; text-align: start; padding: 14px 17px; border-radius: 16px; cursor: pointer;
+    background: var(--cream); border: 1px solid transparent; font: inherit; color: inherit; transition: border-color .2s, transform .2s; }
+  .feed .starter:hover { border-color: rgba(232,116,59,.55); transform: translateY(-2px); }
+  .feed .starter b { font-size: 15px; color: var(--green); }
+  .feed .starter span { font-size: 13px; color: var(--fg-2); line-height: 1.7; }
+  .feed .empty .join { margin-top: 16px; }
   .feed .k { font: 500 13.5px var(--font); border: 1px solid rgba(15,61,62,.2); background: #fff; color: var(--green); padding: 8px 16px; border-radius: 999px; cursor: pointer; transition: all .2s; }
   .feed .k:hover { border-color: var(--orange); } .feed .k.on { background: var(--green); color: var(--cream); border-color: var(--green); }
   .feed .compose { margin-bottom: 18px; }

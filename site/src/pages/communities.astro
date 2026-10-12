@@ -1,7 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
 import '../styles/community.css';
-import { UNIVERSITIES } from '../data/universities';
+import { UNIVERSITIES, STORE_CITY } from '../data/universities';
 import { svg } from '../data/icons';
 ---
 
@@ -11,11 +11,20 @@ import { svg } from '../data/icons';
       <h1>مجتمعات الجامعات</h1>
       <p class="lead">كل جامعة إلها مجتمعها: تسأل فيه سؤالك التقني، تعرض شغلك، تدوّر على شريك لمشروع التخرج، وتشارك مصادر محلية (وين تلاقي قطعة، أي مدرّس بيفهم بالموضوع).</p>
 
+      <!-- شو بتلاقي هون: الصفحة لازم تفيد حتى لو ما في ولا عضو -->
+      <div class="how">
+        {[['chat', 'اسأل سؤالك التقني', 'طلاب بنفس كليتك عاشوا نفس المشكلة'],
+          ['users', 'دوّر على شريك', 'مشروع التخرج فريق — هون بتلاقيه'],
+          ['box', 'مصادر محلية', 'وين تلاقي قطعة، وأي مدرّس بيفهم بالموضوع']].map(([ic, t, d]) => (
+          <div class="hcard"><span class="hi"><Fragment set:html={svg(ic, 17)} /></span><b>{t}</b><span>{d}</span></div>
+        ))}
+      </div>
+
       <div class="ugrid">
         {UNIVERSITIES.map((u) => (
           <a class="c-card mini" href={`/c/${u.slug}`} data-uni={u.slug}>
-            <b>{u.short}</b>
-            <span class="d">{u.name}</span>
+            <span class="row"><b>{u.short}</b>{u.city === STORE_CITY && <span class="near">توصيل أسرع</span>}</span>
+            <span class="d">{u.name} · {u.city}</span>
             <span class="n" data-count={u.slug}></span>
           </a>
         ))}
@@ -39,7 +48,7 @@ import { svg } from '../data/icons';
     document.querySelectorAll<HTMLElement>('[data-count]').forEach((el) => {
       const u = UNIVERSITIES.find((x) => x.slug === el.dataset.count)!;
       const n = counts[u.name] ?? counts[u.slug] ?? 0;
-      el.textContent = n ? `${ar(n)} عضو` : 'كن أول عضو';
+      el.textContent = n ? `${ar(n)} عضو` : 'كن أول عضو — وبتصير المشرف';
     });
 
     const p = await be.profile().catch(() => null);
@@ -58,6 +67,13 @@ import { svg } from '../data/icons';
   .com .mini { display: grid; gap: 5px; text-decoration: none; color: inherit; transition: transform .3s, box-shadow .3s; }
   .com .mini:hover { transform: translateY(-4px); box-shadow: 0 0 0 1px rgba(232,116,59,.5), 0 0 30px rgba(232,116,59,.25); }
   .com .mini b { font-size: 18px; } .com .mini .d { font-size: 13px; color: var(--fg-2); }
+  .com .mini .row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .com .mini .near { font-size: 11.5px; padding: 3px 9px; border-radius: 999px; background: var(--mint); color: var(--green); font-weight: 500; }
+  /* شريط «شو بتلاقي هون»: بيخلي الصفحة مفيدة قبل ما يكون فيها أعضاء */
+  .com .how { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; margin-bottom: 26px; }
+  .com .hcard { display: grid; gap: 5px; padding: 17px 19px; border-radius: 20px; background: #fff; box-shadow: 0 0 0 1px rgba(15,61,62,.06); }
+  .com .hcard .hi { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 12px; background: var(--mint); color: var(--green); margin-bottom: 3px; }
+  .com .hcard b { font-size: 15.5px; } .com .hcard span:last-child { font-size: 13.5px; color: var(--fg-2); line-height: 1.75; }
   .com .mini .n { font-size: 12.5px; color: var(--orange); font-weight: 500; margin-top: 4px; }
   .com .mine { margin-top: 28px; } .com .mine .c-btn { display: inline-block; text-decoration: none; } .com .c-btn svg { vertical-align: -3px; margin-inline-end: 5px; }
 </style>

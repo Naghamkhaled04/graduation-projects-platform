@@ -1,10 +1,24 @@
 -- ============================================================
 -- إعداد قاعدة بيانات منصة مشاريع التخرج — سوبابيس
 --
--- شغّلي الملف كله مرة واحدة من SQL Editor. الترتيب مهم.
--- مولَّد من docs/*.md — عدّلي المصدر وأعيدي التوليد، لا تعدّلي هون.
+-- الصقيه كله بـ SQL Editor واضغطي Run. آمن للإعادة:
+-- الموجود بينتخطّى، والسياسات والمحفّزات بتنستبدل.
+-- مولَّد من docs/*.md — عدّلي المصدر وأعيدي التوليد.
 -- جداول المدينة الذكية مستثناة (الميزة ملغاة).
 -- ============================================================
+
+-- ------------------------------------------------------------
+-- بداية نظيفة (اختياري): لو الجداول انبنت قبل بشكل مختلف،
+-- شيلي التعليق عن السطر وشغّليه لحاله أولاً. **بيمسح كل البيانات.**
+-- لا تشغّليه بعد ما يصير عندك مستخدمون حقيقيون.
+--
+-- drop table if exists public.team_notes, public.team_links, public.team_tasks,
+--   public.team_activity, public.team_members, public.teams,
+--   public.uni_replies, public.uni_posts, public.uni_moderators,
+--   public.redemptions, public.feedback, public.points_ledger,
+--   public.projects, public.profiles cascade;
+-- ------------------------------------------------------------
+
 
 -- ==========================================================
 -- ١. الحسابات والنقاط والتقييمات
@@ -12,7 +26,7 @@
 -- ==========================================================
 
 -- ============ الملفات التعريفية ============
-create table public.profiles (
+create table if not exists public.profiles (
   id           uuid primary key references auth.users(id) on delete cascade,
   display_name text not null check (char_length(display_name) between 2 and 40),
   university   text check (char_length(university) <= 60),
@@ -30,11 +44,14 @@ create or replace function public.is_admin() returns boolean
 language sql security definer stable set search_path = public as
 $$ select exists (select 1 from profiles where id = auth.uid() and role = 'admin') $$;
 
+drop policy if exists "profiles readable" on public.profiles;
 create policy "profiles readable" on public.profiles for select using (true);
 
+drop policy if exists "own profile insert" on public.profiles;
 create policy "own profile insert" on public.profiles for insert to authenticated
   with check (id = auth.uid() and role = 'student' and points = 0);
 
+drop policy if exists "own profile update" on public.profiles;
 create policy "own profile update" on public.profiles for update to authenticated
   using (id = auth.uid()) with check (id = auth.uid());
 
@@ -47,11 +64,12 @@ begin
   return new;
 end $$;
 
+drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created after insert on auth.users
   for each row execute function public.handle_new_user();
 
 -- ============ سجل النقاط (للقراءة فقط من المتصفح) ============
-create table public.points_ledger (
+create table if not exists public.points_ledger (
   id         uuid primary key default gen_random_uuid(),
   user_id    uuid not null references profiles(id) on delete cascade,
   delta      int  not null,
@@ -63,6 +81,7 @@ create table public.points_ledger (
 
 alter table public.points_ledger enable row level security;
 
+drop policy if exists "ledger own or admin" on public.points_ledger;
 create policy "ledger own or admin" on public.points_ledger for select
   using (user_id = auth.uid() or is_admin());
 
@@ -75,7 +94,7 @@ begin
 end $$;
 
 -- ============ الفيدباك والتقييمات ============
-create table public.feedback (
+create table if not exists public.feedback (
   id         uuid primary key default gen_random_uuid(),
   project_id text not null,
   user_id    uuid not null default auth.uid() references profiles(id) on delete cascade,
@@ -89,18 +108,23 @@ create table public.feedback (
 
 alter table public.feedback enable row level security;
 
+drop policy if exists "feedback read" on public.feedback;
 create policy "feedback read" on public.feedback for select
   using (status = 'approved' or user_id = auth.uid() or is_admin());
 
+drop policy if exists "feedback insert own pending" on public.feedback;
 create policy "feedback insert own pending" on public.feedback for insert to authenticated
   with check (user_id = auth.uid() and status = 'pending');
 
+drop policy if exists "feedback edit own pending" on public.feedback;
 create policy "feedback edit own pending" on public.feedback for update to authenticated
   using (user_id = auth.uid() and status = 'pending') with check (user_id = auth.uid() and status = 'pending');
 
+drop policy if exists "feedback admin all" on public.feedback;
 create policy "feedback admin all" on public.feedback for all to authenticated
   using (is_admin()) with check (is_admin());
 
+drop policy if exists "feedback delete own" on public.feedback;
 create policy "feedback delete own" on public.feedback for delete to authenticated
   using (user_id = auth.uid());
 
@@ -117,11 +141,12 @@ begin
   return new;
 end $$;
 
+drop trigger if exists feedback_points on public.feedback;
 create trigger feedback_points after update of status on public.feedback
   for each row execute function public.on_feedback_approved();
 
 -- ============ استبدال النقاط باستشارة مجانية ============
-create table public.redemptions (
+create table if not exists public.redemptions (
   id         uuid primary key default gen_random_uuid(),
   user_id    uuid not null default auth.uid() references profiles(id) on delete cascade,
   code       text not null unique,
@@ -131,9 +156,11 @@ create table public.redemptions (
 
 alter table public.redemptions enable row level security;
 
+drop policy if exists "redemptions own or admin" on public.redemptions;
 create policy "redemptions own or admin" on public.redemptions for select
   using (user_id = auth.uid() or is_admin());
 
+drop policy if exists "redemptions admin update" on public.redemptions;
 create policy "redemptions admin update" on public.redemptions for update to authenticated
   using (is_admin()) with check (is_admin());
 
@@ -159,7 +186,7 @@ begin
 end $$;
 
 -- ============ المشاريع (تُدار من لوحة الأدمن) ============
-create table public.projects (
+create table if not exists public.projects (
   id         text primary key check (id ~ '^[a-z0-9-]{2,40}$'),
   data       jsonb not null,
   status     text not null default 'draft' check (status in ('draft','published','hidden')),
@@ -168,10 +195,12 @@ create table public.projects (
 
 alter table public.projects enable row level security;
 
+drop policy if exists "projects read public" on public.projects;
 -- الزائر يرى المنشور والمخفي (المخفي لإخفاء مشروع ثابت)، والمسودات للأدمن فقط
 create policy "projects read public" on public.projects for select
   using (status in ('published','hidden') or is_admin());
 
+drop policy if exists "projects admin write" on public.projects;
 create policy "projects admin write" on public.projects for all to authenticated
   using (is_admin()) with check (is_admin());
 
@@ -180,11 +209,14 @@ insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_typ
 values ('feedback-images', 'feedback-images', true, 1572864, array['image/jpeg','image/webp','image/png'])
 on conflict (id) do nothing;
 
+drop policy if exists "fb images read" on storage.objects;
 create policy "fb images read" on storage.objects for select using (bucket_id = 'feedback-images');
 
+drop policy if exists "fb images upload own folder" on storage.objects;
 create policy "fb images upload own folder" on storage.objects for insert to authenticated
   with check (bucket_id = 'feedback-images' and (storage.foldername(name))[1] = auth.uid()::text);
 
+drop policy if exists "fb images delete own" on storage.objects;
 create policy "fb images delete own" on storage.objects for delete to authenticated
   using (bucket_id = 'feedback-images' and (storage.foldername(name))[1] = auth.uid()::text);
 
@@ -192,7 +224,7 @@ update public.profiles set role = 'admin'
 where id = (select id from auth.users where email = 'بريدكم@example.com');
 
 -- ============ مشرفو الجامعات ============
-create table public.uni_moderators (
+create table if not exists public.uni_moderators (
   uni        text not null,
   user_id    uuid not null default auth.uid() references profiles(id) on delete cascade,
   why        text,
@@ -203,13 +235,16 @@ create table public.uni_moderators (
 
 alter table public.uni_moderators enable row level security;
 
+drop policy if exists "mods read active" on public.uni_moderators;
 create policy "mods read active" on public.uni_moderators for select
   using (status = 'active' or user_id = auth.uid() or is_admin());
 
+drop policy if exists "mods apply" on public.uni_moderators;
 -- الطالب يقدّم طلبه فقط، والحالة تبقى pending مهما أرسل
 create policy "mods apply" on public.uni_moderators for insert to authenticated
   with check (user_id = auth.uid() and status = 'pending');
 
+drop policy if exists "mods admin" on public.uni_moderators;
 create policy "mods admin" on public.uni_moderators for update to authenticated
   using (is_admin()) with check (is_admin());
 
@@ -222,7 +257,7 @@ language sql stable security definer set search_path = public as $$
 $$;
 
 -- ============ منشورات المجتمع ============
-create table public.uni_posts (
+create table if not exists public.uni_posts (
   id          uuid primary key default gen_random_uuid(),
   uni         text not null,
   user_id     uuid not null default auth.uid() references profiles(id) on delete cascade,
@@ -236,24 +271,28 @@ create table public.uni_posts (
 
 alter table public.uni_posts enable row level security;
 
-create index on public.uni_posts (uni, status, created_at desc);
+create index if not exists on public.uni_posts (uni, status, created_at desc);
 
+drop policy if exists "posts read" on public.uni_posts;
 create policy "posts read" on public.uni_posts for select
   using (status = 'approved' or user_id = auth.uid() or is_moderator_of(uni));
 
+drop policy if exists "posts insert" on public.uni_posts;
 -- ينشر فقط من جامعته، ودائماً pending
 create policy "posts insert" on public.uni_posts for insert to authenticated with check (
   user_id = auth.uid() and status = 'pending'
   and uni = (select university from profiles where id = auth.uid()));
 
+drop policy if exists "posts moderate" on public.uni_posts;
 create policy "posts moderate" on public.uni_posts for update to authenticated
   using (is_moderator_of(uni)) with check (is_moderator_of(uni));
 
+drop policy if exists "posts delete own" on public.uni_posts;
 create policy "posts delete own" on public.uni_posts for delete to authenticated
   using (user_id = auth.uid() or is_moderator_of(uni));
 
 -- ============ الردود ============
-create table public.uni_replies (
+create table if not exists public.uni_replies (
   id         uuid primary key default gen_random_uuid(),
   post_id    uuid not null references uni_posts(id) on delete cascade,
   user_id    uuid not null default auth.uid() references profiles(id) on delete cascade,
@@ -263,14 +302,17 @@ create table public.uni_replies (
 
 alter table public.uni_replies enable row level security;
 
-create index on public.uni_replies (post_id, created_at);
+create index if not exists on public.uni_replies (post_id, created_at);
 
+drop policy if exists "replies read" on public.uni_replies;
 create policy "replies read" on public.uni_replies for select using (true);
 
+drop policy if exists "replies insert" on public.uni_replies;
 create policy "replies insert" on public.uni_replies for insert to authenticated with check (
   user_id = auth.uid()
   and (select uni from uni_posts where id = post_id) = (select university from profiles where id = auth.uid()));
 
+drop policy if exists "replies delete" on public.uni_replies;
 create policy "replies delete" on public.uni_replies for delete to authenticated using (
   user_id = auth.uid() or is_moderator_of((select uni from uni_posts where id = post_id)));
 
@@ -281,6 +323,7 @@ begin
   return null;
 end $$;
 
+drop trigger if exists trg_bump_replies on public.uni_replies;
 create trigger trg_bump_replies after insert or delete on public.uni_replies
   for each row execute function public.bump_replies();
 
@@ -306,6 +349,7 @@ begin
   return new;
 end $$;
 
+drop trigger if exists trg_lock_referrer on public.profiles;
 create trigger trg_lock_referrer before insert or update on public.profiles
   for each row execute function public.lock_referrer();
 
@@ -333,7 +377,7 @@ end $$;
 
 -- ============ الجداول ============
 
-create table public.uni_posts (
+create table if not exists public.uni_posts (
   id          uuid primary key default gen_random_uuid(),
   uni         text not null check (char_length(uni) between 2 and 60),
   user_id     uuid not null default auth.uid() references public.profiles(id) on delete cascade,
@@ -346,9 +390,9 @@ create table public.uni_posts (
   created_at  timestamptz not null default now()
 );
 
-create index uni_posts_feed on public.uni_posts (uni, created_at desc);
+create index if not exists uni_posts_feed on public.uni_posts (uni, created_at desc);
 
-create table public.uni_replies (
+create table if not exists public.uni_replies (
   id         uuid primary key default gen_random_uuid(),
   post_id    uuid not null references public.uni_posts(id) on delete cascade,
   user_id    uuid not null default auth.uid() references public.profiles(id) on delete cascade,
@@ -356,9 +400,9 @@ create table public.uni_replies (
   created_at timestamptz not null default now()
 );
 
-create index uni_replies_post on public.uni_replies (post_id, created_at);
+create index if not exists uni_replies_post on public.uni_replies (post_id, created_at);
 
-create table public.uni_moderators (
+create table if not exists public.uni_moderators (
   user_id    uuid not null default auth.uid() references public.profiles(id) on delete cascade,
   uni        text not null,
   why        text check (char_length(why) <= 400),
@@ -413,10 +457,12 @@ alter table public.uni_replies    enable row level security;
 
 alter table public.uni_moderators enable row level security;
 
+drop policy if exists "posts read" on public.uni_posts;
 -- القراءة: المعتمَد للجميع، وصاحب المنشور يرى منشوره، والمشرف يرى كل شيء بمساحته
 create policy "posts read" on public.uni_posts for select
   using (status = 'approved' or user_id = auth.uid() or public.is_moderator_of(uni));
 
+drop policy if exists "posts insert" on public.uni_posts;
 -- النشر: مسجّل دخول فقط، ودائماً "قيد المراجعة".
 -- الإعلانات وأنواع المشرفين (deadline) للمشرف وحده.
 create policy "posts insert" on public.uni_posts for insert to authenticated
@@ -426,37 +472,46 @@ create policy "posts insert" on public.uni_posts for insert to authenticated
     and (kind <> 'deadline'  or public.is_moderator_of(uni))
   );
 
+drop policy if exists "posts update" on public.uni_posts;
 -- التعديل: صاحبه ما دام معلّقاً، أو المشرف (للاعتماد والرفض)
 create policy "posts update" on public.uni_posts for update to authenticated
   using (public.is_moderator_of(uni) or (user_id = auth.uid() and status = 'pending'))
   with check (public.is_moderator_of(uni) or (user_id = auth.uid() and status = 'pending'));
 
+drop policy if exists "posts delete" on public.uni_posts;
 create policy "posts delete" on public.uni_posts for delete to authenticated
   using (user_id = auth.uid() or public.is_moderator_of(uni));
 
+drop policy if exists "replies read" on public.uni_replies;
 -- الردود: تُقرأ مع منشور ظاهر، وتُكتب من مسجّل، وتُحذف من صاحبها أو المشرف
 create policy "replies read" on public.uni_replies for select
   using (exists (select 1 from public.uni_posts p where p.id = post_id
                  and (p.status = 'approved' or p.user_id = auth.uid() or public.is_moderator_of(p.uni))));
 
+drop policy if exists "replies insert" on public.uni_replies;
 create policy "replies insert" on public.uni_replies for insert to authenticated
   with check (user_id = auth.uid()
     and exists (select 1 from public.uni_posts p where p.id = post_id and p.status = 'approved'));
 
+drop policy if exists "replies delete" on public.uni_replies;
 create policy "replies delete" on public.uni_replies for delete to authenticated
   using (user_id = auth.uid()
     or exists (select 1 from public.uni_posts p where p.id = post_id and public.is_moderator_of(p.uni)));
 
+drop policy if exists "mods read" on public.uni_moderators;
 -- المشرفون: القائمة ظاهرة، والطلب من صاحبه، والاعتماد من الأدمن فقط
 create policy "mods read" on public.uni_moderators for select using (true);
 
+drop policy if exists "mods apply" on public.uni_moderators;
 create policy "mods apply" on public.uni_moderators for insert to authenticated
   with check (user_id = auth.uid() and status = 'pending');
 
+drop policy if exists "mods update own pending" on public.uni_moderators;
 create policy "mods update own pending" on public.uni_moderators for update to authenticated
   using (user_id = auth.uid() and status = 'pending')
   with check (user_id = auth.uid() and status = 'pending');
 
+drop policy if exists "mods admin" on public.uni_moderators;
 create policy "mods admin" on public.uni_moderators for all to authenticated
   using ((select role from public.profiles where id = auth.uid()) = 'admin')
   with check ((select role from public.profiles where id = auth.uid()) = 'admin');
@@ -468,14 +523,14 @@ update public.profiles set role = 'admin' where id = auth.uid();
 -- المصدر: docs/teams-sql.md
 -- ==========================================================
 
-create table public.teams (
+create table if not exists public.teams (
   id         uuid primary key default gen_random_uuid(),
   name       text not null check (char_length(name) between 2 and 60),
   project    text check (char_length(project) <= 60),
   created_at timestamptz not null default now()
 );
 
-create table public.team_members (
+create table if not exists public.team_members (
   id      uuid primary key default gen_random_uuid(),
   team_id uuid not null references public.teams(id) on delete cascade,
   user_id uuid references public.profiles(id) on delete cascade,
@@ -487,11 +542,11 @@ create table public.team_members (
 );
 
 -- حساب واحد لا يكون بفريقين، ولا يتكرر داخل نفس الفريق
-create unique index team_members_one_team on public.team_members (user_id) where user_id is not null;
+create unique index if not exists team_members_one_team on public.team_members (user_id) where user_id is not null;
 
-create index team_members_team on public.team_members (team_id);
+create index if not exists team_members_team on public.team_members (team_id);
 
-create table public.team_tasks (
+create table if not exists public.team_tasks (
   id         uuid primary key default gen_random_uuid(),
   team_id    uuid not null references public.teams(id) on delete cascade,
   title      text not null check (char_length(title) between 3 and 120),
@@ -501,9 +556,9 @@ create table public.team_tasks (
   created_at timestamptz not null default now()
 );
 
-create index team_tasks_team on public.team_tasks (team_id, created_at desc);
+create index if not exists team_tasks_team on public.team_tasks (team_id, created_at desc);
 
-create table public.team_links (
+create table if not exists public.team_links (
   id         uuid primary key default gen_random_uuid(),
   team_id    uuid not null references public.teams(id) on delete cascade,
   title      text not null check (char_length(title) between 1 and 100),
@@ -513,9 +568,9 @@ create table public.team_links (
   created_at timestamptz not null default now()
 );
 
-create index team_links_team on public.team_links (team_id, created_at desc);
+create index if not exists team_links_team on public.team_links (team_id, created_at desc);
 
-create table public.team_notes (
+create table if not exists public.team_notes (
   id         uuid primary key default gen_random_uuid(),
   link_id    uuid not null references public.team_links(id) on delete cascade,
   author     text not null,
@@ -523,9 +578,9 @@ create table public.team_notes (
   created_at timestamptz not null default now()
 );
 
-create index team_notes_link on public.team_notes (link_id, created_at);
+create index if not exists team_notes_link on public.team_notes (link_id, created_at);
 
-create table public.team_activity (
+create table if not exists public.team_activity (
   id      uuid primary key default gen_random_uuid(),
   team_id uuid not null references public.teams(id) on delete cascade,
   who     text not null,
@@ -533,7 +588,7 @@ create table public.team_activity (
   at      timestamptz not null default now()
 );
 
-create index team_activity_team on public.team_activity (team_id, at desc);
+create index if not exists team_activity_team on public.team_activity (team_id, at desc);
 
 -- ============ دوال ============
 
@@ -573,6 +628,7 @@ begin
   return new;
 end; $$;
 
+drop trigger if exists team_members_cap on public.team_members;
 create trigger team_members_cap before insert on public.team_members
 for each row execute function public.cap_team_size();
 
@@ -586,6 +642,7 @@ begin
   return null;
 end; $$;
 
+drop trigger if exists team_members_cleanup on public.team_members;
 create trigger team_members_cleanup after delete on public.team_members
 for each row execute function public.drop_empty_team();
 
@@ -603,27 +660,35 @@ alter table public.team_notes    enable row level security;
 
 alter table public.team_activity enable row level security;
 
+drop policy if exists "team read" on public.teams;
 create policy "team read"   on public.teams for select using (public.is_team_member(id));
 
+drop policy if exists "team update" on public.teams;
 create policy "team update" on public.teams for update to authenticated
   using (public.is_team_member(id)) with check (public.is_team_member(id));
 
+drop policy if exists "members rw" on public.team_members;
 -- الإنشاء يمرّ عبر create_team() فقط
 
 create policy "members rw" on public.team_members for all to authenticated
   using (public.is_team_member(team_id)) with check (public.is_team_member(team_id));
 
+drop policy if exists "tasks rw" on public.team_tasks;
 create policy "tasks rw" on public.team_tasks for all to authenticated
   using (public.is_team_member(team_id)) with check (public.is_team_member(team_id));
 
+drop policy if exists "links rw" on public.team_links;
 create policy "links rw" on public.team_links for all to authenticated
   using (public.is_team_member(team_id)) with check (public.is_team_member(team_id));
 
+drop policy if exists "notes rw" on public.team_notes;
 create policy "notes rw" on public.team_notes for all to authenticated
   using (exists (select 1 from public.team_links l where l.id = link_id and public.is_team_member(l.team_id)))
   with check (exists (select 1 from public.team_links l where l.id = link_id and public.is_team_member(l.team_id)));
 
+drop policy if exists "activity read" on public.team_activity;
 create policy "activity read"   on public.team_activity for select using (public.is_team_member(team_id));
 
+drop policy if exists "activity insert" on public.team_activity;
 create policy "activity insert" on public.team_activity for insert to authenticated
   with check (public.is_team_member(team_id));

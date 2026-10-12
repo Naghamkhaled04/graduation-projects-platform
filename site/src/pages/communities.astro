@@ -25,9 +25,9 @@ import { svg } from '../data/icons';
 
         <div class="hcard" style="--i:1">
           <div class="anim linkA">
-            <span class="av a1"></span>
-            <svg viewBox="0 0 120 40" aria-hidden="true"><path d="M26 20 H94" /></svg>
-            <span class="av a2"></span>
+            <span class="av a1"><i></i></span>
+            <span class="track"><span class="dash"></span><span class="spark"></span></span>
+            <span class="av a2"><i></i></span>
           </div>
           <b>دوّر على شريك</b>
           <span>مشروع التخرج فريق — هون بتلاقيه</span>
@@ -122,15 +122,27 @@ import { svg } from '../data/icons';
   @keyframes pop { from { opacity: 0; transform: translateY(6px) scale(.9); } to { opacity: 1; transform: none; } }
   @keyframes dot { 0%, 100% { opacity: .25; transform: none; } 50% { opacity: 1; transform: translateY(-2px); } }
 
-  /* ٢ · شخصان بينوصلوا بخط بينرسم */
-  .com .linkA { justify-content: center; }
-  .com .linkA .av { width: 26px; height: 26px; border-radius: 50%; flex: none; }
+  /* ٢ · طالبان بيقربوا من بعض، الخط بينوصل، وبتطلع شرارة لقاء */
+  .com .linkA { justify-content: center; gap: 0; }
+  .com .linkA .av { position: relative; width: 30px; height: 30px; border-radius: 50%; flex: none; opacity: 0; }
+  .com .linkA .av i { position: absolute; left: 50%; top: 6px; width: 10px; height: 10px; margin-inline-start: -5px;
+    border-radius: 50%; background: rgba(255,255,255,.9); }
+  .com .linkA .av::after { content: ''; position: absolute; left: 50%; bottom: 4px; width: 18px; height: 10px;
+    margin-inline-start: -9px; border-radius: 9px 9px 0 0; background: rgba(255,255,255,.9); }
   .com .linkA .a1 { background: var(--green); } .com .linkA .a2 { background: var(--orange); }
-  .com .linkA svg { width: 60px; height: 24px; overflow: visible; }
-  .com .linkA path { fill: none; stroke: var(--green); stroke-width: 2.4; stroke-linecap: round;
-    stroke-dasharray: 68; stroke-dashoffset: 68; opacity: .5; }
-  .com .how.in .linkA path { animation: draw 1.1s .35s forwards; }
-  @keyframes draw { to { stroke-dashoffset: 0; } }
+  .com .linkA .track { position: relative; width: 56px; height: 2px; margin: 0 6px; }
+  .com .linkA .dash { position: absolute; inset: 0; border-radius: 2px; transform-origin: center;
+    background: repeating-linear-gradient(90deg, var(--green) 0 6px, transparent 6px 11px); opacity: .45; transform: scaleX(0); }
+  .com .linkA .spark { position: absolute; left: 50%; top: 50%; width: 16px; height: 16px; margin: -8px 0 0 -8px;
+    border-radius: 50%; background: var(--orange); opacity: 0; }
+  .com .how.in .linkA .a1 { animation: slideR .6s .15s cubic-bezier(.2,.9,.3,1.2) forwards; }
+  .com .how.in .linkA .a2 { animation: slideL .6s .15s cubic-bezier(.2,.9,.3,1.2) forwards; }
+  .com .how.in .linkA .dash { animation: grow .5s .6s forwards; }
+  .com .how.in .linkA .spark { animation: meet 1.6s 1.05s infinite; }
+  @keyframes slideR { from { opacity: 0; transform: translateX(26px) scale(.7); } to { opacity: 1; transform: none; } }
+  @keyframes slideL { from { opacity: 0; transform: translateX(-26px) scale(.7); } to { opacity: 1; transform: none; } }
+  @keyframes grow { to { transform: scaleX(1); } }
+  @keyframes meet { 0% { opacity: 0; transform: scale(.3); } 25% { opacity: .85; transform: scale(1); } 60%, 100% { opacity: 0; transform: scale(2.1); } }
 
   /* ٣ · دبوس خريطة بينزل وبيعمل موجات */
   .com .pinA { justify-content: center; }

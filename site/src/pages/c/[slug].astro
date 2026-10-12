@@ -55,7 +55,7 @@ const { u } = Astro.props;
     document.getElementById('mods')!.textContent = mods.length ? 'المشرفون: ' + mods.map((m) => m.name).join('، ') : 'لسه ما في مشرف — أول عضو نشِط بياخدها.';
 
     const acts = document.getElementById('facts')!;
-    acts.innerHTML = `${member ? `<button type="button" class="c-btn" id="new-post">${svg('plus', 15)} اكتب منشور</button>` : `<a class="c-btn" href="/profile">انضم: حدّد جامعتك بملفك</a>`}
+    acts.innerHTML = `${member ? `<button type="button" class="c-btn" id="new-post">${svg('plus', 15)} اكتب منشور</button>` : `<a class="c-btn" href="/settings">${svg('building', 15)} انضم لهالمجتمع</a>`}
       ${member && !canMod ? `<button type="button" class="c-btn ghost" id="apply-mod">قدّم لتكون مشرفاً</button>` : ''}
       ${canMod ? `<span class="c-badge modb">${svg('medal', 13)} أنت مشرف هون</span>` : ''}
       ${be.mode === 'local' && member ? `<button type="button" class="c-btn ghost" id="demo-mod">${canMod ? 'إيقاف' : 'تجربة'} وضع المشرف</button>` : ''}`;
@@ -154,7 +154,11 @@ const { u } = Astro.props;
         <p class="c-note">أول منشور بيفتح الباب. هاي مواضيع بيسأل عنها الطلاب كل فصل${member ? ' — اضغط على أي وحدة وبتفتحلك نموذج الكتابة' : ''}:</p>
         <div class="starters">${STARTERS.map(([k, t, d]) =>
           `<button type="button" class="starter" data-starter="${k}" data-title="${esc(t)}"><b>${esc(t)}</b><span>${esc(d)}</span></button>`).join('')}</div>
-        ${member ? '' : `<p class="c-note join">حدّد جامعتك بملفك عشان تقدر تشارك.</p><a class="c-btn" href="/profile">حدّد جامعتك</a>`}
+        ${member ? '' : `<div class="gatebox">
+          <b>انضم أول عشان تقدر:</b>
+          <ul><li>تنشر سؤالك وتعرض شغلك</li><li>تردّ على الطلاب وتجمع نقاط</li><li>توصلك مواعيد التسليم والمنشورات الجديدة</li></ul>
+          <a class="c-btn" href="/settings">${svg('building', 15)} حدّد جامعتك وانضم</a>
+        </div>`}
       </div>`;
     }
 
@@ -219,7 +223,10 @@ const { u } = Astro.props;
   .feed .starter:hover { border-color: rgba(232,116,59,.55); transform: translateY(-2px); }
   .feed .starter b { font-size: 15px; color: var(--green); }
   .feed .starter span { font-size: 13px; color: var(--fg-2); line-height: 1.7; }
-  .feed .empty .join { margin-top: 16px; }
+  .feed .gatebox { margin-top: 18px; padding: 16px 19px; border-radius: 18px; background: var(--cream); display: grid; gap: 8px; justify-items: start; }
+  .feed .gatebox b { font-size: 15px; color: var(--green); }
+  .feed .gatebox ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 5px; font-size: 13.5px; color: var(--fg-2); }
+  .feed .gatebox li::before { content: '✓ '; color: var(--orange); font-weight: 600; }
   .feed .k { font: 500 13.5px var(--font); border: 1px solid rgba(15,61,62,.2); background: #fff; color: var(--green); padding: 8px 16px; border-radius: 999px; cursor: pointer; transition: all .2s; }
   .feed .k:hover { border-color: var(--orange); } .feed .k.on { background: var(--green); color: var(--cream); border-color: var(--green); }
   .feed .compose { margin-bottom: 18px; }

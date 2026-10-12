@@ -84,7 +84,6 @@ import '../styles/community.css';
             <div class="c-row"><span>تجربة بصور من تنفيذك للمشروع</span><span class="c-plus">+${ar(POINTS.photoFeedback)}</span></div>
             <div class="c-row"><span>تعليق على فكرة</span><span class="c-plus">+${ar(POINTS.ideaComment)}</span></div>
             <p class="c-note">النقاط بتنزل بعد مراجعتنا للمحتوى، مش فوراً.</p>
-            <a class="c-btn ghost" href="/city">ابنِ مبناك بالمدينة</a>
           </div>
         </div>
 
@@ -106,7 +105,7 @@ import '../styles/community.css';
         <div class="c-card sec foot">
           <a class="c-btn ghost" href="/settings">الإعدادات</a>
           <a class="c-btn ghost" href="/u?id=${encodeURIComponent(me.id)}">ملفي العام</a>
-          ${myBuilding ? `<a class="c-btn" href="/city?u=${encodeURIComponent(me.id)}">افتح مبناك بالمدينة</a>` : ''}
+          
           ${admin ? '<a class="c-btn" href="/admin">لوحة الأدمن</a>' : ''}
           ${be.mode === 'local' ? `<button class="c-btn ghost" id="demo-admin">${admin ? 'إيقاف' : 'تجربة'} وضع الأدمن (معاينة)</button>` : `<button class="c-btn ghost" id="out">تسجيل الخروج</button>`}
         </div>`;

@@ -5,15 +5,15 @@ import { svg } from '../data/icons';
 
 <section class="bd" id="boards">
   <div class="container">
-    <button type="button" class="bd-toggle" id="bd-toggle" aria-expanded="false" aria-controls="bd-body">
+    <button type="button" class="bd-toggle" id="bd-toggle" aria-expanded="true" aria-controls="bd-body">
       <span class="tx">
-        <b>شو الفرق بين الألواح؟</b>
-        <small>Arduino · ESP32 · Raspberry Pi · Pico — شو بيقدر يعمل كل واحد، ووين بيفشل</small>
+        <b>شو الفرق بين المتحكمات والألواح؟</b>
+        <small>قبل ما تشتري: شو الفرق بين المتحكم والحاسوب، وشو بيقدر يعمل كل لوح ووين بيفشل</small>
       </span>
-      <span class="chev" aria-hidden="true">＋</span>
+      <span class="chev" aria-hidden="true">−</span>
     </button>
 
-    <div class="bd-wrap" id="bd-body" hidden>
+    <div class="bd-wrap" id="bd-body">
     <div class="bd-main">
       <div class="bd-stage">
         <canvas aria-label="نموذج ثلاثي الأبعاد للوحة التحكم"></canvas>

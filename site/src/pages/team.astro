@@ -1,0 +1,343 @@
+---
+import Base from '../layouts/Base.astro';
+import '../styles/community.css';
+import { ROLES } from '../community/teams';
+import { projects } from '../data/projects';
+import { svg } from '../data/icons';
+---
+
+<Base title="مساحة فريقي — مشاريع" description="مساحة فريق التخرج: أدوار، مهام، روابط شغل وملاحظات عليها، وشو ناقص الفريق.">
+  <main class="pf team" id="team">
+    <div class="container">
+      <a class="back" href="/">← الرئيسية</a>
+      <h1>مساحة فريقي</h1>
+      <p class="c-note" id="sub">جارٍ التحميل…</p>
+
+      <!-- إنشاء فريق -->
+      <section class="c-card sec make" id="make" hidden>
+        <h3>ابدأ فريقك</h3>
+        <p class="c-note">فريق التخرج بيوصل جاهز — هون بتنظّموا الشغل: مين بيعمل شو، شو المهام، ووين الملفات.</p>
+        <div class="frm">
+          <label>اسمك<input id="f-me" maxlength="40" placeholder="نغم" autocomplete="off" /></label>
+          <label>اسم الفريق<input id="f-name" maxlength="60" placeholder="فريق الريّ الذكي" autocomplete="off" /></label>
+          <label>المشروع (اختياري)
+            <select id="f-proj">
+              <option value="">لسه ما اخترنا</option>
+              {projects.map((p) => <option value={p.id}>{p.t}</option>)}
+            </select>
+          </label>
+        </div>
+        <button type="button" class="c-btn" id="f-go">أنشئ الفريق</button>
+      </section>
+
+      <div id="body" hidden>
+        <!-- الرأس: التقدّم والمشروع -->
+        <section class="c-card sec head">
+          <div class="ring" id="ring"><svg viewBox="0 0 80 80" aria-hidden="true"><circle class="bg" cx="40" cy="40" r="34" /><circle class="fg" id="arc" cx="40" cy="40" r="34" /></svg><b id="pct">٪٠</b></div>
+          <div class="hmeta">
+            <h2 id="tname"></h2>
+            <p class="c-note" id="tproj"></p>
+            <p class="c-note" id="tcount"></p>
+          </div>
+          <button type="button" class="c-btn ghost sm" id="leave">غادر الفريق</button>
+        </section>
+
+        <!-- الأعضاء والأدوار -->
+        <section class="sec2">
+          <div class="hd"><h2>الفريق وأدواره</h2><button type="button" class="c-btn sm" id="add-m">+ أضف عضو</button></div>
+          <div class="mem" id="mem"></div>
+          <div class="gap" id="gap" hidden></div>
+        </section>
+
+        <!-- المهام -->
+        <section class="sec2">
+          <div class="hd"><h2>المهام</h2><span class="c-note" id="tsum"></span></div>
+          <form class="addrow" id="t-form">
+            <input id="t-title" maxlength="120" placeholder="شو المهمة؟ مثلاً: نلحم الحساسات على اللوح" autocomplete="off" required />
+            <select id="t-who"><option value="">بدون مسؤول</option></select>
+            <input id="t-due" type="date" aria-label="موعد التسليم" />
+            <button class="c-btn sm" type="submit">أضف</button>
+          </form>
+          <div class="tasks" id="tasks"></div>
+        </section>
+
+        <!-- روابط الشغل -->
+        <section class="sec2">
+          <div class="hd"><h2>شغل الفريق</h2><span class="c-note">ارفعوا روابط وعلّقوا على بعض</span></div>
+          <form class="addrow" id="l-form">
+            <input id="l-title" maxlength="100" placeholder="شو هاد؟ مثلاً: مخطط التوصيل v2" autocomplete="off" required />
+            <input id="l-url" type="url" placeholder="https://…" autocomplete="off" required />
+            <button class="c-btn sm" type="submit">أضف</button>
+          </form>
+          <div class="links" id="links"></div>
+        </section>
+
+        <!-- السجل -->
+        <section class="sec2">
+          <div class="hd"><h2>شو صار</h2></div>
+          <div class="acts" id="acts"></div>
+        </section>
+      </div>
+    </div>
+  </main>
+</Base>
+
+<script>
+  import { getTeams, ROLES, roleLabel, roleIcon, STATUS_LABEL, nextStatus,
+           missingRoles, missingSkills, progress, type Team, type TaskStatus } from '../community/teams';
+  import { byId } from '../data/projects';
+  import { esc, ar, date } from '../community/ui';
+  import { svg } from '../data/icons';
+
+  const $ = (id: string) => document.getElementById(id)!;
+  const api = await getTeams();
+  let team: Team | null = await api.get();
+
+  const AR = (n: number) => ar(n);
+  const toast = (e: unknown) => alert(e instanceof Error ? e.message : String(e));
+  const run = async (fn: () => Promise<unknown>) => { try { await fn(); team = await api.get(); paint(); } catch (e) { toast(e); } };
+
+  /** تاريخ قريب = لون تحذير. المهمة اللي فات موعدها لازم تبيّن */
+  const dueClass = (d: string | null, s: TaskStatus) => {
+    if (!d || s === 'done') return '';
+    const days = Math.ceil((new Date(d).getTime() - Date.now()) / 864e5);
+    return days < 0 ? 'late' : days <= 2 ? 'soon' : '';
+  };
+  const dueText = (d: string) => {
+    const days = Math.ceil((new Date(d).getTime() - Date.now()) / 864e5);
+    return days < 0 ? `متأخرة ${AR(-days)} يوم` : days === 0 ? 'اليوم' : days === 1 ? 'بكرا' : `بعد ${AR(days)} يوم`;
+  };
+
+  function paint() {
+    $('make').hidden = !!team;
+    $('body').hidden = !team;
+    if (!team) { $('sub').textContent = 'ما عندك فريق بعد. أنشئ واحد وادعُ زملاءك.'; return; }
+    const t = team;
+    $('sub').textContent = 'كل شي بهاي الصفحة محفوظ بمتصفحك حالياً — لما نربط الحسابات بينشارك مع الفريق.';
+
+    // التقدّم
+    const { done, total } = progress(t);
+    const pc = total ? Math.round((done / total) * 100) : 0;
+    const arc = $('arc') as unknown as SVGCircleElement;
+    const C = 2 * Math.PI * 34;
+    arc.style.strokeDasharray = String(C);
+    arc.style.strokeDashoffset = String(C * (1 - pc / 100));
+    $('pct').textContent = `٪${AR(pc)}`;
+    $('tname').textContent = t.name;
+    const pr = t.project ? byId(t.project) : null;
+    $('tproj').innerHTML = pr ? `المشروع: <a href="/projects/${pr.id}">${esc(pr.t)}</a>` : 'لسه ما اخترتوا مشروع.';
+    $('tcount').textContent = `${AR(t.members.length)} أعضاء · ${AR(done)} من ${AR(total)} مهمة خلصت`;
+
+    // الأعضاء
+    $('mem').innerHTML = t.members.map((m) => `
+      <article class="mcard" data-m="${m.id}">
+        <div class="mtop"><span class="av">${esc(m.name.slice(0, 1))}</span>
+          <b>${esc(m.name)}${m.me ? ' <em>أنت</em>' : ''}</b>
+          ${m.me ? '' : `<button type="button" class="x" data-rm="${m.id}" aria-label="شيل">×</button>`}</div>
+        <div class="roles">${ROLES.map((r) => `<button type="button" class="rchip${m.roles.includes(r.k) ? ' on' : ''}" data-role="${m.id}:${r.k}" title="${esc(r.hint)}">${esc(r.label)}</button>`).join('')}</div>
+        <label class="sk">بتتقن<input data-sk="${m.id}" value="${esc(m.skills.join('، '))}" placeholder="مثلاً: Arduino، لحام، Figma" /></label>
+        <label class="sk">بتحتاج<input data-wt="${m.id}" value="${esc(m.wants.join('، '))}" placeholder="مثلاً: مصمّم عرض" /></label>
+      </article>`).join('');
+
+    // الفجوات
+    const gaps = missingRoles(t), skills = missingSkills(t);
+    const g = $('gap'); g.hidden = !gaps.length && !skills.length;
+    g.innerHTML = `<div class="c-card sec">
+      <h3>${svg('flask', 17)} شو ناقص الفريق</h3>
+      ${gaps.length ? `<p class="c-note">أدوار ما حدا أخذها:</p><div class="chips">${gaps.map((k) => `<span class="chip">${esc(roleLabel(k))}</span>`).join('')}</div>` : '<p class="c-note">كل الأدوار مغطّاة ✅</p>'}
+      ${skills.length ? `<p class="c-note mt">مهارات طلبها الفريق وما حدا فيكم بيتقنها:</p><div class="chips">${skills.map((s) => `<span class="chip want">${esc(s)}</span>`).join('')}</div>
+        <a class="c-btn sm" href="/c/general">${svg('users', 14)} انشر «أدوّر على شريك» بالمجتمع العام</a>` : ''}
+    </div>`;
+
+    // المهام
+    const who = $('t-who') as HTMLSelectElement;
+    who.innerHTML = '<option value="">بدون مسؤول</option>' + t.members.map((m) => `<option value="${m.id}">${esc(m.name)}</option>`).join('');
+    const order: TaskStatus[] = ['doing', 'todo', 'done'];
+    const sorted = [...t.tasks].sort((a, b) => order.indexOf(a.status) - order.indexOf(b.status));
+    $('tsum').textContent = total ? `${AR(done)} / ${AR(total)}` : 'ما في مهام بعد';
+    $('tasks').innerHTML = sorted.length ? sorted.map((k) => {
+      const m = t.members.find((x) => x.id === k.assignee);
+      return `<div class="task ${k.status} ${dueClass(k.due, k.status)}" data-t="${k.id}">
+        <button type="button" class="box" data-cycle="${k.id}" aria-label="${esc(STATUS_LABEL[k.status])}"><i></i></button>
+        <span class="tt">${esc(k.title)}</span>
+        <span class="meta">${m ? `<span class="pill">${esc(m.name)}</span>` : ''}${k.due ? `<span class="pill due">${esc(dueText(k.due))}</span>` : ''}<span class="pill st">${esc(STATUS_LABEL[k.status])}</span></span>
+        <button type="button" class="x" data-tdel="${k.id}" aria-label="احذف">×</button>
+      </div>`;
+    }).join('') : '<p class="c-note">أضف أول مهمة من فوق.</p>';
+
+    // الروابط
+    $('links').innerHTML = t.links.length ? t.links.map((l) => `
+      <article class="lcard">
+        <div class="ltop">
+          <a href="${esc(l.url)}" target="_blank" rel="noopener noreferrer">${svg('send', 14)} ${esc(l.title)}</a>
+          <small>${esc(l.author)} · ${date(l.created_at)}</small>
+          <button type="button" class="x" data-ldel="${l.id}" aria-label="احذف">×</button>
+        </div>
+        ${l.notes.length ? `<div class="notes">${l.notes.map((n) => `<div class="note"><b>${esc(n.author)}</b><span>${esc(n.body)}</span><small>${date(n.created_at)}</small></div>`).join('')}</div>` : ''}
+        <form class="noteform" data-note="${l.id}"><input maxlength="400" placeholder="اكتب ملاحظة أو تعديل…" autocomplete="off" required /><button class="c-btn sm" type="submit">علّق</button></form>
+      </article>`).join('') : '<p class="c-note">ارفع أول رابط: مخطط، كود، تقرير، أو فيديو تجربة.</p>';
+
+    // السجل
+    $('acts').innerHTML = t.activity.length
+      ? t.activity.map((a) => `<div class="act"><b>${esc(a.who)}</b><span>${esc(a.what)}</span><small>${date(a.at)}</small></div>`).join('')
+      : '<p class="c-note">كل تعديل بيعمله أي عضو بيطلع هون.</p>';
+  }
+
+  // ===== أحداث =====
+  $('f-go').addEventListener('click', () => run(async () => {
+    const me = ($('f-me') as HTMLInputElement).value;
+    const nm = ($('f-name') as HTMLInputElement).value;
+    const pj = ($('f-proj') as HTMLSelectElement).value || null;
+    if (me.trim().length < 2) throw new Error('اكتب اسمك');
+    await api.create(nm, pj, me);
+  }));
+  $('leave').addEventListener('click', () => { if (confirm('بتأكد؟ بياناتك المحلية للفريق بتنمسح.')) run(() => api.leave()); });
+  $('add-m').addEventListener('click', () => { const n = prompt('اسم العضو؟'); if (n) run(() => api.addMember(n)); });
+
+  $('mem').addEventListener('click', (e) => {
+    const t = e.target as HTMLElement;
+    const rm = t.closest<HTMLElement>('[data-rm]'); if (rm) return void run(() => api.removeMember(rm.dataset.rm!));
+    const rl = t.closest<HTMLElement>('[data-role]');
+    if (rl) {
+      const [id, key] = rl.dataset.role!.split(':');
+      const m = team!.members.find((x) => x.id === id)!;
+      const on = m.roles.includes(key as any);
+      run(() => api.setMember(id, { roles: on ? m.roles.filter((r) => r !== key) : [...m.roles, key as any] }));
+    }
+  });
+  $('mem').addEventListener('change', (e) => {
+    const i = e.target as HTMLInputElement;
+    const v = i.value.split(/[،,]/).map((x) => x.trim()).filter(Boolean);
+    if (i.dataset.sk) run(() => api.setMember(i.dataset.sk!, { skills: v }));
+    if (i.dataset.wt) run(() => api.setMember(i.dataset.wt!, { wants: v }));
+  });
+
+  $('t-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const ti = $('t-title') as HTMLInputElement, wh = $('t-who') as HTMLSelectElement, dd = $('t-due') as HTMLInputElement;
+    run(async () => { await api.addTask(ti.value, wh.value || null, dd.value || null); ti.value = ''; dd.value = ''; });
+  });
+  $('tasks').addEventListener('click', (e) => {
+    const t = e.target as HTMLElement;
+    const c = t.closest<HTMLElement>('[data-cycle]');
+    if (c) {
+      const k = team!.tasks.find((x) => x.id === c.dataset.cycle)!;
+      c.closest('.task')!.classList.add('bump');
+      return void run(() => api.setTask(k.id, { status: nextStatus(k.status) }));
+    }
+    const d = t.closest<HTMLElement>('[data-tdel]');
+    if (d) run(() => api.removeTask(d.dataset.tdel!));
+  });
+
+  $('l-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const ti = $('l-title') as HTMLInputElement, u = $('l-url') as HTMLInputElement;
+    run(async () => { await api.addLink(ti.value, u.value); ti.value = ''; u.value = ''; });
+  });
+  $('links').addEventListener('click', (e) => {
+    const d = (e.target as HTMLElement).closest<HTMLElement>('[data-ldel]');
+    if (d) run(() => api.removeLink(d.dataset.ldel!));
+  });
+  $('links').addEventListener('submit', (e) => {
+    const f = (e.target as HTMLElement).closest<HTMLFormElement>('[data-note]'); if (!f) return;
+    e.preventDefault();
+    const i = f.querySelector('input') as HTMLInputElement;
+    run(async () => { await api.addNote(f.dataset.note!, i.value); i.value = ''; });
+  });
+
+  paint();
+</script>
+
+<style is:global>
+  .team h1 { margin-bottom: 8px; }
+  .team .sec2 { margin-top: 30px; }
+  .team .hd { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+  .team .hd h2 { font-size: 20px; }
+  .team .frm { display: grid; gap: 12px; margin: 14px 0 16px; }
+  .team .frm label { display: grid; gap: 5px; font-size: 13.5px; color: var(--fg-2); }
+  .team .frm input, .team .frm select { font: inherit; padding: 10px 13px; border-radius: 13px; border: 1px solid rgba(15,61,62,.18); background: #fff; color: var(--green); }
+
+  /* الرأس وحلقة التقدّم */
+  .team .head { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+  .team .hmeta { flex: 1; min-width: 180px; }
+  .team .hmeta h2 { font-size: 22px; margin-bottom: 4px; }
+  .team .ring { position: relative; width: 80px; height: 80px; flex: none; }
+  .team .ring svg { transform: rotate(-90deg); }
+  .team .ring circle { fill: none; stroke-width: 8; stroke-linecap: round; }
+  .team .ring .bg { stroke: var(--cream-2); }
+  .team .ring .fg { stroke: var(--orange); transition: stroke-dashoffset .6s cubic-bezier(.2,.8,.3,1); }
+  .team .ring b { position: absolute; inset: 0; display: grid; place-items: center; font-size: 16px; color: var(--green); }
+
+  /* الأعضاء */
+  .team .mem { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 12px; }
+  .team .mcard { background: #fff; border-radius: 20px; padding: 16px 18px; display: grid; gap: 10px; box-shadow: 0 0 0 1px rgba(15,61,62,.06); }
+  .team .mtop { display: flex; align-items: center; gap: 10px; }
+  .team .av { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--green); color: var(--cream); font-weight: 500; }
+  .team .mtop b { flex: 1; font-size: 15.5px; }
+  .team .mtop em { font-style: normal; font-size: 11.5px; color: var(--fg-2); }
+  .team .x { border: 0; background: transparent; color: var(--fg-2); font-size: 19px; line-height: 1; cursor: pointer; padding: 0 4px; }
+  .team .x:hover { color: #b03030; }
+  .team .roles { display: flex; flex-wrap: wrap; gap: 6px; }
+  .team .rchip { font: 400 12.5px var(--font); padding: 5px 11px; border-radius: 999px; cursor: pointer;
+    border: 1px solid rgba(15,61,62,.16); background: transparent; color: var(--fg-2); transition: all .18s; }
+  .team .rchip:hover { border-color: var(--orange); }
+  .team .rchip.on { background: var(--mint); color: var(--green); border-color: transparent; font-weight: 500; }
+  .team .sk { display: grid; gap: 4px; font-size: 12.5px; color: var(--fg-2); }
+  .team .sk input { font: inherit; font-size: 13.5px; padding: 8px 12px; border-radius: 11px; border: 1px solid rgba(15,61,62,.14); background: var(--cream); color: var(--green); }
+  .team .chips { display: flex; flex-wrap: wrap; gap: 7px; margin: 8px 0 4px; }
+  .team .chip { font-size: 13px; padding: 5px 12px; border-radius: 999px; background: var(--cream-2); color: var(--green); }
+  .team .chip.want { background: rgba(232,116,59,.16); color: #a8481c; }
+  .team .mt { margin-top: 12px; }
+
+  /* صفوف الإضافة */
+  .team .addrow { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+  .team .addrow input, .team .addrow select { font: inherit; padding: 10px 13px; border-radius: 13px; border: 1px solid rgba(15,61,62,.16); background: #fff; color: var(--green); }
+  .team .addrow input:first-child { flex: 1; min-width: 200px; }
+
+  /* المهام */
+  .team .tasks { display: grid; gap: 7px; }
+  .team .task { display: flex; align-items: center; gap: 11px; background: #fff; border-radius: 15px; padding: 12px 15px;
+    box-shadow: 0 0 0 1px rgba(15,61,62,.06); transition: opacity .25s, transform .18s; }
+  .team .task.bump { transform: scale(.985); }
+  .team .task .tt { flex: 1; font-size: 15px; }
+  .team .task.done { opacity: .55; }
+  .team .task.done .tt { text-decoration: line-through; }
+  .team .box { flex: none; width: 24px; height: 24px; border-radius: 8px; border: 2px solid rgba(15,61,62,.22);
+    background: transparent; cursor: pointer; display: grid; place-items: center; transition: all .2s; }
+  .team .box i { width: 10px; height: 10px; border-radius: 3px; background: transparent; transition: all .2s; }
+  .team .task.doing .box { border-color: var(--orange); }
+  .team .task.doing .box i { background: var(--orange); border-radius: 50%; animation: pulseDot 1.4s ease-in-out infinite; }
+  .team .task.done .box { border-color: var(--green); background: var(--green); }
+  .team .task.done .box i { background: var(--cream); clip-path: polygon(14% 52%, 38% 76%, 86% 20%, 96% 32%, 38% 96%, 4% 62%); width: 14px; height: 14px; border-radius: 0; }
+  @keyframes pulseDot { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(.6); opacity: .6; } }
+  .team .task .meta { display: flex; gap: 6px; flex-wrap: wrap; }
+  .team .pill { font-size: 11.5px; padding: 3px 9px; border-radius: 999px; background: var(--cream-2); color: var(--fg-2); }
+  .team .pill.st { background: var(--mint); color: var(--green); }
+  .team .task.soon .pill.due { background: rgba(232,116,59,.18); color: #a8481c; }
+  .team .task.late { box-shadow: 0 0 0 1px rgba(224,36,36,.4); }
+  .team .task.late .pill.due { background: rgba(224,36,36,.14); color: #a31414; }
+
+  /* الروابط والملاحظات */
+  .team .links { display: grid; gap: 10px; }
+  .team .lcard { background: #fff; border-radius: 20px; padding: 15px 18px; box-shadow: 0 0 0 1px rgba(15,61,62,.06); }
+  .team .ltop { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .team .ltop a { flex: 1; min-width: 160px; display: flex; align-items: center; gap: 7px; color: var(--green); font-weight: 500; text-decoration: none; }
+  .team .ltop a:hover { text-decoration: underline; }
+  .team .ltop small { color: var(--fg-2); font-size: 12.5px; }
+  .team .notes { display: grid; gap: 6px; margin: 11px 0 0; padding-top: 11px; border-top: 1px solid rgba(15,61,62,.08); }
+  .team .note { display: flex; gap: 9px; align-items: baseline; flex-wrap: wrap; font-size: 14px; }
+  .team .note b { color: var(--green); } .team .note span { flex: 1; color: var(--fg-2); } .team .note small { font-size: 12px; color: var(--fg-2); }
+  .team .noteform { display: flex; gap: 8px; margin-top: 11px; }
+  .team .noteform input { flex: 1; font: inherit; font-size: 14px; padding: 9px 13px; border-radius: 12px; border: 1px solid rgba(15,61,62,.14); background: var(--cream); color: var(--green); }
+
+  /* السجل */
+  .team .acts { display: grid; gap: 4px; }
+  .team .act { display: flex; gap: 9px; align-items: baseline; flex-wrap: wrap; font-size: 14px; padding: 9px 13px; border-radius: 12px; background: #fff; box-shadow: 0 0 0 1px rgba(15,61,62,.05); }
+  .team .act b { color: var(--green); } .team .act span { flex: 1; color: var(--fg-2); } .team .act small { font-size: 12px; color: var(--fg-2); }
+
+  @media (max-width: 560px) {
+    .team .task { flex-wrap: wrap; }
+    .team .task .tt { flex-basis: calc(100% - 70px); }
+    .team .task .meta { flex-basis: 100%; padding-inline-start: 35px; }
+  }
+</style>

@@ -37,6 +37,11 @@ const chals: string[] = d.chals ?? [];
 const related = ((d.rel ?? []) as { id: string; why: string }[])
   .map((x) => ({ r: byId(x.id)!, why: x.why }))
   .filter((x) => !!x.r);
+const stack = (d.stack ?? []) as [string, string[]][];
+const AR_D = '٠١٢٣٤٥٦٧٨٩';
+const ar = (n: number) => String(n).replace(/\d/g, (c) => AR_D[+c]);
+/** تمييز عربي: ٣–١٠ جمع، وغيرها مفرد — «٥ طبقات» و«١٤ طبقة» */
+const cnt = (n: number, one: string, many: string) => `${ar(n)} ${n >= 3 && n <= 10 ? many : one}`;
 const waLink =`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(`مرحباً، بدي أحجز استشارة لمشروع: ${p.t}`)}`;
 const waParts = `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(`مرحباً، بدي أفتح قائمة القطع لمشروع: ${p.t}`)}`;
 ---
@@ -103,13 +108,20 @@ const waParts = `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(`مرحبا
 
       {p.sw ? (
         <section class="wide">
-          <h2>التقنيات المقترحة</h2>
-          <p class="note">مشروع برمجي — ما في قطع تُشترى. هاي التقنيات اللي بننصح فيها، وبتقدر تبدّل أي وحدة بما بتتقنه.</p>
-          <div class="stack">
-            {((d.stack ?? []) as [string, string[]][]).map(([grp, items]) => (
-              <div class="stk"><b>{grp}</b><div class="sitems">{items.map((i) => <span>{i}</span>)}</div></div>
-            ))}
+          <div class="head">
+            <h2>التقنيات المقترحة</h2>
+            <span class="cnt">{cnt(stack.length, 'طبقة', 'طبقات')} · {cnt(stack.reduce((n, [, it]) => n + it.length, 0), 'تقنية', 'تقنيات')}</span>
           </div>
+          <p class="note">مشروع برمجي — ما في قطع تُشترى. هاي الطبقات اللي بننصح فيها، وكل وحدة بتقدر تبدّلها بما بتتقنه.</p>
+          <ol class="stack">
+            {stack.map(([grp, items], i) => (
+              <li class="stk">
+                <span class="sn">{ar(i + 1)}</span>
+                <span class="sg">{grp}</span>
+                <span class="sitems">{items.map((it) => <span>{it}</span>)}</span>
+              </li>
+            ))}
+          </ol>
           <a class="pill" href={waLink} target="_blank" rel="noopener">احجز استشارة للمسار التقني <i>←</i></a>
         </section>
       ) : p.x ? (
@@ -181,12 +193,25 @@ const waParts = `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(`مرحبا
   .steps { display: grid; gap: 10px; counter-reset: s; }
   .step { display: grid; gap: 4px; background: #fff; border-radius: 18px; padding: 16px 20px; box-shadow: 0 0 0 1px rgba(15,61,62,.06); border-inline-start: 4px solid var(--orange); }
   .step b { font-size: 16px; } .step span { color: var(--fg-2); font-size: 14.5px; line-height: 1.8; }
-  .stack { display: grid; gap: 10px; margin-bottom: 20px; }
-  .stk { display: grid; gap: 8px; background: #fff; border-radius: 18px; padding: 15px 20px;
-    box-shadow: 0 0 0 1px rgba(15,61,62,.06); border-inline-start: 4px solid var(--green); }
-  .stk b { font-size: 15px; }
+  /* الطبقات: بطاقة واحدة وصفوف، بدل خمس بطاقات نصّها فاضي */
+  .stack { list-style: none; padding: 10px 6px; margin: 0 0 22px; display: grid; gap: 2px;
+    background: #fff; border-radius: 24px; box-shadow: 0 0 0 1px rgba(15,61,62,.06), 0 16px 40px -30px rgba(15,61,62,.35); }
+  .stk { position: relative; display: grid; grid-template-columns: 34px minmax(88px, auto) 1fr; align-items: center;
+    gap: 14px; padding: 13px 16px; border-radius: 16px; transition: background .2s; }
+  .stk:hover { background: var(--cream); }
+  .sn { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 10px;
+    background: var(--mint); color: var(--green); font-size: 13px; font-weight: 500; }
+  /* خيط رأسي بيوصل الأرقام فيبيّنوا كطبقات مش كصفوف منفصلة */
+  .stk:not(:last-child) .sn::after { content: ''; position: absolute; top: 41px; inset-inline-start: 30px;
+    width: 2px; height: calc(100% - 28px); background: linear-gradient(var(--mint), transparent); }
+  .sg { font-size: 15px; font-weight: 500; color: var(--green); }
   .sitems { display: flex; flex-wrap: wrap; gap: 7px; }
   .sitems span { font-size: 13.5px; padding: 5px 13px; border-radius: 999px; background: var(--cream-2); color: var(--green); }
+  @media (max-width: 620px) {
+    .stk { grid-template-columns: 28px 1fr; row-gap: 9px; padding: 12px 13px; }
+    .sitems { grid-column: 2; }
+    .stk:not(:last-child) .sn::after { inset-inline-start: 26px; }
+  }
   .avail { margin: 44px 0 -34px; padding: 11px 18px; border-radius: 14px; width: fit-content;
     background: rgba(47,125,92,.12); color: var(--green); font-size: 14px; }
   .avail::before { content: '✓ '; color: #2F7D5C; font-weight: 600; }

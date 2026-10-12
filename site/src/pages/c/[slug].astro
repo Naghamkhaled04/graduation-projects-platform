@@ -37,7 +37,7 @@ const { u } = Astro.props;
 
 <script>
   import { getBackend } from '../../community/backend';
-  import { getCommunities, KINDS, MOD_ONLY, kindLabel, kindIcon, demoMod, type Post, type PostKind } from '../../community/communities';
+  import { getCommunities, KINDS, MOD_ONLY, kindLabel, kindIcon, type Post, type PostKind } from '../../community/communities';
   import { uniSlug, UNIVERSITIES } from '../../data/universities';
   import { linkMentions, mentionedUnis, PINNED } from '../../data/spaces';
   import { esc, ar, date, STATUS } from '../../community/ui';
@@ -67,9 +67,8 @@ const { u } = Astro.props;
          : kind === 'news' ? '' : `<a class="c-btn" href="/join">${svg('lock', 15)} سجّل دخولك للمشاركة</a>`)}
       ${member && !canMod && kind === 'uni' ? `<button type="button" class="c-btn ghost" id="apply-mod">قدّم لتكون مشرفاً</button>` : ''}
       ${canMod ? `<span class="c-badge modb">${svg('medal', 13)} أنت مشرف هون</span>` : ''}
-      ${be.mode === 'local' && member ? `<button type="button" class="c-btn ghost" id="demo-mod">${canMod ? 'إيقاف' : 'تجربة'} وضع المشرف</button>` : ''}`;
+`;
 
-    acts.querySelector('#demo-mod')?.addEventListener('click', async () => { await demoMod(uni, !canMod); location.reload(); });
     acts.querySelector('#new-post')?.addEventListener('click', () => { composeEl.hidden = !composeEl.hidden; if (!composeEl.hidden) paintCompose(); });
     acts.querySelector('#apply-mod')?.addEventListener('click', async () => {
       const why = prompt('ليش بدك تكون مشرف مجتمع جامعتك؟ (بنراجع الطلب)');

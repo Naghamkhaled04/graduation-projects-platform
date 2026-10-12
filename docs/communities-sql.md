@@ -1,5 +1,9 @@
 # جداول المجتمع (Supabase)
 
+> ⚠️ **غير مُنفَّذ — مرجع فقط.** المنتج هو دروبل على `novatera.space`، وعنده مستخدمون وأدوار
+> وتعليقات وسير اعتماد مدمجون. هذا الملف يبقى لأنه يوثّق **الصلاحيات المطلوبة** بدقة
+> (مين بينشر وين، وشو بينقرأ)، فيُترجَم لأدوار دروبل عند بناء القسم ٧ من `drupal-build-plan.md`.
+
 > هذا الملف يكمل `community-backend.md`. ذاك ينشئ `profiles` و`points_ledger` و`feedback` و`redemptions`،
 > وهذا ينشئ جداول المجتمع الثلاثة التي يستعملها `site/src/community/communities.ts`:
 > `uni_posts` و`uni_replies` و`uni_moderators`، مع الدالّتين `community_counts` و`is_moderator_of`.

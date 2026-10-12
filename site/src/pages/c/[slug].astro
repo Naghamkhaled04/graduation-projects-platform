@@ -1,26 +1,28 @@
 ---
 import Base from '../../layouts/Base.astro';
 import '../../styles/community.css';
-import { UNIVERSITIES } from '../../data/universities';
+import { ALL_SPACES } from '../../data/spaces';
 import { KINDS } from '../../community/communities';
 import { svg } from '../../data/icons';
 
 export function getStaticPaths() {
-  return UNIVERSITIES.map((u) => ({ params: { slug: u.slug }, props: { u } }));
+  return ALL_SPACES.map((u) => ({ params: { slug: u.slug }, props: { u } }));
 }
 const { u } = Astro.props;
 ---
 
 <Base title={`مجتمع ${u.name} — مشاريع`} description={`مجتمع طلاب ${u.name}: أسئلة تقنية، عرض مشاريع، شركاء، ومصادر.`}>
-  <main class="pf feed" data-uni={u.name} data-slug={u.slug}>
+  <main class="pf feed" data-uni={u.name} data-slug={u.slug} data-kind={u.kind}>
     <div class="container">
       <a class="back" href="/communities">← كل المجتمعات</a>
       <div class="fhead">
-        <div><h1>مجتمع {u.short}</h1><p class="c-note" id="mods"></p></div>
+        <div><h1>{u.kind === "uni" ? `مجتمع ${u.short}` : u.short}</h1><p class="c-note" id="mods"></p></div>
         <div class="acts" id="facts"></div>
       </div>
 
       <div class="notif" id="notif" hidden></div>
+
+      <div class="ments" id="ments" hidden></div>
 
       <div class="kinds" id="kinds">
         <button type="button" class="k on" data-k="">الكل</button>
@@ -36,26 +38,33 @@ const { u } = Astro.props;
 <script>
   import { getBackend } from '../../community/backend';
   import { getCommunities, KINDS, MOD_ONLY, kindLabel, kindIcon, demoMod, type Post, type PostKind } from '../../community/communities';
-  import { uniSlug } from '../../data/universities';
+  import { uniSlug, UNIVERSITIES } from '../../data/universities';
+  import { linkMentions, mentionedUnis } from '../../data/spaces';
   import { esc, ar, date, STATUS } from '../../community/ui';
   import { svg } from '../../data/icons';
 
   const root = document.querySelector<HTMLElement>('.feed')!;
-  const uni = root.dataset.uni!, slug = root.dataset.slug!;
+  const uni = root.dataset.uni!, slug = root.dataset.slug!, kind = root.dataset.kind!;
   const postsEl = document.getElementById('posts')!, composeEl = document.getElementById('compose')!;
   let filter = '', canMod = false, member = false, all: Post[] = [];
 
   (async () => {
     const [be, com] = await Promise.all([getBackend(), getCommunities()]);
     const p = await be.profile().catch(() => null);
-    member = !!p?.university && uniSlug(p.university) === slug;
+    member = kind === 'uni' ? (!!p?.university && uniSlug(p.university) === slug) : !!p;
+    if (kind === 'news') member = member && (await com.canModerate(uni).catch(() => false));
     canMod = await com.canModerate(uni).catch(() => false);
 
     const mods = await com.moderators(uni).catch(() => []);
-    document.getElementById('mods')!.textContent = mods.length ? 'المشرفون: ' + mods.map((m) => m.name).join('، ') : 'لسه ما في مشرف — أول عضو نشِط بياخدها.';
+    document.getElementById('mods')!.textContent =
+      kind === 'news' ? 'إعلانات من فريق مشاريع — للقراءة فقط.'
+      : kind === 'general' ? 'لكل طلاب الجامعات. اذكر جامعة بمنشورك بعلامة @ فيوصلها.'
+      : mods.length ? 'المشرفون: ' + mods.map((m) => m.name).join('، ')
+      : 'لسه ما في مشرف لهالمجتمع.';
 
     const acts = document.getElementById('facts')!;
-    acts.innerHTML = `${member ? `<button type="button" class="c-btn" id="new-post">${svg('plus', 15)} اكتب منشور</button>` : `<a class="c-btn" href="/settings">${svg('building', 15)} انضم لهالمجتمع</a>`}
+    acts.innerHTML = `${member ? `<button type="button" class="c-btn" id="new-post">${svg('plus', 15)} اكتب منشور</button>` : (kind === 'uni' ? `<a class="c-btn" href="/settings">${svg('building', 15)} انضم لهالمجتمع</a>`
+         : kind === 'news' ? '' : `<a class="c-btn" href="/join">${svg('lock', 15)} سجّل دخولك للمشاركة</a>`)}
       ${member && !canMod ? `<button type="button" class="c-btn ghost" id="apply-mod">قدّم لتكون مشرفاً</button>` : ''}
       ${canMod ? `<span class="c-badge modb">${svg('medal', 13)} أنت مشرف هون</span>` : ''}
       ${be.mode === 'local' && member ? `<button type="button" class="c-btn ghost" id="demo-mod">${canMod ? 'إيقاف' : 'تجربة'} وضع المشرف</button>` : ''}`;
@@ -71,7 +80,21 @@ const { u } = Astro.props;
 
     // الفلاتر بتختفي لما ما يكون في شي تفلتره — صفوف أزرار فوق فراغ بتبيّن الصفحة مكسورة
     const kindsEl = document.getElementById('kinds')!;
-    const syncKinds = () => { kindsEl.hidden = all.length === 0; };
+    const mentEl = document.getElementById('ments')!;
+    const syncKinds = () => {
+      kindsEl.hidden = all.length === 0;
+      if (kind !== 'general') { mentEl.hidden = true; return; }
+      const slugs = [...new Set(all.flatMap((p) => mentionedUnis(p.title + ' ' + p.body)))];
+      mentEl.hidden = slugs.length === 0;
+      if (mentEl.hidden) return;
+      mentEl.innerHTML = `<span class="ml">الجامعات المذكورة:</span>` + [['', 'الكل'], ...slugs.map((sl) =>
+        [sl, UNIVERSITIES.find((u) => u.slug === sl)?.abbr ?? sl] as [string, string])]
+        .map(([v, l]) => `<button type="button" class="k${v === uniFilter ? ' on' : ''}" data-u="${v}">${esc(l)}</button>`).join('');
+    };
+    mentEl.addEventListener('click', (e) => {
+      const b = (e.target as HTMLElement).closest<HTMLElement>('[data-u]'); if (!b) return;
+      uniFilter = b.dataset.u ?? ''; paint();
+    });
     kindsEl.addEventListener('click', (e) => {
       const b = (e.target as HTMLElement).closest<HTMLElement>('.k'); if (!b) return;
       document.querySelectorAll('.k').forEach((x) => x.classList.toggle('on', x === b));
@@ -79,7 +102,11 @@ const { u } = Astro.props;
     });
 
     function paintCompose() {
-      composeEl.innerHTML = `<h3>منشور جديد</h3>
+      const mentPick = kind === 'general'
+        ? `<label class="mentpick">اذكر جامعة <select id="ment-pick"><option value="">اختر…</option>${
+            UNIVERSITIES.map((u) => `<option value="${u.abbr}">${esc(u.short)} (${u.abbr})</option>`).join('')}</select></label>`
+        : '';
+      composeEl.innerHTML = `<h3>منشور جديد</h3>${mentPick}
         <div class="kpick">${KINDS.filter((k) => !k.modOnly || canMod).map((k, i) => `<label class="kp"><input type="radio" name="kind" value="${k.k}" ${i === 0 ? 'checked' : ''} /><span>${svg(k.icon, 15)} ${k.label}<small>${k.hint}</small></span></label>`).join('')}</div>
         <label id="due-wrap" hidden>تاريخ التسليم<input type="date" id="np-due" /></label>
         <label>العنوان<input id="np-title" maxlength="100" placeholder="مثلاً: ESP32 بيفصل لما أشغّل المحرك" /></label>
@@ -90,6 +117,13 @@ const { u } = Astro.props;
       composeEl.querySelectorAll('input[name=kind]').forEach((r) => r.addEventListener('change', (e) => {
         composeEl.querySelector('#due-wrap')!.toggleAttribute('hidden', (e.target as HTMLInputElement).value !== 'deadline');
       }));
+      // بالمجتمع العام: زر بيضيف ذكر جامعة لنص المنشور
+      composeEl.querySelector('#ment-pick')?.addEventListener('change', (e) => {
+        const sel = e.target as HTMLSelectElement; if (!sel.value) return;
+        const ta = composeEl.querySelector('#np-body') as HTMLTextAreaElement;
+        ta.value = (ta.value.trim() + ' @' + sel.value).trim() + ' ';
+        sel.value = ''; ta.focus();
+      });
       composeEl.querySelector('#np-send')!.addEventListener('click', async () => {
         const k = (composeEl.querySelector('input[name=kind]:checked') as HTMLInputElement).value as PostKind;
         const t = (composeEl.querySelector('#np-title') as HTMLInputElement).value;
@@ -120,8 +154,11 @@ const { u } = Astro.props;
       box.querySelector('#mark')?.addEventListener('click', async () => { await com.markSeen(uni); paintDeadlines(); });
     }
 
+    let uniFilter = '';
     function paint() {
-      const list = all.filter((p) => (!filter || p.kind === filter) && (p.status === 'approved' || canMod || p.user_id === 'me'));
+      const list = all.filter((p) => (!filter || p.kind === filter)
+        && (!uniFilter || mentionedUnis(p.title + ' ' + p.body).includes(uniFilter))
+        && (p.status === 'approved' || canMod || p.user_id === 'me'));
       postsEl.innerHTML = list.length ? list.map((p) => `
         <article class="c-card post" data-id="${p.id}">
           <div class="ptop"><span class="kind">${svg(kindIcon(p.kind), 14)} ${esc(kindLabel(p.kind))}</span>
@@ -129,7 +166,7 @@ const { u } = Astro.props;
             ${p.status !== 'approved' ? `<span class="c-badge ${p.status}">${STATUS[p.status]}</span>` : ''}</div>
           <h3>${esc(p.title)}</h3>
           ${p.due ? `<p class="due">${svg('medal', 14)} التسليم: ${esc(p.due)}</p>` : ''}
-          <p class="body">${esc(p.body)}</p>
+          <p class="body">${linkMentions(esc(p.body))}</p>
           <div class="pfoot">
             <button type="button" class="link" data-open="${p.id}">${svg('chat', 14)} ${p.replies ? ar(p.replies) + ' رد' : 'رد'}</button>
             ${canMod && p.status === 'pending' ? `<button type="button" class="c-btn sm" data-ok="${p.id}">اعتماد</button><button type="button" class="c-btn ghost sm" data-no="${p.id}">رفض</button>` : ''}
@@ -213,6 +250,14 @@ const { u } = Astro.props;
   .feed .modb { background: rgba(232,116,59,.16); color: #a8481c; }
   .feed .kinds { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
   .feed .kinds[hidden] { display: none; }
+  /* ذكر الجامعات بالمجتمع العام */
+  .feed .ments { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+  .feed .ments[hidden] { display: none; }
+  .feed .ments .ml { font-size: 13px; color: var(--fg-2); }
+  .feed .mentpick { display: flex; align-items: center; gap: 9px; font-size: 13.5px; color: var(--fg-2); margin-bottom: 10px; }
+  .feed .mentpick select { font: inherit; padding: 7px 11px; border-radius: 11px; border: 1px solid rgba(15,61,62,.18); background: #fff; color: var(--green); }
+  .feed .ment { color: var(--orange); text-decoration: none; font-weight: 500; }
+  .feed .ment:hover { text-decoration: underline; }
   /* الحالة الفاضية: مواضيع بداية بدل اعتذار */
   .feed .empty h3 { display: flex; align-items: center; gap: 9px; font-size: 20px; margin-bottom: 8px; }
   .feed .empty h3 svg { color: var(--orange); }

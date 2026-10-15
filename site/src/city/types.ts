@@ -25,7 +25,7 @@ export const STYLES: { key: Style; label: string; icon: string }[] = [
   { key: 'tower', label: 'برج', icon: 'building' },
   { key: 'farm', label: 'مزرعة', icon: 'leaf' },
 ];
-export const COLORS = ['#E8743B', '#0F3D3E', '#7FA07A', '#3B6F73', '#B4553A', '#6B5B95'];
+export const COLORS = ['#1a9e8f', '#0e3a63', '#7FA07A', '#3B6F73', '#18766a', '#6B5B95'];
 export const MAX_PROJECTS = 6;
 export const OFFICIAL_PLOTS = 4;
 
@@ -43,10 +43,10 @@ export const PLOTS: [number, number][] = (() => {
 })();
 
 export const OFFICIAL: Building[] = [
-  { id: 'off-hospital', owner: 'team', name: 'مشفى مشاريع', sign: 'المشفى الذكي', style: 'hospital', color: '#E8743B', plot: 0, official: true, projects: ['iv', 'vitals', 'ecg', 'fall', 'coma', 'medfridge'] },
-  { id: 'off-home', owner: 'team', name: 'البيت الذكي', sign: 'البيت الذكي', style: 'home', color: '#E8743B', plot: 1, official: true, projects: ['home', 'meter', 'gas', 'water', 'lock', 'fire'] },
+  { id: 'off-hospital', owner: 'team', name: 'مشفى مشاريع', sign: 'المشفى الذكي', style: 'hospital', color: '#1a9e8f', plot: 0, official: true, projects: ['iv', 'vitals', 'ecg', 'fall', 'coma', 'medfridge'] },
+  { id: 'off-home', owner: 'team', name: 'البيت الذكي', sign: 'البيت الذكي', style: 'home', color: '#1a9e8f', plot: 1, official: true, projects: ['home', 'meter', 'gas', 'water', 'lock', 'fire'] },
   { id: 'off-env', owner: 'team', name: 'الطبيعة والطاقة', sign: 'الطبيعة والطاقة', style: 'farm', color: '#7FA07A', plot: 2, official: true, projects: ['farm', 'solar', 'flood', 'weather', 'air', 'tank'] },
-  { id: 'off-road', owner: 'team', name: 'الطرق والسلامة', sign: 'الطرق والسلامة', style: 'tower', color: '#E8743B', plot: 3, official: true, projects: ['traffic', 'street', 'park', 'crash', 'gate', 'guard'] },
+  { id: 'off-road', owner: 'team', name: 'الطرق والسلامة', sign: 'الطرق والسلامة', style: 'tower', color: '#1a9e8f', plot: 3, official: true, projects: ['traffic', 'street', 'park', 'crash', 'gate', 'guard'] },
 ];
 
 /** تنظيف نصوص المستخدم قبل الاستعمال */

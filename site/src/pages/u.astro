@@ -56,19 +56,19 @@ import '../styles/community.css';
 
 <style is:global>
   /* ---- هيرو الحساب ---- */
-  .pf .hero { position: relative; overflow: hidden; background: var(--green); color: var(--cream); border-radius: 30px; padding: 30px; box-shadow: 0 0 0 1px rgba(232,116,59,.35), 0 0 60px -20px rgba(232,116,59,.35); }
-  .pf .hero::after { content: ''; position: absolute; inset-inline-end: -80px; top: -120px; width: 320px; height: 320px; border-radius: 50%; background: radial-gradient(circle, rgba(232,116,59,.5), transparent 70%); pointer-events: none; }
-  .pf .hero .av { width: 86px; height: 86px; font-size: 36px; background: var(--orange); color: #fff; box-shadow: 0 0 0 4px rgba(255,255,255,.14), 0 0 34px rgba(232,116,59,.6); }
+  .pf .hero { position: relative; overflow: hidden; background: var(--green); color: var(--cream); border-radius: 30px; padding: 30px; box-shadow: 0 0 0 1px rgba(61, 183, 166,.35), 0 0 60px -20px rgba(61, 183, 166,.35); }
+  .pf .hero::after { content: ''; position: absolute; inset-inline-end: -80px; top: -120px; width: 320px; height: 320px; border-radius: 50%; background: radial-gradient(circle, rgba(61, 183, 166,.5), transparent 70%); pointer-events: none; }
+  .pf .hero .av { width: 86px; height: 86px; font-size: 36px; background: var(--orange); color: #fff; box-shadow: 0 0 0 4px rgba(255,255,255,.14), 0 0 34px rgba(61, 183, 166,.6); }
   .pf .hero h1, .pf .hero h2 { font-size: clamp(24px, 3.4vw, 34px); line-height: 1.25; }
   .pf .hero .who p { opacity: .82; margin-top: 6px; } .pf .hero .bio { opacity: .68; font-size: 14px; margin-top: 8px; line-height: 1.9; max-width: 48ch; }
   .pf .hero .ulink { color: var(--cream); }
   .pf .hero .pts { position: relative; text-align: center; background: rgba(0,0,0,.22); border-radius: 22px; padding: 16px 22px; display: grid; gap: 2px; align-content: center; }
   .pf .hero .pts b { font-size: 40px; line-height: 1; color: var(--orange); }
   .pf .hero .pts small { opacity: .7; } .pf .hero .lvl { display: inline-flex; align-items: center; gap: 6px; justify-content: center; font-size: 13px; margin-top: 6px; opacity: .9; }
-  .pf .hero .c-note { color: rgba(247,239,227,.55); }
+  .pf .hero .c-note { color: rgba(233, 243, 248,.55); }
   /* ---- شريط الأرقام ---- */
   .pf .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin-top: 16px; }
-  .pf .kpi { background: #fff; border-radius: 20px; padding: 16px 18px; display: grid; gap: 3px; box-shadow: 0 0 0 1px rgba(15,61,62,.06); }
+  .pf .kpi { background: #fff; border-radius: 20px; padding: 16px 18px; display: grid; gap: 3px; box-shadow: 0 0 0 1px rgba(14, 58, 99,.06); }
   .pf .kpi b { font-size: 26px; line-height: 1; } .pf .kpi span { font-size: 12.5px; color: var(--fg-2); display: inline-flex; align-items: center; gap: 6px; }
   .pf .kpi svg { color: var(--orange); }
   @media (max-width: 700px) { .pf .hero { grid-template-columns: auto 1fr; } .pf .hero .pts { grid-column: 1 / -1; } }

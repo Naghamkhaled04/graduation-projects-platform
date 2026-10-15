@@ -15,9 +15,9 @@ export function makeEnv(renderer: THREE.WebGLRenderer) {
     env.add(m);
   };
   panel(24, 12, 0, 22, 6, 0xffffff, 3.2);
-  panel(10, 20, -24, 4, 4, 0xffe9d0, 1.6);
+  panel(10, 20, -24, 4, 4, 0xd8ecff, 1.6);
   panel(10, 20, 24, 2, -2, 0xd8f2f0, 1.2);
-  panel(20, 6, 0, -16, 10, 0xe8743b, 1.2);
+  panel(20, 6, 0, -16, 10, 0x3db7a6, 1.2);
   const pm = new THREE.PMREMGenerator(renderer);
   const tex = pm.fromScene(env, 0.02).texture;
   pm.dispose();
@@ -61,13 +61,13 @@ export function createStage(id: string, env: THREE.Texture, aspect: number, shad
   // قاعدة دائرية بلون الهوية تستقبل الظل
   const plinth = new THREE.Mesh(
     new THREE.CylinderGeometry(R * 0.95 + 1.5, R * 0.95 + 1.7, 0.4, 72),
-    new THREE.MeshStandardMaterial({ color: 0xe9dfcd, roughness: 0.92, metalness: 0 }),
+    new THREE.MeshStandardMaterial({ color: 0xe6edf2, roughness: 0.92, metalness: 0 }),
   );
   plinth.position.set(center.x, -0.2 - 0.02, center.z);
   plinth.receiveShadow = true;
   scene.add(plinth);
 
-  scene.add(new THREE.HemisphereLight(0xffffff, 0xcdbfa6, 1.1));
+  scene.add(new THREE.HemisphereLight(0xffffff, 0xc3d0db, 1.1));
   const key = new THREE.DirectionalLight(0xffffff, 2.6);
   key.position.set(span * 0.7, span * 1.4, span * 0.8);
   key.castShadow = true;
@@ -76,7 +76,7 @@ export function createStage(id: string, env: THREE.Texture, aspect: number, shad
   key.shadow.bias = -0.0005;
   key.shadow.normalBias = 0.03;
   scene.add(key);
-  const rim = new THREE.DirectionalLight(0xe8743b, 1.4);
+  const rim = new THREE.DirectionalLight(0x3db7a6, 1.4);
   rim.position.set(-span, span * 0.5, -span * 0.8);
   scene.add(rim);
 
@@ -96,11 +96,11 @@ export function createStage(id: string, env: THREE.Texture, aspect: number, shad
     if (!path) return;
     const r = (o.geometry.parameters.radius ?? 0.08) * 2.4;
     for (let k = 0; k < 2; k++) {
-      const m = new THREE.Mesh(new THREE.SphereGeometry(r, 10, 10), new THREE.MeshBasicMaterial({ color: 0xff8a3d, toneMapped: false }));
+      const m = new THREE.Mesh(new THREE.SphereGeometry(r, 10, 10), new THREE.MeshBasicMaterial({ color: 0x5fe8d4, toneMapped: false }));
       m.visible = false; o.parent.add(m); pulses.push({ m, path, t: k * 0.5, sp: 0.28 + (k ? 0.06 : 0) });
     }
   });
-  const ring = new THREE.Mesh(new THREE.RingGeometry(0.92, 1, 64), new THREE.MeshBasicMaterial({ color: 0xe8743b, transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false, toneMapped: false }));
+  const ring = new THREE.Mesh(new THREE.RingGeometry(0.92, 1, 64), new THREE.MeshBasicMaterial({ color: 0x3db7a6, transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false, toneMapped: false }));
   ring.rotation.x = -Math.PI / 2; ring.position.set(center.x, 0.06, center.z); scene.add(ring);
   let age = instant ? 99 : 0, lastT = -1, ex = 0, exT = 0, spun = 0;
 

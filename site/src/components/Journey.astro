@@ -24,14 +24,14 @@ const PATH = 'M1100 140 C 930 140 980 330 780 330 S 590 130 430 250 S 330 440 10
         <g transform="translate(-45,-28)">
           <rect x="4" y="4" width="90" height="56" rx="9" fill="#000" opacity=".18"></rect>
           <rect width="90" height="56" rx="9" fill="#00979D"></rect>
-          <rect x="12" y="14" width="30" height="28" rx="3" fill="#0A2E30"></rect>
-          <rect x="52" y="14" width="24" height="7" rx="2" fill="#0A2E30"></rect>
+          <rect x="12" y="14" width="30" height="28" rx="3" fill="#0a2448"></rect>
+          <rect x="52" y="14" width="24" height="7" rx="2" fill="#0a2448"></rect>
           <g fill="#E3C25A">
             <rect x="10" y="-5" width="4" height="8"></rect><rect x="20" y="-5" width="4" height="8"></rect>
             <rect x="30" y="-5" width="4" height="8"></rect><rect x="40" y="-5" width="4" height="8"></rect>
           </g>
-          <circle class="led" cx="76" cy="44" r="5" fill="#E8743B"></circle>
-          <circle cx="76" cy="44" r="10" fill="#E8743B" opacity=".25"></circle>
+          <circle class="led" cx="76" cy="44" r="5" fill="#1a9e8f"></circle>
+          <circle cx="76" cy="44" r="10" fill="#1a9e8f" opacity=".25"></circle>
         </g>
       </g>
     </svg>
@@ -65,8 +65,8 @@ const PATH = 'M1100 140 C 930 140 980 330 780 330 S 590 130 430 250 S 330 440 10
   });
 
   // تبدأ بنفس أخضر نهاية الهيرو وتنتهي كريمي
-  const BG: Stops = [[0, [10, 46, 48]], [0.12, [10, 46, 48]], [0.6, [247, 239, 227]], [1, [247, 239, 227]]];
-  const FG: Stops = [[0, [247, 239, 227]], [0.12, [247, 239, 227]], [0.6, [15, 61, 62]], [1, [15, 61, 62]]];
+  const BG: Stops = [[0, [10, 36, 72]], [0.12, [10, 36, 72]], [0.6, [233, 243, 248]], [1, [233, 243, 248]]];
+  const FG: Stops = [[0, [233, 243, 248]], [0.12, [233, 243, 248]], [0.6, [14, 58, 99]], [1, [14, 58, 99]]];
 
   const frame = () => {
     const { p, visible, covers } = sectionProgress(root);
@@ -107,14 +107,14 @@ const PATH = 'M1100 140 C 930 140 980 330 780 330 S 590 130 430 250 S 330 440 10
   .jr-title p { margin-top: 8px; opacity: 0.7; font-size: clamp(14px, 1.6vw, 17px); }
   .jr .map { width: min(1200px, 100%); height: auto; max-height: 64vh; overflow: visible; position: relative; z-index: 2; }
   .jr .track { fill: none; stroke: currentColor; stroke-opacity: 0.22; stroke-width: 3; stroke-dasharray: 2 12; stroke-linecap: round; }
-  .jr .prog { fill: none; stroke: var(--orange); stroke-width: 5; stroke-linecap: round; filter: drop-shadow(0 0 8px rgba(232, 116, 59, 0.6)); }
+  .jr .prog { fill: none; stroke: var(--orange); stroke-width: 5; stroke-linecap: round; filter: drop-shadow(0 0 8px rgba(61, 183, 166, 0.6)); }
   .jr .st circle.o { fill: var(--bgc); stroke: currentColor; stroke-opacity: 0.35; stroke-width: 3; transition: all 0.4s; }
   .jr .st text { fill: currentColor; opacity: 0.35; transition: opacity 0.4s; font-family: var(--font); }
   .jr .st .t { font-size: 26px; font-weight: 700; }
   .jr .st .d { font-size: 16px; }
   /* الـSVG بينضغط لثلث حجمه بالموبايل، فالنص بيصير 5px. بنكبّره ونخفي الوصف */
   @media (max-width: 760px) { .jr .st .t { font-size: 52px; } .jr .st .d { display: none; } }
-  .jr .st.on circle.o { fill: var(--orange); stroke: var(--orange); stroke-opacity: 1; filter: drop-shadow(0 0 10px rgba(232, 116, 59, 0.7)); }
+  .jr .st.on circle.o { fill: var(--orange); stroke: var(--orange); stroke-opacity: 1; filter: drop-shadow(0 0 10px rgba(61, 183, 166, 0.7)); }
   .jr .st.on text { opacity: 1; }
   .jr .led { animation: jrblink 1.2s steps(2) infinite; }
   @keyframes jrblink { 50% { opacity: 0.25; } }

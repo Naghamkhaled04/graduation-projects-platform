@@ -37,7 +37,7 @@ export async function initCity(root: HTMLElement) {
   renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
   renderer.setClearColor(NIGHT);
   renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
-  setHeader('rgb(247,239,227)', 'rgb(6,18,20)');
+  setHeader('rgb(233, 243, 248)', 'rgb(6,18,20)');
   try { await document.fonts.load('700 64px "IBM Plex Sans Arabic"', 'مشفى'); } catch { /* اختياري */ }
 
   const scene = new THREE.Scene();
@@ -51,7 +51,7 @@ export async function initCity(root: HTMLElement) {
   // إضاءة ليلية
   scene.add(new THREE.HemisphereLight(0x5f8f97, 0x081213, 0.55));
   const moon = new THREE.DirectionalLight(0xa9c4ff, 0.9); moon.position.set(-120, 200, -160); scene.add(moon);
-  const warm = new THREE.DirectionalLight(0xe8743b, 0.7); warm.position.set(160, 40, 120); scene.add(warm);
+  const warm = new THREE.DirectionalLight(0x3db7a6, 0.7); warm.position.set(160, 40, 120); scene.add(warm);
 
   // سماء + نجوم + قمر
   scene.add(new THREE.Mesh(new THREE.SphereGeometry(700, 32, 16), new THREE.ShaderMaterial({
@@ -80,7 +80,7 @@ export async function initCity(root: HTMLElement) {
   const lawns: THREE.Mesh[] = [], markers: THREE.Mesh[] = [];
   PLOTS.forEach(([x, z]) => {
     const l = new THREE.Mesh(new THREE.BoxGeometry(33, 0.3, 33), mat(0x0d2124, 0.95, 0)); l.position.set(x, 0.05, z); scene.add(l); lawns.push(l);
-    const ring = new THREE.Mesh(new THREE.TorusGeometry(3.6, 0.18, 8, 44), bright(0xe8743b, 1.7)); ring.rotation.x = Math.PI / 2; ring.position.set(x, 0.4, z); scene.add(ring); markers.push(ring);
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(3.6, 0.18, 8, 44), bright(0x3db7a6, 1.7)); ring.rotation.x = Math.PI / 2; ring.position.set(x, 0.4, z); scene.add(ring); markers.push(ring);
   });
 
   // خط الأفق: ناطحات خلفية تملأ المدينة (ديكور، ليست مباني أشخاص)
@@ -146,7 +146,7 @@ export async function initCity(root: HTMLElement) {
   SKY.forEach((id, i) => {
     const g = new THREE.Group(), rotors: THREE.Object3D[] = [];
     if (id === 'zep') {
-      const body = new THREE.Mesh(new THREE.SphereGeometry(1.8, 24, 16), mat(0x2a3f42, 0.5)); body.scale.set(2.4, 1, 1); g.add(body, box(0.2, 1.4, 1.8, mat(0xe8743b), -3.4, -0.5, 0));
+      const body = new THREE.Mesh(new THREE.SphereGeometry(1.8, 24, 16), mat(0x2a3f42, 0.5)); body.scale.set(2.4, 1, 1); g.add(body, box(0.2, 1.4, 1.8, mat(0x3db7a6), -3.4, -0.5, 0));
     } else {
       g.add(box(1.8, 0.5, 1.8, mat(0x1c2526, 0.4, 0.4)));
       for (const [sx, sz] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) {
@@ -178,11 +178,11 @@ export async function initCity(root: HTMLElement) {
     for (const s of [-0.45, 0.45]) { g.add(box(0.12, 0.25, 0.3, hl, L, 0.6, s), box(0.12, 0.25, 0.3, tl, -L, 0.6, s)); }
     scene.add(g); return g;
   };
-  const cc = [0xe8743b, 0x3b6f73, 0xc6d3a6, 0x7fa07a, 0xf2ead9];
+  const cc = [0x3db7a6, 0x3b6f73, 0xc6d3a6, 0x7fa07a, 0xf2ead9];
   const addCar = (ax: 'x' | 'z', dir: 1 | -1, lane: number, s: number, v: number, c: number) => vehicles.push({ g: car(c), ax, dir, lane, s, v });
   addCar('x', -1, -1.8, 40, 7, cc[0]); addCar('x', -1, -1.8, -10, 7, cc[1]); addCar('x', -1, -1.8, -70, 7, cc[3]);
   addCar('z', 1, 1.8, -50, 6, cc[2]); addCar('z', 1, 1.8, -14, 6, cc[3]); addCar('z', -1, -1.8, 44, 6.5, cc[4]); addCar('z', -1, -1.8, 8, 6.5, cc[1]);
-  const amb = car(0xffffff, true); amb.add(box(3.3, 0.35, 1.34, mat(0xe8743b), 0, 0.6, 0));
+  const amb = car(0xffffff, true); amb.add(box(3.3, 0.35, 1.34, mat(0x3db7a6), 0, 0.6, 0));
   const sirenA = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.2, 0.5), new THREE.MeshBasicMaterial({ color: 0xff2d2d, toneMapped: false }));
   const sirenB = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.2, 0.5), new THREE.MeshBasicMaterial({ color: 0x2d6bff, toneMapped: false }));
   sirenA.position.set(-0.3, 1.95, 0.35); sirenB.position.set(-0.3, 1.95, -0.35); amb.add(sirenA, sirenB);

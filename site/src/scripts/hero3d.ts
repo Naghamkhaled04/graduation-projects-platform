@@ -11,9 +11,9 @@ const KF: number[][] = [
   [0.82, 1.22, 5.9, 0, -3.0, 0, 0.64],
   [1, 1.3, 6.5, 0, -3.0, 0, 0.66],
 ];
-const BG: Stops = [[0, [247, 239, 227]], [0.4, [247, 239, 227]], [0.56, [15, 61, 62]], [1, [10, 46, 48]]];
-const FG: Stops = [[0, [15, 61, 62]], [0.4, [15, 61, 62]], [0.56, [247, 239, 227]], [1, [247, 239, 227]]];
-const FG2: Stops = [[0, [63, 92, 92]], [0.4, [63, 92, 92]], [0.56, [198, 211, 166]], [1, [198, 211, 166]]];
+const BG: Stops = [[0, [233, 243, 248]], [0.4, [233, 243, 248]], [0.56, [14, 58, 99]], [1, [10, 36, 72]]];
+const FG: Stops = [[0, [14, 58, 99]], [0.4, [14, 58, 99]], [0.56, [233, 243, 248]], [1, [233, 243, 248]]];
+const FG2: Stops = [[0, [74, 99, 128]], [0.4, [74, 99, 128]], [0.56, [185, 202, 219]], [1, [185, 202, 219]]];
 
 const kf = (p: number) => {
   let i = 0;
@@ -89,17 +89,17 @@ export function initHero(root: HTMLElement) {
       m.position.set(x, y, z); m.lookAt(0, 0, 0); env.add(m);
     };
     panel(24, 12, 0, 22, 6, 0xffffff, 3.2);
-    panel(10, 20, -24, 4, 4, 0xffe9d0, 1.6);
+    panel(10, 20, -24, 4, 4, 0xd8ecff, 1.6);
     panel(10, 20, 24, 2, -2, 0xd8f2f0, 1.2);
-    panel(20, 6, 0, -16, 10, 0xe8743b, 1.5);
+    panel(20, 6, 0, -16, 10, 0x3db7a6, 1.5);
     const pm = new THREE.PMREMGenerator(renderer);
     scene.environment = pm.fromScene(env, 0.02).texture;
     pm.dispose();
   }
-  scene.add(new THREE.HemisphereLight(0xffffff, 0xb9a88c, 0.9));
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x9fb3c4, 0.9));
   const key = new THREE.DirectionalLight(0xffffff, 3.2); key.position.set(4, 9, 7); scene.add(key);
-  const rim = new THREE.DirectionalLight(0xe8743b, 3); rim.position.set(-7, 3, -5); scene.add(rim);
-  const ledLight = new THREE.PointLight(0xe8743b, 8, 6, 2); scene.add(ledLight);
+  const rim = new THREE.DirectionalLight(0x3db7a6, 3); rim.position.set(-7, 3, -5); scene.add(rim);
+  const ledLight = new THREE.PointLight(0x3db7a6, 8, 6, 2); scene.add(ledLight);
 
   // البوردة
   const board = new THREE.Group(); scene.add(board);
@@ -124,7 +124,7 @@ export function initHero(root: HTMLElement) {
   const black = new THREE.MeshStandardMaterial({ color: 0x14171b, roughness: 0.45, metalness: 0.2 });
   const metal = new THREE.MeshStandardMaterial({ color: 0xd9dde2, roughness: 0.22, metalness: 1 });
   const gold = new THREE.MeshStandardMaterial({ color: 0xe6c15a, roughness: 0.28, metalness: 1 });
-  const orangeM = new THREE.MeshStandardMaterial({ color: 0xe8743b, roughness: 0.4 });
+  const orangeM = new THREE.MeshStandardMaterial({ color: 0x3db7a6, roughness: 0.4 });
   const box = (w: number, h: number, d: number, m: THREE.Material, x = 0, y = 0, z = 0) => {
     const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); o.position.set(x, y + h / 2, z); return o;
   };
@@ -161,7 +161,7 @@ export function initHero(root: HTMLElement) {
     const c = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.22, 24), orangeM); c.position.y = 0.11; g.add(c); g.add(box(0.5, 0.09, 0.5, metal));
   }, 0.8);
   part('led', 2.35, -0.35, [1.8, 3.6, -0.2], (g) => {
-    ledMat = new THREE.MeshStandardMaterial({ color: 0xe8743b, emissive: 0xe8743b, emissiveIntensity: 1.6, roughness: 0.3 });
+    ledMat = new THREE.MeshStandardMaterial({ color: 0x3db7a6, emissive: 0x3db7a6, emissiveIntensity: 1.6, roughness: 0.3 });
     g.add(box(0.34, 0.12, 0.22, ledMat));
   });
   part('head', 0, -2.2, [0, 2.6, -2.9], (g) => {
@@ -182,7 +182,7 @@ export function initHero(root: HTMLElement) {
     const c = document.createElement('canvas'); c.width = c.height = 256;
     const g = c.getContext('2d')!;
     const gr = g.createRadialGradient(128, 128, 10, 128, 128, 128);
-    gr.addColorStop(0, 'rgba(10,46,48,.38)'); gr.addColorStop(1, 'rgba(10,46,48,0)');
+    gr.addColorStop(0, 'rgba(10, 36, 72,.38)'); gr.addColorStop(1, 'rgba(10, 36, 72,0)');
     g.fillStyle = gr; g.fillRect(0, 0, 256, 256);
     const m = new THREE.Mesh(new THREE.PlaneGeometry(8, 5.6), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false }));
     m.rotation.x = -Math.PI / 2; m.position.y = -2.6; scene.add(m); return m;
@@ -191,7 +191,7 @@ export function initHero(root: HTMLElement) {
     const n = 140, a = new Float32Array(n * 3);
     for (let i = 0; i < n; i++) { a[i * 3] = (Math.random() - 0.5) * 26; a[i * 3 + 1] = (Math.random() - 0.5) * 14; a[i * 3 + 2] = (Math.random() - 0.5) * 10 - 2; }
     const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(a, 3));
-    const pts = new THREE.Points(g, new THREE.PointsMaterial({ color: 0xe8743b, size: 0.05, transparent: true, opacity: 0.55, depthWrite: false }));
+    const pts = new THREE.Points(g, new THREE.PointsMaterial({ color: 0x3db7a6, size: 0.05, transparent: true, opacity: 0.55, depthWrite: false }));
     scene.add(pts); return pts;
   })();
 

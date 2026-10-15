@@ -19,7 +19,7 @@ export function mountBoards(canvas: HTMLCanvasElement, first: BoardId) {
   const c = key.shadow.camera as THREE.OrthographicCamera;
   c.left = -8; c.right = 8; c.top = 8; c.bottom = -8; c.updateProjectionMatrix();
   scene.add(key, new THREE.AmbientLight(0xffe9d2, 0.5));
-  const rim = new THREE.DirectionalLight(0xe8743b, 1.1); rim.position.set(-5, 3, -5); scene.add(rim);
+  const rim = new THREE.DirectionalLight(0x3db7a6, 1.1); rim.position.set(-5, 3, -5); scene.add(rim);
 
   // أرضية تلتقط الظل فقط
   const floor = new THREE.Mesh(new THREE.CircleGeometry(9, 48), new THREE.ShadowMaterial({ opacity: 0.16 }));

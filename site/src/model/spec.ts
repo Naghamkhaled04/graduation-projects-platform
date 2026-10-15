@@ -72,7 +72,7 @@ function part(it: Item): { g: THREE.Group; led?: THREE.Mesh } {
     case 'motor': { const m = C(1, 1, 3, c, 0, 0.35, 0, 0.35, 0.7); m.rotation.z = Math.PI / 2; m.position.y = 1.35; g.add(m); const sh = C(0.15, 0.15, 1.2, 0xd8dde5, 2.1, 0.35, 0, 0.3, 0.9); sh.rotation.z = Math.PI / 2; sh.position.y = 1.35; g.add(sh, B(2.6, 0.35, 1.6, 0x39404d, 0, 0)); break; }
     case 'servo':
       g.add(B(2.2, 1.8, 1.1, c, 0, 0.1, 0, 0.5, 0.15), B(0.6, 0.12, 1.1, c, -1.4, 0.9), B(0.6, 0.12, 1.1, c, 1.4, 0.9), C(0.32, 0.32, 0.4, 0xf1f5f9, 0.45, 1.9, 0, 0.5, 0.1), B(1.7, 0.1, 0.32, 0xf1f5f9, 1.2, 2.3)); break;
-    case 'battery': g.add(B(3, 2, 2.4, c, 0, 0, 0, 0.6), B(2.6, 0.2, 2, 0xe8743b, 0, 2.0, 0, 0.5, 0.2)); break;
+    case 'battery': g.add(B(3, 2, 2.4, c, 0, 0, 0, 0.6), B(2.6, 0.2, 2, 0x3db7a6, 0, 2.0, 0, 0.5, 0.2)); break;
     case 'buzzer': g.add(C(0.85, 0.85, 1, c, 0, 0.35, 0, 0.6, 0.15), C(0.15, 0.15, 0.1, 0x000000, 0, 1.36, 0)); break;
     case 'camera': g.add(B(2.4, 0.26, 2.4, 0x14532d, 0, 0.35), B(1.5, 1.5, 1.5, c, 0, 0.61), C(0.5, 0.55, 0.6, 0x0b1220, 0, 2.1, 0, 0.2, 0.5)); pins(g, 4, -0.55, 1.2); break;
     case 'relay': g.add(B(2.8, 0.26, 2.2, 0x1e3a8a, 0, 0.35), B(1.5, 1.2, 1.2, c, -0.3, 0.61, 0), B(0.6, 0.7, 0.6, 0x16a34a, 0.9, 0.61, 0.6)); pins(g, 3, -0.4, -1); break;

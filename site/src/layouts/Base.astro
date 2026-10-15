@@ -23,7 +23,7 @@ const imgFallback = imgFallbackSrc.replace(/^export /gm, '') + `
 addEventListener('error', function (e) { onImgError(e.target); }, true);
 addEventListener('DOMContentLoaded', function () { document.querySelectorAll('img').forEach(function (i) { if (i.complete && !i.naturalWidth && i.getAttribute('src')) onImgError(i); }); });`;
 const path = Astro.url.pathname.replace(/\/$/, '');
-const chrome = !bare && !['/city', '/admin'].includes(path);
+const chrome = !bare && !['/admin'].includes(path);
 ---
 
 <!doctype html>

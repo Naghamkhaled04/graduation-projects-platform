@@ -6,7 +6,6 @@ const groups = [
     { href: '/home', icon: 'home', label: 'الرئيسية' },
     { href: '/home#projects', icon: 'box', label: 'المشاريع' },
     { href: '/store', icon: 'store', label: 'المتجر' },
-    { href: '/city', icon: 'compass', label: 'المدينة الذكية' },
   ] },
   { title: 'المجتمع', items: [
     { href: '/communities', icon: 'chat', label: 'مجتمعات الجامعات' },
@@ -101,7 +100,7 @@ const groups = [
     if (!s || !p) {
       acct.innerHTML = `<span class="gt">حسابي</span>${item('/join', 'lock', 'تسجيل الدخول أو حساب جديد')}`;
       document.getElementById('d-me')!.setAttribute('href', '/join');
-      foot.innerHTML = '<p>سجّل دخولك لتجمع نقاط، تبني مبناك، وتنضم لمجتمع جامعتك.</p>';
+      foot.innerHTML = '<p>سجّل دخولك لتجمع نقاط وتنضم لمجتمع جامعتك.</p>';
       return;
     }
     const lvl = levelOf(p.points), first = p.display_name.slice(0, 1);

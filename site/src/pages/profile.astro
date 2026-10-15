@@ -17,8 +17,6 @@ import '../styles/community.css';
   import { POINTS, levelOf, LEVELS, reasonLabel } from '../community/rules';
   import projects from '../data/projects.json';
   import { svg } from '../data/icons';
-  import { createStore } from '../city/store';
-  import { getSocial } from '../city/social';
 
   const titleOf = (id: string) => (projects as any[]).find((p) => p.id === id)?.t ?? id;
   const root = document.getElementById('pf-root')!;
@@ -32,8 +30,7 @@ import '../styles/community.css';
     gateEl.hidden = true; body.hidden = false;
 
     async function paint() {
-      const [me, mine, ledger, reds, board, admin, myBuilding] = await Promise.all([be.profile(), be.myFeedback(), be.ledger(), be.myRedemptions(), be.leaderboard(), be.isAdmin(), createStore().then((s) => s.mine()).catch(() => null)]);
-      const bstats = myBuilding ? await getSocial().then((s) => s.stats([myBuilding.id])).then((x) => x[myBuilding.id]).catch(() => null) : null;
+      const [me, mine, ledger, reds, board, admin] = await Promise.all([be.profile(), be.myFeedback(), be.ledger(), be.myRedemptions(), be.leaderboard(), be.isAdmin()]);
       const okCount = mine.filter((f) => f.status === 'approved').length, photoCount = mine.filter((f) => f.status === 'approved' && f.images.length).length;
       if (!me) { body.innerHTML = '<p class="c-note">ما لقينا ملفك.</p>'; return; }
       const lvl = levelOf(me.points), next = LEVELS.find((l) => l.min > me.points);
@@ -52,8 +49,6 @@ import '../styles/community.css';
         <div class="kpis">
           <div class="kpi"><b>${ar(okCount)}</b><span>${svg('chat', 14)} تجربة معتمدة</span></div>
           <div class="kpi"><b>${ar(photoCount)}</b><span>${svg('camera', 14)} مشروع نفّذته</span></div>
-          ${bstats ? `<div class="kpi"><b>${ar(bstats.likes)}</b><span>${svg('heart', 14)} إعجاب على مبناك</span></div>
-          <div class="kpi"><b>${ar(bstats.visits)}</b><span>${svg('eye', 14)} زيارة لمبناك</span></div>` : ''}
         </div>
 
         <div class="c-card sec invite">
@@ -71,7 +66,7 @@ import '../styles/community.css';
         <div class="grid2">
           <div class="c-card">
             <h3>استشارة مجانية</h3>
-            <p class="c-note">${ar(POINTS.redeemCost)} نقطة = استشارة مجانية. علّق على الأفكار، وارفق صور تنفيذك، وانشر مبناك.</p>
+            <p class="c-note">${ar(POINTS.redeemCost)} نقطة = استشارة مجانية. علّق على الأفكار، وارفق صور تنفيذك.</p>
             <div class="c-bar"><i style="width:${pct}%"></i></div>
             <small>${ar(Math.min(me.points, POINTS.redeemCost))} من ${ar(POINTS.redeemCost)}</small>
             <p class="c-err" id="rd-err"></p>
@@ -80,11 +75,9 @@ import '../styles/community.css';
           </div>
           <div class="c-card">
             <h3>كيف تجمع نقاط</h3>
-            <div class="c-row"><span>نشر مبناك بالمدينة</span><span class="c-plus">+${ar(POINTS.building)}</span></div>
             <div class="c-row"><span>تجربة بصور من تنفيذك للمشروع</span><span class="c-plus">+${ar(POINTS.photoFeedback)}</span></div>
             <div class="c-row"><span>تعليق على فكرة</span><span class="c-plus">+${ar(POINTS.ideaComment)}</span></div>
             <p class="c-note">النقاط بتنزل بعد مراجعتنا للمحتوى، مش فوراً.</p>
-            <a class="c-btn ghost" href="/city">ابنِ مبناك بالمدينة</a>
           </div>
         </div>
 
@@ -106,7 +99,6 @@ import '../styles/community.css';
         <div class="c-card sec foot">
           <a class="c-btn ghost" href="/settings">الإعدادات</a>
           <a class="c-btn ghost" href="/u?id=${encodeURIComponent(me.id)}">ملفي العام</a>
-          ${myBuilding ? `<a class="c-btn" href="/city?u=${encodeURIComponent(me.id)}">افتح مبناك بالمدينة</a>` : ''}
           ${admin ? '<a class="c-btn" href="/admin">لوحة الأدمن</a>' : ''}
           ${be.mode === 'local' ? `<button class="c-btn ghost" id="demo-admin">${admin ? 'إيقاف' : 'تجربة'} وضع الأدمن (معاينة)</button>` : `<button class="c-btn ghost" id="out">تسجيل الخروج</button>`}
         </div>`;

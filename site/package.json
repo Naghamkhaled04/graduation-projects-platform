@@ -10,7 +10,7 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "test": "node --test src/scripts/guard.test.js src/scripts/guard-inline.test.js src/scripts/journey.test.js"
+    "test": "node --test src/scripts/guard.test.js src/scripts/guard-inline.test.js src/scripts/journey.test.js src/scripts/imgfallback.test.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.116.0",

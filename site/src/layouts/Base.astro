@@ -6,6 +6,7 @@ import WhatsAppFab from '../components/WhatsAppFab.astro';
 import Footer from '../components/Footer.astro';
 import guardSrc from '../scripts/guard.js?raw';
 import { inlineGuard } from '../scripts/guard-inline.js';
+import imgFallbackSrc from '../scripts/imgfallback.js?raw';
 
 interface Props {
   title: string;
@@ -17,6 +18,10 @@ interface Props {
 }
 const { title, description = 'مشاريع تخرج لطلاب الحاسوب وإنترنت الأشياء: أفكار، قطع، وسلة جاهزة.', isPublic = false, bare = false } = Astro.props;
 const guard = inlineGuard(guardSrc);
+// صور مكسورة → صورة بديلة. capture عشان أخطاء الصور ما بتطلع لفوق؛ والـsweep بيلقط اللي فشلت قبل ما السكربت يشتغل
+const imgFallback = imgFallbackSrc.replace(/^export /gm, '') + `
+addEventListener('error', function (e) { onImgError(e.target); }, true);
+addEventListener('DOMContentLoaded', function () { document.querySelectorAll('img').forEach(function (i) { if (i.complete && !i.naturalWidth && i.getAttribute('src')) onImgError(i); }); });`;
 const path = Astro.url.pathname.replace(/\/$/, '');
 const chrome = !bare && !['/city', '/admin'].includes(path);
 ---
@@ -26,6 +31,7 @@ const chrome = !bare && !['/city', '/admin'].includes(path);
   <head>
     <meta charset="utf-8" />
     {!isPublic && <script is:inline set:html={guard}></script>}
+    <script is:inline set:html={imgFallback}></script>
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta name="description" content={description} />
     <title>{title}</title>

@@ -375,3 +375,6 @@ a {
     font-size: 16px !important;
   }
 }
+
+/* صورة بديلة لما صورة تفشل (scripts/imgfallback.js) */
+img.img-off { object-fit: cover; background: #e9f3f8; }

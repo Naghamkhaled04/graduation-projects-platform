@@ -57,3 +57,7 @@
   content: ''; position: absolute; inset-inline: 18%; bottom: -7px; height: 3px;
   border-radius: 3px; background: var(--orange);
 }
+
+/* الزر بصفحة التعريف بيتمدد ويصير هالكرت (View Transition بين الصفحات) */
+.auth .box { view-transition-name: auth; }
+::view-transition-group(auth) { animation-duration: .55s; animation-timing-function: var(--ease-spring); }

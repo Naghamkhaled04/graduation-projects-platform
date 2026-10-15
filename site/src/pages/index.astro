@@ -8,7 +8,7 @@ const Ex = '<span class="ex">مثال · عبّيه</span>';
 <Base title="مشاريع — من فكرة إلى مشروع بيشتغل" description="فريق أردني بيوصّل طالب التخرج من الفكرة للمناقشة." isPublic bare>
   <div class="intro" id="intro">
     <canvas class="stage3d" aria-hidden="true"></canvas>
-    <img class="board-still" src="/intro/board.webp" alt="" loading="lazy" width="1200" height="800" />
+    <div class="board-still" aria-hidden="true"></div>
 
     <nav class="in-nav" aria-label="الدخول">
       <a class="in-logo" href="/"><i aria-hidden="true"></i>مشاريع</a>
@@ -83,6 +83,11 @@ const Ex = '<span class="ex">مثال · عبّيه</span>';
   <script>
     import { initIntro } from '../scripts/intro3d';
     initIntro(document.getElementById('intro')!);
+    // الاسم بينحط على الزر المكبوس بس، عشان ما يتكرر بالصفحة
+    document.querySelectorAll<HTMLAnchorElement>('[data-auth]').forEach((a) =>
+      a.addEventListener('click', () => { a.style.viewTransitionName = 'auth'; }),
+    );
+    addEventListener('pageshow', () => document.querySelectorAll<HTMLElement>('[data-auth]').forEach((a) => (a.style.viewTransitionName = '')));
   </script>
 
   <style is:global>
@@ -154,7 +159,7 @@ const Ex = '<span class="ex">مثال · عبّيه</span>';
 
     /* بدون WebGL: صورة ثابتة + كل شي ظاهر */
     .no-webgl .stage3d { display: none; }
-    .no-webgl .board-still { display: block; position: absolute; top: 58vh; left: 50%; transform: translateX(-50%); width: min(560px, 90vw); height: auto; z-index: 0; }
+    .no-webgl .board-still { display: block; position: absolute; top: 58vh; left: 50%; transform: translateX(-50%); width: min(560px, 90vw); aspect-ratio: 3 / 2; background: url(/intro/board.webp) center / contain no-repeat; z-index: 0; }
     /* تقليل الحركة: البوردة بتضل مع الهيرو وما بتلحق التمرير */
     .still .stage3d { position: absolute; height: 100vh; }
 

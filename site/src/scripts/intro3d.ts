@@ -6,7 +6,10 @@ type Pose = [number, number, number, number, number, number]; // rx, ry, rz, x, 
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 const mix = (a: Pose, b: Pose, t: number) => a.map((v, i) => lerp(v, b[i], t)) as Pose;
 
-const OPEN: Pose = [0.95, -0.55, 0.1, 0, -3.0, 0.56];
+const OPEN: Pose = [0.95, -0.55, 0.1, 0, -3.0, 0.56]; // الموبايل: تحت النص
+const HALF_H = Math.tan((16 * Math.PI) / 180) * 17; // نص ارتفاع المشهد على z=0 (fov 32، بعد 17)
+/** الكمبيوتر: البوردة على الشمال والنص على اليمين */
+const OPEN_WIDE = (aspect: number): Pose => [0.85, -0.35, 0.08, -HALF_H * aspect * 0.5, -0.3, 0.62 * Math.min(1, aspect / 1.6)];
 const IDEA = (q: number): Pose => [0.6, 0.6 + q * 2.2, 0.05, -2.9, -0.1, 0.6];
 const TEAM = (q: number): Pose => [0.75, 0.3 + q * 2.4, 0, 0, -2.2, 0.62]; // تحت النص، بتلف ببطء على المسرح الكحلي
 const WHY = (q: number): Pose => [0.7, 2.8 + q * 3.2, 0, -2.9, 0, 0.58];
@@ -62,13 +65,13 @@ export function initIntro(root: HTMLElement) {
   const frame = () => {
     const t = reduce ? 99 : (performance.now() - t0) / 1000;
     smx += (mx - smx) * 0.06; smy += (my - smy) * 0.06;
-    const portrait = innerWidth < 760;
+    const portrait = innerWidth < 760 || innerWidth < innerHeight; // موبايل أو تابلت عمودي: النص فوق والبوردة تحت
 
     // تقدم الأقسام (مع تقليل الحركة كله صفر → البوردة ثابتة على OPEN)
     const p0 = reduce ? 0 : clamp(scrollY / (innerHeight * 0.9));
     const qI = reduce ? 0 : prog(sIdea), qT = reduce ? 0 : prog(sTeam), qW = reduce ? 0 : prog(sWhy), qP = reduce ? 0 : prog(sPort);
 
-    let pose = OPEN;
+    let pose = portrait ? OPEN : OPEN_WIDE(cam.aspect);
     pose = mix(pose, IDEA(qI), sstep(0.15, 1, p0));
     pose = mix(pose, TEAM(qT), sstep(0.85, 1, qI)); // بتنزل وقت ما "هدفنا" بيطلع، قبل ما يوصل عنوان "مين نحن"
     pose = mix(pose, WHY(qW), sstep(0, 0.25, qW));

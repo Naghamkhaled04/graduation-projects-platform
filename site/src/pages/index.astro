@@ -165,6 +165,16 @@ const Ex = '<span class="ex">مثال · عبّيه</span>';
     /* تقليل الحركة: البوردة بتضل مع الهيرو وما بتلحق التمرير */
     .still .stage3d { position: absolute; height: 100vh; }
 
+    /* الكمبيوتر: النص على اليمين والبوردة على الشمال، كل واحد بمساحته */
+    @media (min-width: 761px) and (min-aspect-ratio: 1/1) {
+      .in-hero { justify-items: start; text-align: start; align-content: center; padding: 8vh clamp(24px, 6vw, 96px) 0; }
+      .in-hero > * { max-width: min(600px, 46vw); }
+      .in-hero h1 { font-size: clamp(44px, 6.2vw, 92px); }
+      .in-hero-cta, .trust { justify-content: flex-start; }
+      .boot { position: absolute; bottom: 9vh; inset-inline-end: clamp(24px, 6vw, 96px); }
+      .no-webgl .board-still { top: 24vh; left: 5vw; transform: none; width: min(520px, 42vw); }
+    }
+
     @media (max-width: 760px) {
       .in-nav .in-btn { padding: 7px 12px; font-size: 13px; }
       .in-hero { padding-top: 12vh; }

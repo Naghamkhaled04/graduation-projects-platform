@@ -8,7 +8,7 @@ const mix = (a: Pose, b: Pose, t: number) => a.map((v, i) => lerp(v, b[i], t)) a
 
 const OPEN: Pose = [0.95, -0.55, 0.1, 0, -3.0, 0.56];
 const IDEA = (q: number): Pose => [0.6, 0.6 + q * 2.2, 0.05, -2.9, -0.1, 0.6];
-const TEAM: Pose = [0.9, 0.3, 0, 0, 1.4, 0.5];
+const TEAM = (q: number): Pose => [0.75, 0.3 + q * 2.4, 0, 0, -2.2, 0.62]; // تحت النص، بتلف ببطء على المسرح الكحلي
 const WHY = (q: number): Pose => [0.7, 2.8 + q * 3.2, 0, -2.9, 0, 0.58];
 const PORT: Pose = [0.25, Math.PI / 2, 0, 0, 1.5, 0.85]; // فتحة الـUSB (طرف -X) بتواجه الكاميرا
 
@@ -31,8 +31,6 @@ export function initIntro(root: HTMLElement) {
   });
   ledMat.color.set(0x1c3a40); ledMat.emissiveIntensity = 0; rim.intensity = 0; ledLight.intensity = 0;
 
-  // الـ٤ بوردات الصغيرة لقسم الفريق (بيشاركوا الهندسة والمواد)
-  const minis = [0, 1, 2, 3].map(() => { const m = board.clone(); m.visible = false; scene.add(m); return m; });
 
   const shadow = (() => {
     const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d')!;
@@ -44,14 +42,8 @@ export function initIntro(root: HTMLElement) {
 
   const sec = (id: string) => root.querySelector<HTMLElement>(id)!;
   const sIdea = sec('#s-idea'), sTeam = sec('#s-team'), sWhy = sec('#s-why'), sPort = sec('#s-port');
-  const slots = [...root.querySelectorAll<HTMLElement>('.mem .slot')];
   const prog = (el: HTMLElement) => { const r = el.getBoundingClientRect(); return clamp((innerHeight * 0.6 - r.top) / r.height); };
 
-  // من نقطة على الشاشة لنقطة على مستوى z=0
-  const ray = new THREE.Raycaster(), plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0), ndc = new THREE.Vector2();
-  const toWorld = (sx: number, sy: number, out: THREE.Vector3) => {
-    ndc.set((sx / innerWidth) * 2 - 1, -(sy / innerHeight) * 2 + 1); ray.setFromCamera(ndc, cam); ray.ray.intersectPlane(plane, out); return out;
-  };
 
   const resize = () => { renderer.setSize(innerWidth, innerHeight, false); cam.aspect = innerWidth / innerHeight; cam.updateProjectionMatrix(); };
   addEventListener('resize', resize); resize();
@@ -65,7 +57,7 @@ export function initIntro(root: HTMLElement) {
   let line = -1;
   const outBack = (t: number) => { const c1 = 1.4, c3 = c1 + 1; return 1 + c3 * (t - 1) ** 3 + c1 * (t - 1) ** 2; };
   const flicker = (t: number) => (t <= 0 ? 0 : t >= 1 ? 1 : [0.2, 0.9, 0.1, 1, 0.4, 1, 0.7, 1][Math.floor(t * 8)]);
-  const v = new THREE.Vector3(), target = new THREE.Vector3();
+  const v = new THREE.Vector3();
 
   const frame = () => {
     const t = reduce ? 99 : (performance.now() - t0) / 1000;
@@ -78,31 +70,20 @@ export function initIntro(root: HTMLElement) {
 
     let pose = OPEN;
     pose = mix(pose, IDEA(qI), sstep(0.15, 1, p0));
-    pose = mix(pose, TEAM, sstep(0, 0.25, qT));
+    pose = mix(pose, TEAM(qT), sstep(0.85, 1, qI)); // بتنزل وقت ما "هدفنا" بيطلع، قبل ما يوصل عنوان "مين نحن"
     pose = mix(pose, WHY(qW), sstep(0, 0.25, qW));
     pose = mix(pose, PORT, sstep(0, 0.4, qP));
-    if (portrait) { pose = [...pose] as Pose; pose[3] = 0; pose[4] += p0 > 0.3 && qP < 0.2 ? 2.2 : 0; pose[5] *= 0.62; }
+    if (portrait) { pose = [...pose] as Pose; pose[3] = 0; pose[4] = lerp(pose[4], 2.6, sstep(0.2, 0.4, p0) * (1 - sstep(0.1, 0.25, qP))); pose[5] *= 0.62; } // بالموبايل فوق النص، بانتقال ناعم
 
     // النزول
     const d = clamp(t / T_DROP), drop = (1 - outBack(d)) * 9;
     board.rotation.set(pose[0] + smy * 0.14 + (1 - d) * 0.6, pose[1] + smx * 0.25 - (1 - d) * 0.9, pose[2] + Math.sin(t * 0.5) * 0.02);
     board.position.set(pose[3], pose[4] + drop + Math.sin(t * 0.9) * 0.08, 0);
 
-    // انقسام الفريق: البوردة بتصغر والـ٤ بيطلعوا لأماكن الكروت
-    const split = sstep(0.05, 0.3, qT) * (1 - sstep(0, 0.25, qW));
-    board.scale.setScalar(pose[5] * (1 - split));
-    minis.forEach((m, i) => {
-      m.visible = split > 0.01 && !!slots[i];
-      if (!m.visible) return;
-      const r = slots[i].getBoundingClientRect();
-      toWorld(r.left + r.width / 2, r.top + r.height / 2, target);
-      m.position.lerpVectors(board.position, target, split);
-      m.rotation.set(0.9, t * 0.6 + i * 1.3, 0);
-      m.scale.setScalar(lerp(0.05, portrait ? 0.14 : 0.2, split));
-    });
+    board.scale.setScalar(pose[5]);
 
     shadow.position.set(pose[3], pose[4] - 1.6, 0);
-    (shadow.material as THREE.MeshBasicMaterial).opacity = d * 0.9 * (1 - split) * (1 - sstep(0.3, 0.7, qP));
+    (shadow.material as THREE.MeshBasicMaterial).opacity = d * 0.9 * (1 - sstep(0.3, 0.7, qP));
 
     // التشغيل + توهّج الدخول
     const fl = flicker(clamp((t - T_ON) / T_ON_LEN)), plug = sstep(0.3, 0.8, qP);

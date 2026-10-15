@@ -41,17 +41,10 @@ const Ex = '<span class="ex">مثال · عبّيه</span>';
       <div class="in-wide">
         <span class="silk">U4 · الفريق</span>
         <h2>مين نحن</h2>
-        <div class="team">
-          {team.map((m) => (
-            <div class="mem">
-              <div class="slot" aria-hidden="true"></div>
-              <h3>{m.name}</h3>
-              <p class="role">{m.role}</p>
-              <p>{m.line}</p>
-              {m.example && <Fragment set:html={Ex} />}
-            </div>
-          ))}
-        </div>
+        <p class="team-p">{team.p}</p>
+        <ul class="facts">
+          {team.facts.map((f) => (<li><b>{f.n}</b><span>{f.l}</span></li>))}
+        </ul>
       </div>
     </section>
 
@@ -144,13 +137,12 @@ const Ex = '<span class="ex">مثال · عبّيه</span>';
     .in-idea p, .in-why p { color: var(--in-fg2); max-width: 46ch; }
 
     .in-team { min-height: 160vh; padding-top: 22vh; }
-    .in-wide { width: min(1100px, 100%); margin-inline: auto; text-align: center; position: sticky; top: 14vh; }
-    .team { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-top: 24px; }
-    .mem { --slot: 130px; background: linear-gradient(transparent calc(var(--slot) + 16px), color-mix(in srgb, var(--in-panel) 72%, transparent) 0); border: 1px solid rgba(61,183,166,.25); border-radius: 18px; padding: 16px; text-align: center; }
-    .mem .slot { height: var(--slot); }
-    .mem h3 { font-size: 22px; }
-    .mem .role { font: 500 13px var(--font); color: var(--in-neon); }
-    .mem p { color: var(--in-fg2); font-size: 14px; }
+    .in-wide { width: min(760px, 100%); margin-inline: auto; text-align: center; position: sticky; top: 14vh; padding: 24px clamp(16px, 3vw, 32px); border-radius: 24px; background: color-mix(in srgb, var(--in-panel) 55%, transparent); backdrop-filter: blur(10px); }
+    .team-p { color: var(--in-fg2); max-width: 52ch; margin: 0 auto; font-size: clamp(16px, 1.6vw, 19px); }
+    .facts { list-style: none; padding: 0; margin: 28px auto 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+    .facts li { display: grid; gap: 2px; min-width: 150px; padding: 14px 20px; border-radius: 16px; border: 1px solid rgba(61,183,166,.3); background: color-mix(in srgb, var(--in-panel) 60%, transparent); backdrop-filter: blur(8px); }
+    .facts b { font-size: clamp(24px, 3vw, 34px); color: var(--in-neon); line-height: 1.1; }
+    .facts span { color: var(--in-fg2); font-size: 14px; }
 
     .in-why { min-height: 170vh; padding-top: 20vh; }
     .why { display: grid; gap: 22px; margin-top: 10px; }
@@ -180,8 +172,6 @@ const Ex = '<span class="ex">مثال · عبّيه</span>';
       .in-idea article { min-height: 0; margin: 45vh 0 30vh; padding: 20px; }
       .why > div { padding: 16px; }
       .in-wide { position: static; }
-      .team { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .mem { --slot: 90px; }
     }
   </style>
 </Base>

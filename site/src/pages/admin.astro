@@ -26,7 +26,7 @@ import '../styles/community.css';
     // بوابة: لا تُعرض أي بيانات قبل التأكد من أنه أدمن
     if (!(await be.session())) { location.replace('/join?next=/admin'); return; }
     if (!(await be.isAdmin())) {
-      root.innerHTML = '<div class="c-card"><h2>هالصفحة للإدارة فقط</h2><p class="c-note">حسابك ما إله صلاحية هون.</p><a class="c-btn" href="/">الرجوع للرئيسية</a></div>';
+      root.innerHTML = '<div class="c-card"><h2>هالصفحة للإدارة فقط</h2><p class="c-note">حسابك ما إله صلاحية هون.</p><a class="c-btn" href="/home">الرجوع للرئيسية</a></div>';
       return;
     }
     root.innerHTML = `<h1>لوحة الأدمن</h1>${demoBanner(be)}<div id="g"></div><div id="b" hidden></div>`;

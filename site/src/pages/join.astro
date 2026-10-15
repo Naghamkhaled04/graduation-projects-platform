@@ -4,7 +4,7 @@ import '../styles/auth.css';
 import { UNIVERSITIES } from '../data/universities';
 ---
 
-<Base title="حساب جديد — مشاريع" description="أنشئ حسابك بخطوتين: طالب جامعي ببريد جامعتك، أو ضيف.">
+<Base title="حساب جديد — مشاريع" description="أنشئ حسابك بخطوتين: طالب جامعي ببريد جامعتك، أو ضيف." isPublic>
   <main class="auth">
     <div class="box" id="j"><p class="c-note">جارٍ التحميل…</p></div>
   </main>
@@ -17,11 +17,12 @@ import { UNIVERSITIES } from '../data/universities';
   import { POINTS } from '../community/rules';
   import { hintFor, emailMatchesUni, uniFromEmail } from '../data/unimail';
   import { svg } from '../data/icons';
+  import { safeNext } from '../scripts/guard.js';
 
   const UNIS = (window as any).__UNIS as { slug: string; name: string }[];
   const root = document.getElementById('j')!;
   const params = new URLSearchParams(location.search);
-  const next = params.get('next') || '/profile';
+  const next = safeNext(params.get('next'));
   const ref = (params.get('ref') || '').slice(0, 64);
   const fromWall = params.get('wall') === '1';
   const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);

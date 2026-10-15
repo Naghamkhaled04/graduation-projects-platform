@@ -3,8 +3,8 @@ import { svg } from '../data/icons';
 
 const groups = [
   { title: 'تصفّح', items: [
-    { href: '/', icon: 'home', label: 'الرئيسية' },
-    { href: '/#projects', icon: 'box', label: 'المشاريع' },
+    { href: '/home', icon: 'home', label: 'الرئيسية' },
+    { href: '/home#projects', icon: 'box', label: 'المشاريع' },
     { href: '/store', icon: 'store', label: 'المتجر' },
     { href: '/city', icon: 'compass', label: 'المدينة الذكية' },
   ] },
@@ -17,7 +17,7 @@ const groups = [
 ---
 
 <header id="hdr">
-  <a class="logo" href="/">مشاريع</a>
+  <a class="logo" href="/home">مشاريع</a>
 
   <div class="right">
     <button type="button" class="burger" id="burger" aria-label="القائمة" aria-expanded="false" aria-controls="drawer"><span></span><span></span><span></span></button>

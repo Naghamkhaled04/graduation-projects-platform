@@ -3,7 +3,7 @@ import Base from '../layouts/Base.astro';
 import '../styles/auth.css';
 ---
 
-<Base title="تسجيل الدخول — مشاريع" description="ادخل لحسابك بالبريد أو رقم موبايلك.">
+<Base title="تسجيل الدخول — مشاريع" description="ادخل لحسابك بالبريد أو رقم موبايلك." isPublic>
   <main class="auth">
     <div class="box" id="lg"><p class="c-note">جارٍ التحميل…</p></div>
   </main>
@@ -12,10 +12,11 @@ import '../styles/auth.css';
 <script>
   import { getBackend } from '../community/backend';
   import { svg } from '../data/icons';
+  import { safeNext } from '../scripts/guard.js';
 
   const MODE = 'login';
   const root = document.getElementById('lg')!;
-  const next = new URLSearchParams(location.search).get('next') || '/profile';
+  const next = safeNext(new URLSearchParams(location.search).get('next'));
 
   (async () => {
     const be = await getBackend();

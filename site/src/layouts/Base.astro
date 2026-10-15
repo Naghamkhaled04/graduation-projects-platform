@@ -4,18 +4,27 @@ import Header from '../components/Header.astro';
 import ChatAdvisor from '../components/ChatAdvisor.astro';
 import WhatsAppFab from '../components/WhatsAppFab.astro';
 import Footer from '../components/Footer.astro';
+import guardSrc from '../scripts/guard.js?raw';
 
 interface Props {
   title: string;
   description?: string;
+  /** صفحة مفتوحة بدون تسجيل دخول */
+  isPublic?: boolean;
+  /** بدون الهيدر والمساعد والواتساب والفوتر (صفحة التعريف) */
+  bare?: boolean;
 }
-const { title, description = 'مشاريع تخرج لطلاب الحاسوب وإنترنت الأشياء: أفكار، قطع، وسلة جاهزة.' } = Astro.props;
+const { title, description = 'مشاريع تخرج لطلاب الحاسوب وإنترنت الأشياء: أفكار، قطع، وسلة جاهزة.', isPublic = false, bare = false } = Astro.props;
+const guard = guardSrc.replace(/^export /gm, '') + '\nif(!hasSession(localStorage))location.replace(loginUrl(location));';
+const path = Astro.url.pathname.replace(/\/$/, '');
+const chrome = !bare && !['/city', '/admin'].includes(path);
 ---
 
 <!doctype html>
 <html lang="ar" dir="rtl">
   <head>
     <meta charset="utf-8" />
+    {!isPublic && <script is:inline set:html={guard}></script>}
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta name="description" content={description} />
     <title>{title}</title>
@@ -30,11 +39,11 @@ const { title, description = 'مشاريع تخرج لطلاب الحاسوب و
     <script is:inline src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
   </head>
   <body>
-    <Header />
+    {!bare && <Header />}
     <slot />
-    {!['/city', '/admin'].includes(Astro.url.pathname.replace(/\/$/, '')) && <ChatAdvisor />}
-    {!['/city', '/admin'].includes(Astro.url.pathname.replace(/\/$/, '')) && <WhatsAppFab />}
-    {!['/city', '/admin'].includes(Astro.url.pathname.replace(/\/$/, '')) && <Footer />}
+    {chrome && <ChatAdvisor />}
+    {chrome && <WhatsAppFab />}
+    {chrome && <Footer />}
 
     <script is:inline>
       // تسجيل إضافة ScrollTrigger فور جاهزية الصفحة

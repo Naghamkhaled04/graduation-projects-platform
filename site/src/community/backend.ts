@@ -1,4 +1,5 @@
 import { POINTS } from './rules';
+import { authReturn } from '../scripts/guard.js';
 import { dataUrlToBlob } from './img';
 import type { Feedback, FeedbackInput, LedgerRow, PendingBuilding, Profile, Redemption, Session } from './types';
 
@@ -157,7 +158,7 @@ class CloudBackend implements Backend {
     const isPhone = /^\+?[0-9]{8,15}$/.test(handle.replace(/[\s-]/g, ''));
     const creds: any = isPhone ? { phone: handle.replace(/[\s-]/g, '') } : { email: handle.trim().toLowerCase() };
     creds.password = password;
-    creds.options = { data: { display_name: profile.display_name }, emailRedirectTo: location.origin + '/profile' };
+    creds.options = { data: { display_name: profile.display_name }, emailRedirectTo: authReturn(location.origin, '/profile') };
     const r = await this.sb.auth.signUp(creds);
     if (r.error) throw new Error(mapAuthError(r.error.message));
     // لا جلسة = بانتظار تأكيد البريد، فنحفظ الملف ليُطبَّق بعد التأكيد
@@ -171,7 +172,7 @@ class CloudBackend implements Backend {
     if (r.error) throw new Error(mapAuthError(r.error.message));
   }
   async resetPassword(email: string) {
-    const r = await this.sb.auth.resetPasswordForEmail(email.trim().toLowerCase(), { redirectTo: location.origin + '/settings' });
+    const r = await this.sb.auth.resetPasswordForEmail(email.trim().toLowerCase(), { redirectTo: authReturn(location.origin, '/settings') });
     if (r.error) throw new Error(mapAuthError(r.error.message));
   }
   async signOut() { await this.sb.auth.signOut(); }

@@ -20,7 +20,16 @@ export function loginUrl(loc) {
   return '/login?next=' + encodeURIComponent(loc.pathname + loc.search);
 }
 
-/** next آمن: مسار داخلي بس، وإلا fallback */
+/** رابط رجوع لروابط الإيميل (تأكيد/استعادة): صفحة الدخول مفتوحة، فـsupabase بيقرأ التوكن هناك وبعدين بنكمّل لـnext */
+export function authReturn(origin, next) {
+  return origin + '/login?next=' + encodeURIComponent(next);
+}
+
+/** next آمن: مسار داخلي بس، وإلا fallback. منحكم بالرابط بعد ما المتصفح يحلّله (بيشيل tab/سطر جديد ويقلب \ لـ /) */
 export function safeNext(raw, fallback = '/home') {
-  return typeof raw === 'string' && /^\/(?![/\\])/.test(raw) ? raw : fallback;
+  if (typeof raw !== 'string' || raw[0] !== '/') return fallback;
+  try {
+    const u = new URL(raw, 'http://same.invalid');
+    return u.host === 'same.invalid' ? u.pathname + u.search + u.hash : fallback;
+  } catch (e) { return fallback; }
 }

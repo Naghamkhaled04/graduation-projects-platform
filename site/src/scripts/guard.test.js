@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { hasSession, loginUrl, safeNext } from './guard.js';
+import { hasSession, loginUrl, safeNext, authReturn } from './guard.js';
 
 const store = (obj) => {
   const keys = Object.keys(obj);
@@ -40,4 +40,15 @@ test('safeNext only allows same-site paths', () => {
   assert.equal(safeNext('javascript:alert(1)'), '/home');
   assert.equal(safeNext('/x', '/profile'), '/x');
   assert.equal(safeNext(null, '/profile'), '/profile');
+});
+
+test('safeNext rejects control characters that browsers strip', () => {
+  assert.equal(safeNext('/\t/evil.com'), '/home');
+  assert.equal(safeNext('/\n/evil.com'), '/home');
+  assert.equal(safeNext('/\r/evil.com'), '/home');
+});
+
+test('authReturn sends email links to the public login page, then on to next', () => {
+  assert.equal(authReturn('https://mashari.jo', '/profile'), 'https://mashari.jo/login?next=%2Fprofile');
+  assert.equal(authReturn('https://mashari.jo', '/city?x=1'), 'https://mashari.jo/login?next=%2Fcity%3Fx%3D1');
 });

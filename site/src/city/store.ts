@@ -1,4 +1,5 @@
 import { OFFICIAL, PLOTS, clean, type Building, type Draft } from './types';
+import { authReturn } from '../scripts/guard.js';
 
 export interface Store {
   mode: 'local' | 'cloud';
@@ -56,7 +57,7 @@ class CloudStore implements Store {
   }
   async authed() { return !!(await this.sb.auth.getSession()).data.session; }
   async signIn(email: string) {
-    const { error } = await this.sb.auth.signInWithOtp({ email, options: { emailRedirectTo: location.href } });
+    const { error } = await this.sb.auth.signInWithOtp({ email, options: { emailRedirectTo: authReturn(location.origin, location.pathname + location.search) } });
     if (error) throw error;
   }
   async mine() {

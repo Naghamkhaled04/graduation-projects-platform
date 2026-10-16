@@ -1,5 +1,6 @@
 ---
-import { slugOf, ar } from '../data/storecats';
+import { slugOf, iconOf, ar } from '../data/storecats';
+import { svg } from '../data/icons';
 interface Props { p: { id: string; nm: string; cat: string; p: number; img: string }; used?: { id: string; t: string }[] }
 const { p, used = [] } = Astro.props;
 const href = `/store/${slugOf(p.cat)}#p-${p.id}`;
@@ -7,18 +8,19 @@ const href = `/store/${slugOf(p.cat)}#p-${p.id}`;
 
 <article class="nv-card" id={`p-${p.id}`} data-id={p.id} data-nm={p.nm} data-price={p.p} data-img={p.img}
   data-cat={p.cat} data-used={used.length} data-search={(p.nm + ' ' + p.cat).toLowerCase()}>
-  <a class="nv-card__media" href={href}>
-    <img src={p.img} alt={p.nm} loading="lazy" decoding="async" width="240" height="240" />
+  <a class="nv-card__media" href={href} tabindex="-1" aria-hidden="true">
+    <img src={p.img} alt="" loading="lazy" decoding="async" width="240" height="240" />
+    <span class="nv-card__ic"><Fragment set:html={svg(iconOf(p.cat), 34)} /></span>
   </a>
   <div class="nv-card__body">
     <span class="nv-card__tag">{p.cat}</span>
-    <h3 class="nv-card__title"><a href={href}>{p.nm}</a></h3>
+    <h3 class="nv-card__title"><a href={href} title={p.nm}>{p.nm}</a></h3>
     {used.length > 0 && (
       <span class="nv-card__used">بمشروع: <a href={`/projects/${used[0].id}`}>{used[0].t}</a>{used.length > 1 && ` و${ar(used.length - 1)} غيره`}</span>
     )}
     <div class="nv-card__foot">
-      <span class="nv-card__price">{ar(p.p)} د.أ</span>
-      <button type="button" class="nv-btn add">أضف للسلة</button>
+      <span class="nv-card__price"><b>{ar(p.p)}</b> د.أ</span>
+      <button type="button" class="nv-btn add" aria-label={`أضف ${p.nm} للسلة`}>+ أضف</button>
     </div>
   </div>
 </article>

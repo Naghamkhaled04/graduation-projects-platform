@@ -40,6 +40,13 @@ export function mountBasket(root: ParentNode = document) {
         </div>`).join('')
       : '<p class="c-note">سلتك فاضية.</p>';
     if (!keys.length) box.hidden = true;
+    // زر أضف بكل كرت بيبيّن الكمية اللي بالسلة
+    root.querySelectorAll<HTMLElement>('.nv-card').forEach((c) => {
+      const b = c.querySelector<HTMLElement>('.add'); if (!b) return;
+      const n = bag[c.dataset.id!]?.n ?? 0;
+      b.textContent = n ? `✓ ${ar(n)}` : '+ أضف';
+      b.classList.toggle('in', n > 0);
+    });
   }
 
   root.querySelectorAll<HTMLElement>('.nv-grid').forEach((grid) =>
@@ -48,7 +55,6 @@ export function mountBasket(root: ParentNode = document) {
       const el = b.closest<HTMLElement>('.nv-card')!, id = el.dataset.id!;
       bag[id] = { id, nm: el.dataset.nm!, p: Number(el.dataset.price) || 0, img: el.dataset.img || '', n: (bag[id]?.n ?? 0) + 1 };
       save(); paint(); added(el.dataset.nm!);
-      b.textContent = '✓'; setTimeout(() => (b.textContent = 'أضف'), 1000);
     }));
 
   list.addEventListener('click', (e) => {

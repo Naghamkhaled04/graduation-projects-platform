@@ -28,6 +28,8 @@ export const CATEGORIES = ORDER.filter((c) => PRODUCTS.some((p) => p.cat === c.c
 
 export const catBySlug = (slug: string) => CATEGORIES.find((c) => c.slug === slug);
 export const slugOf = (cat: string) => ORDER.find((c) => c.cat === cat)?.slug ?? '';
+/** أيقونة القسم: بتبيّن بالكرت لما صورة القطعة مش متوفرة */
+export const iconOf = (cat: string) => ORDER.find((c) => c.cat === cat)?.icon ?? 'box';
 export const productsOf = (cat: string) => PRODUCTS.filter((p) => p.cat === cat);
 
 /** قطع مختارة للواجهة: الأرخص من كل قسم أساسي، بترتيب ثابت */

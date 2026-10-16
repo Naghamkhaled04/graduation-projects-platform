@@ -59,22 +59,6 @@
 
 /* ---- البطاقة: نفس بطاقة المتجر ---- */
 .nv-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: clamp(14px, 1.6vw, 26px); }
-.nv-card { display: flex; flex-direction: column; background: var(--nv-bg); border: 0.8px solid var(--nv-line);
-  border-radius: var(--nv-radius); overflow: hidden; transition: transform .25s, box-shadow .25s, border-color .25s; }
-.nv-card[hidden] { display: none; }
-.nv-card:hover { transform: translateY(-4px); border-color: var(--nv-brand); box-shadow: var(--nv-shadow-hover); }
-.nv-card__media { display: block; aspect-ratio: 1; background: #fff; overflow: hidden; }
-.nv-card__media img { width: 100%; height: 100%; object-fit: contain; display: block; transition: transform .4s; }
-.nv-card:hover .nv-card__media img { transform: scale(1.05); }
-.nv-card__body { display: flex; flex-direction: column; gap: 8px; padding: 14px 16px 16px; flex: 1; }
-.nv-card__tag { align-self: flex-start; font-size: 11.5px; color: var(--nv-muted);
-  background: var(--nv-surface); border-radius: 999px; padding: 3px 11px; }
-.nv-card__title { font-size: 14.5px; font-weight: 600; line-height: 1.55; overflow-wrap: anywhere; }
-.nv-card__title a { text-decoration: none; } .nv-card__title a:hover { color: var(--nv-brand-dark); }
-.nv-card__used { font-size: 11.5px; color: var(--nv-muted); line-height: 1.6; }
-.nv-card__used a { color: var(--nv-brand-dark); }
-.nv-card__foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: auto; padding-top: 6px; }
-.nv-card__price { font-weight: 700; font-size: 15px; white-space: nowrap; }
 
 .nv-btn { font: 500 13px var(--font); border: 0; border-radius: 999px; padding: 8px 18px; cursor: pointer;
   background: var(--nv-brand); color: #fff; text-decoration: none; display: inline-block; transition: background .2s; }
@@ -145,8 +129,6 @@
 }
 
 /* لمسة أخضر من هوية موقعنا داخل المتجر: للقطع المربوطة بمشاريعنا */
-.nv-card__used { background: rgba(198,211,166,.4); border-radius: 999px; padding: 4px 11px; align-self: flex-start; }
-.nv-card__used a { color: #0e3a63; font-weight: 500; }
 .nv-side a.on { background: #0e3a63; }
 .nv-cta { background: #0e3a63; color: #fbfdfe; border-color: #0e3a63; }
 .nv-cta p { color: rgba(255,253,249,.72); }
@@ -165,7 +147,6 @@
 .bsk button:focus-visible, .bfab:focus-visible { outline: 2px solid #18766a; outline-offset: 2px; }
 
 /* صفحات فيها مئات القطع: المتصفح ما بيرسم الكروت اللي برّا الشاشة */
-.nv-grid .nv-card { content-visibility: auto; contain-intrinsic-size: auto 340px; }
 
 
 /* رأس المتجر: البحث هو البطل، والأقسام شرائح تحته */
@@ -191,4 +172,41 @@
   .nv-find__bar button { padding: 0 18px; }
   .nv-chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
   .nv-chips a { flex: none; }
+}
+
+
+/* كرت القطعة: صورة مربعة صغيرة، اسم بسطرين، سعر واضح، وزر أضف قصير */
+.nv-card { display: flex; flex-direction: column; background: #fff; border-radius: 16px; box-shadow: inset 0 0 0 1px rgba(14, 58, 99, .1); overflow: hidden;
+  transition: box-shadow .2s, transform .2s; content-visibility: auto; contain-intrinsic-size: auto 300px; }
+.nv-card[hidden] { display: none; }
+.nv-card:hover { box-shadow: inset 0 0 0 1px #3db7a6, 0 14px 32px -20px rgba(14, 58, 99, .45); transform: translateY(-2px); }
+.nv-card__media { position: relative; display: grid; place-items: center; aspect-ratio: 4 / 3; background: #f3f7f9; overflow: hidden; }
+.nv-card__media img { width: 100%; height: 100%; object-fit: contain; display: block; }
+/* الصورة مش متوفرة → أيقونة القسم بدل الصورة البديلة الموحّدة */
+.nv-card__ic { display: none; width: 64px; height: 64px; border-radius: 18px; place-items: center; background: #e3f3f0; color: #18766a; }
+.nv-card__media:has(img.img-off) img { display: none; }
+.nv-card__media:has(img.img-off) .nv-card__ic { display: grid; }
+.nv-card__body { display: flex; flex-direction: column; gap: 6px; padding: 12px 14px 14px; flex: 1; min-width: 0; }
+.nv-card__tag { align-self: flex-start; font-size: 12px; color: #4a6380; }
+.nv-card__title { font-size: 14.5px; font-weight: 600; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+.nv-card__title a { color: #0e3a63; text-decoration: none; } .nv-card__title a:hover { color: #18766a; }
+.nv-card__used { align-self: flex-start; font-size: 12px; line-height: 1.5; padding: 3px 10px; border-radius: 999px; background: rgba(61, 183, 166, .14); color: #18766a;
+  max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nv-card__used a { color: #0e3a63; font-weight: 500; }
+.nv-card__foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: auto; padding-top: 8px; border-top: 1px solid rgba(14, 58, 99, .08); }
+.nv-card__price { font-size: 13px; color: #4a6380; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.nv-card__price b { font-size: 20px; color: #0e3a63; }
+.nv-card .add { min-height: 40px; padding: 0 16px; font-size: 14px; font-weight: 600; white-space: nowrap; }
+.nv-card .add.in { background: #0a2448; color: #e9f3f8; }
+
+/* الموبايل: كرت أفقي (الصورة جنب الاسم)، واحد بالسطر، أقصر بكتير */
+@media (max-width: 640px) {
+  .nv-grid { grid-template-columns: minmax(0, 1fr) !important; gap: 10px; }
+  .nv-card { flex-direction: row; contain-intrinsic-size: auto 130px; }
+  .nv-card:hover { transform: none; }
+  .nv-card__media { flex: none; width: 112px; aspect-ratio: auto; }
+  .nv-card__ic { width: 52px; height: 52px; border-radius: 14px; }
+  .nv-card__body { padding: 10px 12px; gap: 4px; }
+  .nv-card__title { font-size: 14px; }
+  .nv-card__foot { padding-top: 6px; }
 }

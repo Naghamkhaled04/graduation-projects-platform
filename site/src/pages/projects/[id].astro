@@ -36,7 +36,7 @@ const waParts = `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(`مرحبا
 <Base title={`${p.t} — مشاريع`} description={description.slice(0, 200)}>
   <main class="pg">
     <div class="container">
-      <a class="back" href="/home#projects">← كل المشاريع</a>
+      <a class="back" href="/projects">← كل المشاريع</a>
       <div class="meta"><span class={`lvl ${p.l}`}>{p.ln}</span><span>{p.c}</span>{p.x && <span class="lk"><Fragment set:html={svg('lock', 14)} /> فكرة حصرية</span>}<span class="built" id="built-badge" hidden></span></div>
       <h1>{p.t}</h1>
       <p class:list={['lead', { long: description.length > 400 }]}>{description}</p>

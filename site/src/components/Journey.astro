@@ -8,7 +8,7 @@ const steps = [
 const PATH = 'M1100 140 C 930 140 980 330 780 330 S 590 130 430 250 S 330 440 100 400';
 ---
 
-<section class="jr" id="how" data-steps={JSON.stringify(steps)}>
+<section class="jr" id="steps" data-steps={JSON.stringify(steps)}>
   <div class="jr-stage">
     <div class="word" aria-hidden="true">مشروعك</div>
     <div class="jr-title">
@@ -41,7 +41,7 @@ const PATH = 'M1100 140 C 930 140 980 330 780 330 S 590 130 430 250 S 330 440 10
 <script>
   import { colorAt, rgb, sectionProgress, setHeader, sstep, clamp, type Stops } from '../scripts/theme';
 
-  const root = document.getElementById('how') as HTMLElement;
+  const root = document.getElementById('steps') as HTMLElement;
   const stage = root.querySelector<HTMLElement>('.jr-stage')!;
   const track = root.querySelector<SVGPathElement>('.track')!;
   const prog = root.querySelector<SVGPathElement>('.prog')!;

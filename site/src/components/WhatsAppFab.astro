@@ -20,11 +20,11 @@ import { WHATSAPP } from '../data/config';
 </script>
 
 <style is:global>
-  .wafab { position: fixed; right: 20px; bottom: 22px; z-index: 55; display: inline-flex; align-items: center; gap: 0; height: 56px; padding: 0 16px; border-radius: 999px; background: var(--green); color: var(--cream); text-decoration: none; font: 500 14px var(--font);
+  .wafab { position: fixed; right: 20px; bottom: calc(22px + var(--bnav, 0px)); z-index: 55; display: inline-flex; align-items: center; gap: 0; height: 56px; padding: 0 16px; border-radius: 999px; background: var(--green); color: var(--cream); text-decoration: none; font: 500 14px var(--font);
     box-shadow: 0 0 0 1px rgba(61, 183, 166,.5), 0 0 26px rgba(61, 183, 166,.3), 0 14px 30px -10px rgba(10, 36, 72,.6); transition: gap .3s, padding .3s; overflow: hidden; }
   .wafab .t { max-width: 0; opacity: 0; white-space: nowrap; transition: max-width .3s, opacity .3s; }
   .wafab:hover, .wafab:focus-visible { gap: 10px; padding: 0 20px; }
   .wafab:hover .t, .wafab:focus-visible .t { max-width: 90px; opacity: 1; }
   .wafab .i { display: inline-flex; }
-  @media (max-width: 640px) { .wafab { right: 14px; bottom: 16px; height: 50px; } }
+  @media (max-width: 640px) { .wafab { right: 14px; bottom: calc(16px + var(--bnav, 0px)); height: 50px; } }
 </style>

@@ -37,7 +37,7 @@ import { svg } from '../data/icons';
   let pos = { x: 20, y: innerHeight - 170 };
   try { const s = JSON.parse(localStorage.getItem(KEY) || 'null'); if (s) pos = s; } catch { /* اختياري */ }
   const place = () => {
-    pos.x = Math.min(Math.max(8, pos.x), innerWidth - (bubble.offsetWidth || 70) - 8); pos.y = Math.min(Math.max(70, pos.y), innerHeight - 70);
+    pos.x = Math.min(Math.max(8, pos.x), innerWidth - (bubble.offsetWidth || 70) - 8); pos.y = Math.min(Math.max(70, pos.y), innerHeight - 70 - (document.querySelector<HTMLElement>('.bnav')?.offsetHeight ?? 0));
     root.style.left = pos.x + 'px'; root.style.top = pos.y + 'px';
     root.classList.toggle('up', pos.y > innerHeight / 2); root.classList.toggle('right', pos.x > innerWidth / 2);
   };

@@ -1,0 +1,14 @@
+---
+import Base from '../../layouts/Base.astro';
+import Projects from '../../components/Projects.astro';
+---
+
+<Base title="المشاريع — مشاريع" description="كل أفكار مشاريع التخرج: الوصف والمكونات والتكلفة، مع فلترة حسب المجال والمستوى.">
+  <main class="projects-page">
+    <Projects />
+  </main>
+</Base>
+
+<style is:global>
+  .projects-page { padding-top: 70px; }
+</style>

@@ -1,27 +1,45 @@
 ---
 import { svg } from '../data/icons';
+import { activeHref } from '../scripts/navmatch.js';
 
+// الأقسام الرئيسية: ظاهرة دايماً (شريط فوق بالكمبيوتر، تحت بالموبايل)
+const primary = [
+  { href: '/home', icon: 'home', label: 'الرئيسية' },
+  { href: '/projects', icon: 'box', label: 'المشاريع', match: ['/projects', '/p'] },
+  { href: '/store', icon: 'store', label: 'المتجر' },
+  { href: '/communities', icon: 'chat', label: 'المجتمع', match: ['/communities', '/c'] },
+  { href: '/store/services', icon: 'flask', label: 'الاستشارة' },
+];
+// الموبايل: ٥ أيقونات بس، والاستشارة بتنزل للقائمة الجانبية
+const mobile = [...primary.slice(0, 4), { href: '/profile', icon: 'medal', label: 'حسابي', match: ['/profile', '/u', '/settings'] }];
+// القائمة الجانبية: الثانوي
 const groups = [
-  { title: 'تصفّح', items: [
-    { href: '/home', icon: 'home', label: 'الرئيسية' },
-    { href: '/home#projects', icon: 'box', label: 'المشاريع' },
-    { href: '/store', icon: 'store', label: 'المتجر' },
-  ] },
-  { title: 'المجتمع', items: [
-    { href: '/communities', icon: 'chat', label: 'مجتمعات الجامعات' },
+  { title: 'المزيد', items: [
+    { href: '/store/services', icon: 'flask', label: 'الاستشارة ٥ د.أ' },
+    { href: '/ambassador', icon: 'medal', label: 'كن سفيراً لجامعتك' },
     { href: '/about', icon: 'building', label: 'من نحن' },
-    { href: '/ambassador', icon: 'medal', label: 'كن سفيراً' },
+    { href: '/terms', icon: 'lock', label: 'الشروط والأحكام' },
   ] },
 ];
+const here = activeHref(Astro.url.pathname, [...primary, mobile[4]]);
+const cur = (href: string) => (href === here ? { 'aria-current': 'page' as const, class: 'on' } : {});
 ---
 
 <header id="hdr">
   <a class="logo" href="/home">مشاريع</a>
 
+  <nav class="topnav" aria-label="الأقسام">
+    {primary.map((i) => <a href={i.href} {...cur(i.href)}>{i.label}</a>)}
+  </nav>
+
   <div class="right">
     <button type="button" class="burger" id="burger" aria-label="القائمة" aria-expanded="false" aria-controls="drawer"><span></span><span></span><span></span></button>
   </div>
 </header>
+
+<nav class="bnav" aria-label="الأقسام">
+  {mobile.map((i) => <a href={i.href} {...cur(i.href)}><Fragment set:html={svg(i.icon, 21)} /><span>{i.label}</span></a>)}
+</nav>
 
 <div class="scrim" id="scrim" hidden></div>
 
@@ -125,6 +143,29 @@ const groups = [
   #hdr.solid { background: color-mix(in srgb, var(--hdr-bg) 84%, transparent); backdrop-filter: blur(16px); box-shadow: 0 1px 0 rgba(127,127,127,.16); padding-block: 9px; }
   #hdr .logo { font-weight: 700; font-size: 21px; text-decoration: none; color: var(--hdr-fg); }
   #hdr .right { display: flex; align-items: center; gap: 8px; }
+
+  /* الأقسام الرئيسية فوق (الكمبيوتر) */
+  #hdr .topnav { display: none; }
+  @media (min-width: 1024px) {
+    #hdr .topnav { display: flex; gap: 4px; margin-inline: auto; padding: 4px; border-radius: 999px; background: color-mix(in srgb, var(--hdr-bg) 55%, transparent); backdrop-filter: blur(14px); border: 1px solid rgba(127,127,127,.18); }
+    #hdr .topnav a { color: var(--hdr-fg); text-decoration: none; font-size: 14.5px; font-weight: 500; padding: 8px 16px; border-radius: 999px; transition: background .2s, color .2s; }
+    #hdr .topnav a:hover { background: color-mix(in srgb, var(--hdr-fg) 10%, transparent); }
+    #hdr .topnav a.on { background: var(--orange); color: #fff; box-shadow: 0 0 18px var(--orange-glow); }
+  }
+
+  /* الأقسام الرئيسية تحت (الموبايل والتابلت) */
+  :root { --bnav: 0px; }
+  .bnav { display: none; }
+  @media (max-width: 1023px) {
+    :root { --bnav: calc(64px + env(safe-area-inset-bottom, 0px)); }
+    body { padding-bottom: var(--bnav); }
+    .bnav { display: grid; grid-template-columns: repeat(5, 1fr); position: fixed; inset: auto 0 0 0; z-index: 56; height: var(--bnav); padding-bottom: env(safe-area-inset-bottom, 0px); background: color-mix(in srgb, var(--cream) 92%, transparent); backdrop-filter: blur(16px); box-shadow: 0 -1px 0 rgba(14, 58, 99,.1); }
+    .bnav a { display: grid; justify-items: center; align-content: center; gap: 3px; min-height: 44px; color: var(--fg-2); text-decoration: none; font-size: 11.5px; font-weight: 500; }
+    .bnav a svg { opacity: .8; }
+    .bnav a.on { color: var(--orange); }
+    .bnav a.on svg { opacity: 1; filter: drop-shadow(0 0 6px var(--orange-glow)); }
+    .bnav a:focus-visible { outline: 2px solid var(--orange); outline-offset: -4px; border-radius: 12px; }
+  }
 
   #hdr .burger.has::after { content: ''; position: absolute; top: 7px; inset-inline-end: 7px; width: 8px; height: 8px; border-radius: 50%; background: var(--orange); box-shadow: 0 0 8px var(--orange); }
   #hdr .quick { display: flex; align-items: center; gap: 7px; text-decoration: none; padding: 5px 12px 5px 5px; border-radius: 999px; background: rgba(255,255,255,.14); backdrop-filter: blur(14px); border: 1px solid rgba(127,127,127,.18); transition: border-color .25s; }

@@ -2,9 +2,17 @@
 import { projects, levels } from '../data/projects';
 import { DOMAINS, tagsOf } from '../data/taxonomy';
 import { svg } from '../data/icons';
+
+interface Props {
+  /** بالرئيسية: عرض مختصر (أول N مشروع) بدون فلاتر، وزر لصفحة كل المشاريع */
+  limit?: number;
+}
+const { limit } = Astro.props;
+const list = limit ? projects.slice(0, limit) : projects;
+const ar = (n: number) => n.toLocaleString('ar-EG');
 ---
 
-<section class="pj" id="projects">
+<section class="pj" id="projects" data-limit={limit}>
   <div class="ambient-glow" style="top: 15%; right: 10%; width: 500px; height: 500px; background: radial-gradient(circle, rgba(61, 183, 166,0.12) 0%, transparent 70%);"></div>
   <div class="ambient-glow" style="bottom: 20%; left: 5%; width: 600px; height: 600px; background: radial-gradient(circle, rgba(28, 95, 119,0.10) 0%, transparent 70%);"></div>
 
@@ -15,7 +23,7 @@ import { svg } from '../data/icons';
       <p class="sub">الوصف والمكونات والتكلفة مجاناً. المسار والمخططات وحلول التحديات بالاستشارة.</p>
     </div>
 
-    <div class="filterbar glass-panel">
+    {!limit && <div class="filterbar glass-panel">
       <label>
         <span>المجال</span>
         <select id="f-dom">
@@ -31,10 +39,10 @@ import { svg } from '../data/icons';
         </select>
       </label>
       <div class="count-badge" id="f-count" aria-live="polite"></div>
-    </div>
+    </div>}
 
     <div class="grid">
-      {projects.map((p) => (
+      {list.map((p) => (
         <a class="card" href={`/projects/${p.id}`} data-lvl={p.ln} data-tags={tagsOf(p.id).join('|')}>
           <div class="thumb">
             <canvas data-id={p.id} aria-hidden="true"></canvas>
@@ -52,6 +60,8 @@ import { svg } from '../data/icons';
         </a>
       ))}
     </div>
+
+    {limit && <div class="pj-more"><a class="pill" href="/projects"><span>شوف كل المشاريع ({ar(projects.length)})</span><i>←</i></a></div>}
 
     <div class="split">
       <div class="l">
@@ -89,7 +99,8 @@ import { svg } from '../data/icons';
       };
       rt.hidden.forEach((id) => grid?.querySelector<HTMLElement>(`.card canvas[data-id="${id}"]`)?.closest('.card')?.remove());
       rt.changed.forEach((d) => { const c = grid?.querySelector<HTMLElement>(`.card canvas[data-id="${d.id}"]`)?.closest<HTMLElement>('.card'); if (c) fill(c, toCard(d)); });
-      if (first && grid) rt.added.forEach((d) => { const c = first.cloneNode(true) as HTMLElement; c.classList.remove('in'); c.hidden = false; fill(c, toCard(d)); const cv = c.querySelector('canvas')!; cv.classList.remove('ready'); grid.prepend(c); });
+      const limited = grid?.closest<HTMLElement>('.pj')?.dataset.limit;
+      if (first && grid && !limited) rt.added.forEach((d) => { const c = first.cloneNode(true) as HTMLElement; c.classList.remove('in'); c.hidden = false; fill(c, toCard(d)); const cv = c.querySelector('canvas')!; cv.classList.remove('ready'); grid.prepend(c); });
     } catch (e) { console.warn(e); }
 
     initThumbs([...document.querySelectorAll<HTMLCanvasElement>('.pj .thumb canvas')]);
@@ -135,7 +146,8 @@ import { svg } from '../data/icons';
     // Re-refresh ScrollTrigger if present
     if (typeof ScrollTrigger !== 'undefined') ScrollTrigger.refresh();
   };
-  selDom.addEventListener('change', applyFilter); selLvl.addEventListener('change', applyFilter);
+  // بالعرض المختصر (الرئيسية) ما في فلاتر
+  if (selDom && selLvl) { selDom.addEventListener('change', applyFilter); selLvl.addEventListener('change', applyFilter); }
 
   addEventListener('projects:filter', (e) => {
     const d = (e as CustomEvent).detail ?? {};
@@ -417,6 +429,7 @@ import { svg } from '../data/icons';
   }
 
   /* Split Banner — Contrast Box */
+  .pj-more { display: flex; justify-content: center; margin: 34px 0 10px; }
   .split {
     margin: 90px auto 0;
     max-width: 1040px;

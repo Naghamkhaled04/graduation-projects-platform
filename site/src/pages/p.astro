@@ -33,14 +33,14 @@ import '../styles/project.css';
     let doc: ProjectDoc | null = null;
     try { doc = await (await getProjectStore()).get(id); } catch (e) { console.warn(e); }
     if (doc && !(await guardProject(doc.id))) return;
-    if (!doc) { root.innerHTML = '<a class="back" href="/home#projects">← كل المشاريع</a><h1>ما لقينا هالمشروع</h1><p class="lead">يمكن انحذف أو لسا ما انتشر.</p>'; return; }
+    if (!doc) { root.innerHTML = '<a class="back" href="/projects">← كل المشاريع</a><h1>ما لقينا هالمشروع</h1><p class="lead">يمكن انحذف أو لسا ما انتشر.</p>'; return; }
     const d = doc, preview = d.status !== 'published';
     document.title = `${d.title} — مشاريع`;
     registerModel(d.id, d.model ?? undefined);
     const wa = (t: string) => `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(t)}`;
 
     root.innerHTML = `
-      <a class="back" href="/home#projects">← كل المشاريع</a>
+      <a class="back" href="/projects">← كل المشاريع</a>
       ${preview ? '<p class="note"><b>معاينة:</b> هذا المشروع غير منشور بعد، وأنت بس اللي تشوفه.</p>' : ''}
       <div class="meta"><span class="lvl ${KEY[d.level]}">${esc(d.level)}</span><span>${esc(d.cat)}</span>${d.exclusive ? `<span class="lk">${svg('lock', 14)} فكرة حصرية</span>` : ''}<span class="built" id="built-badge" hidden></span></div>
       <h1>${esc(d.title)}</h1>

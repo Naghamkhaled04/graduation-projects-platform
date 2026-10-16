@@ -2,6 +2,7 @@
 import Base from '../layouts/Base.astro';
 import Hero3D from '../components/Hero3D.astro';
 import Blueprint from '../components/Blueprint.astro';
+import Journey from '../components/Journey.astro';
 import Projects from '../components/Projects.astro';
 ---
 
@@ -9,6 +10,7 @@ import Projects from '../components/Projects.astro';
   <main>
     <Hero3D />
     <Blueprint />
-    <Projects />
+    <Journey />
+    <Projects limit={6} />
   </main>
 </Base>

@@ -1,8 +1,11 @@
-import catalog from './novatera.json';
+import catalog from './abela.json';
+import partmap from './partmap.json';
+import partblock from './partblock.json';
+import partalt from './partalt.json';
 import { STORE_URL } from './config';
 
 /**
- * يربط أسماء القطع بمشاريعنا مع منتجات المتجر الحقيقي (نوفاتيرا).
+ * يربط أسماء القطع بمشاريعنا مع منتجات المتجر (كتالوج المورّد أبيلا).
  * أسماء المتجر إنجليزية وأسماء مشاريعنا عربية غالباً، فنترجم الكلمات الشائعة أولاً.
  * القاعدة: ربط غلط أسوأ من عدم الربط — لو الثقة ضعيفة نرجّع null.
  */
@@ -62,7 +65,11 @@ function terms(raw: string) {
 
 const INDEX = items.map((it) => ({ it, n: ' ' + norm(it.nm) + ' ', flat: norm(it.nm).replace(/ /g, '') }));
 
+/** قائمة منع يدوية: أسماء راجعناها بالعين وطلعت مطابقتها الآلية غلط (partblock.json) */
+const BLOCK = new Set(partblock as string[]);
+
 export function findProduct(name: string): Product | null {
+  if (BLOCK.has(String(name).trim())) return null;
   const { groups, models } = terms(name);
   if (!groups.length) return null;
 
@@ -96,5 +103,45 @@ export function findProduct(name: string): Product | null {
   return bestScore >= 55 ? best : null;
 }
 
-export const productUrl = (id: string) => `${STORE_URL}/product/${id}`;
+/**
+ * ربط قطع المشاريع بالمتجر من قائمة مدقّقة يدوياً (partmap.json: اسم القطعة ← رقم المنتج).
+ * هاد اللي بتعتمد عليه السلة والأسعار. findProduct فوق للاقتراح بس، لأنه بيغلط بأسماء عامة.
+ * قطعة جديدة مش بالقائمة ← ما بتنربط لحد ما تنضاف للقائمة.
+ */
+const BY_ID = new Map(items.map((it) => [it.id, it]));
+export function linkedProduct(name: string): Product | null {
+  const id = (partmap as Record<string, string>)[String(name).trim()];
+  return id ? BY_ID.get(id) ?? null : null;
+}
+
+/**
+ * قطع مش موجودة بالمتجر كقطعة وحدة (partalt.json):
+ *  alt   — القطعة الأصلية نفدت، وهاد أقرب بديل من المتجر
+ *  set   — القطعة مكتوبة كمجموعة، ففكّكناها لقطع من المتجر
+ *  node  — وحدة إضافية: لوحة ESP32 من المتجر، والحساسات نفس الوحدة الأساسية
+ *  print — علبة أو هيكل: مش بالمتجر، وبتنطبع بخدمة الطباعة ثلاثية الأبعاد
+ *  other — مش متوفرة بالمتجر حالياً
+ */
+type AltKind = 'alt' | 'set' | 'node' | 'print' | 'other';
+interface AltDoc { kind: AltKind; items?: [string, number][] }
+export interface PartAlt { kind: AltKind; items: { prod: Product; qty: number }[]; total: number | null; note: string }
+
+const qtyLabel = (nm: string, q: number) => (q > 1 ? `${nm} ×${q}` : nm);
+export function partAlt(name: string): PartAlt | null {
+  const doc = (partalt as Record<string, AltDoc>)[String(name).trim()];
+  if (!doc) return null;
+  const items = (doc.items ?? []).map(([id, qty]) => ({ prod: BY_ID.get(id)!, qty })).filter((x) => x.prod);
+  const total = items.length ? Math.round(items.reduce((s, x) => s + x.prod.p * x.qty, 0) * 100) / 100 : null;
+  const list = items.map((x) => qtyLabel(x.prod.nm, x.qty)).join(' + ');
+  const note = {
+    alt: `القطعة الأصلية نفدت من المتجر، وهاد أقرب بديل: ${list}`,
+    set: `مجموعة من المتجر: ${list}`,
+    node: `وحدة إضافية: ${list} من المتجر، والحساسات نفس الوحدة الأساسية`,
+    print: 'مش بالمتجر · إذا بدك بنطبعها لك بخدمة الطباعة ثلاثية الأبعاد',
+    other: 'مش متوفرة بالمتجر حالياً · اسألنا عن بديل',
+  }[doc.kind];
+  return { kind: doc.kind, items, total, note };
+}
+
+export const productUrl =(id: string) => `${STORE_URL}/product/${id}`;
 export const STORE_HOME = `${STORE_URL}/store`;

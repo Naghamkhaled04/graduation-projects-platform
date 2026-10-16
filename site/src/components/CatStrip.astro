@@ -1,5 +1,5 @@
 ---
-import { CATEGORIES, productsOf, ar } from '../data/storecats';
+import { CATEGORIES, productsOf, ar, imgFallback } from '../data/storecats';
 
 /** شريط أقسام أكورديون بصور — نفس نمط «تصفّح حسب القسم» بمتجرنا */
 const TOP = 5;
@@ -12,13 +12,13 @@ const strip = [...CATEGORIES].sort((a, b) => b.n - a.n).slice(0, TOP).map((c) =>
 <section class="nv-sec">
   <div class="strip-head">
     <h2>تصفّح حسب القسم</h2>
-    <a class="nv-btn nv-btn--ghost" href="/store/all">كل الأقسام</a>
+    <a class="nv-btn nv-btn--ghost" href="/store/all">كل القطع ←</a>
   </div>
 
   <div class="nv-strip">
     {strip.map((c, i) => (
       <a class:list={['nv-strip__panel', { 'is-open': i === 0 }]} href={`/store/${c.slug}`} data-i={i}>
-        <img class="nv-strip__img" src={c.img} alt="" loading="lazy" decoding="async" />
+        <img class="nv-strip__img" src={c.img || '/img/part.svg'} alt="" onerror={imgFallback} loading="lazy" decoding="async" />
         <span class="nv-strip__body">
           <span class="nv-strip__label">{c.cat}</span>
           <span class="nv-strip__count">{ar(c.n)} سلعة</span>

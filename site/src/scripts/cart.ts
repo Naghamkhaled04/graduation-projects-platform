@@ -1,6 +1,6 @@
-  interface Opt { k: string; nm: string; d: string; p: number; def?: boolean; url?: string; live?: number; img?: string }
+  interface Opt { k: string; nm: string; d: string; p: number; def?: boolean; url?: string; live?: number; img?: string; note?: string }
   interface Part { id: string; nm: string; req: boolean; qty: number; opts: Opt[] }
-  interface Extra { k: string; nm: string; d: string; p: number }
+  interface Extra { k: string; nm: string; d: string; p: number; note?: string }
 
   const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
   const AR = (n: number) => n.toLocaleString('ar-EG', { maximumFractionDigits: 2 });
@@ -21,10 +21,11 @@ export function mountCart(root: HTMLElement) {
         return `<div class="item ${st.on ? '' : 'off'}">
           <div class="row1">
             <button type="button" class="chk ${st.on ? 'on' : ''}" data-tog="${p.id}" aria-label="تفعيل القطعة">${CHECK}</button>
-            ${sel.img ? `<a class="pimg" href="${esc(sel.url || '#')}"><img src="${esc(sel.img)}" alt="" loading="lazy" /></a>` : ''}
+            ${sel.img ? `<a class="pimg" href="${esc(sel.url || '#')}"><img src="${esc(sel.img)}" alt="" loading="lazy" onerror="this.onerror=null;this.src='/img/part.svg'" /></a>` : ''}
             <div class="mid">
               <div class="nm">${sel.url ? `<a class="plink" href="${esc(sel.url)}">${esc(sel.nm)}</a>` : esc(sel.nm)}${p.req ? '<span class="req">أساسي</span>' : ''}</div>
               <div class="dsc">${esc(sel.d)}</div>
+              ${sel.note ? `<div class="note">${esc(sel.note)}</div>` : ''}
               ${st.on ? `<div class="qty"><button type="button" data-q="${p.id}:-1">−</button><span>${AR(st.qty)}</span><button type="button" data-q="${p.id}:1">+</button></div>` : ''}
             </div>
             <div class="pr">${AR((sel.live ?? sel.p) * st.qty)} د.أ<small>${AR(sel.live ?? sel.p)} للقطعة</small></div>
@@ -37,7 +38,7 @@ export function mountCart(root: HTMLElement) {
       }).join('');
       if (extrasEl) extrasEl.innerHTML = extras.map((e) => `
         <button type="button" class="addrow ${extraOn[e.k] ? 'on' : ''}" data-ex="${e.k}">
-          <span class="rad sq"></span><span class="an">${esc(e.nm)}<span class="ad">${esc(e.d)}</span></span><span class="ap">+${AR(e.p)} د.أ</span>
+          <span class="rad sq"></span><span class="an">${esc(e.nm)}<span class="ad">${esc(e.d)}</span>${e.note ? `<span class="ad note">${esc(e.note)}</span>` : ''}</span><span class="ap">+${AR(e.p)} د.أ</span>
         </button>`).join('');
 
       let total = 0, count = 0, active = 0;
@@ -64,9 +65,9 @@ export function mountCart(root: HTMLElement) {
 
     q('.order').addEventListener('click', () => {
       const lines: string[] = []; let total = 0;
-      parts.forEach((p) => { const st = state[p.id]; if (!st.on) return; const s = p.opts.find((o) => o.k === st.pick)!; lines.push(`• ${s.nm} × ${st.qty} — ${s.p * st.qty} د.أ`); total += s.p * st.qty; });
+      parts.forEach((p) => { const st = state[p.id]; if (!st.on) return; const s = p.opts.find((o) => o.k === st.pick)!; lines.push(`• ${s.nm} × ${st.qty} — ${s.p * st.qty} د.أ${s.note ? ` (${s.note})` : ''}`); total += s.p * st.qty; });
       const ex = extras.filter((e) => extraOn[e.k]);
-      if (ex.length) { lines.push('', 'إضافات:'); ex.forEach((e) => { lines.push(`• ${e.nm} — ${e.p} د.أ`); total += e.p; }); }
+      if (ex.length) { lines.push('', 'إضافات:'); ex.forEach((e) => { lines.push(`• ${e.nm} — ${e.p} د.أ${e.note ? ` (${e.note})` : ''}`); total += e.p; }); }
       const msg = `مرحبا \nبدي أطلب سلة مشروع:\n*${project}*\n\n${lines.join('\n')}\n\nالمجموع: *${Math.round(total * 100) / 100} د.أ*\n\nالاسم:\nالجامعة:\nالعنوان:`;
       window.open(`https://wa.me/${wa}?text=${encodeURIComponent(msg)}`, '_blank', 'noopener');
     });

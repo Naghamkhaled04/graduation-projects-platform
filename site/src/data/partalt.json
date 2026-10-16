@@ -1,0 +1,1747 @@
+{
+ "Arduino Nano + ESP8266": {
+  "kind": "set",
+  "items": [
+   [
+    "arduino-nano",
+    1
+   ],
+   [
+    "esp8266-wifi-module-esp-01-esp01",
+    1
+   ]
+  ]
+ },
+ "Arduino Nano + LoRa": {
+  "kind": "set",
+  "items": [
+   [
+    "arduino-nano",
+    1
+   ],
+   [
+    "lora-868mhz-10km-long-range-wireless-module-ra-01h",
+    1
+   ]
+  ]
+ },
+ "Arduino UNO + ESP8266": {
+  "kind": "set",
+  "items": [
+   [
+    "arduino-uno-atmega328p-ch340",
+    1
+   ],
+   [
+    "esp8266-wifi-module-esp-01-esp01",
+    1
+   ]
+  ]
+ },
+ "ESP32 + LoRa كمحطة": {
+  "kind": "set",
+  "items": [
+   [
+    "esp32-esp-wroom-32-nodemcu-wi-fi-bluetooth-development-board-cp2102-38-pins",
+    1
+   ],
+   [
+    "lora-868mhz-10km-long-range-wireless-module-ra-01h",
+    1
+   ]
+  ]
+ },
+ "ESP32 DevKit + كاميرا منفصلة": {
+  "kind": "set",
+  "items": [
+   [
+    "esp32-esp-wroom-32-nodemcu-wi-fi-bluetooth-development-board-cp2102-38-pins",
+    1
+   ],
+   [
+    "esp32-cam-ch340-development-board-test-board-wifi-bluetooth-module-esp32-serial-port-with-ov2640-camera",
+    1
+   ]
+  ]
+ },
+ "GPS NEO-8M": {
+  "kind": "alt",
+  "items": [
+   [
+    "goouuu-tech-gt-u7-gps-module",
+    1
+   ]
+  ]
+ },
+ "HX711 بلوحة معزولة": {
+  "kind": "alt",
+  "items": [
+   [
+    "hx711-24bit-precision-adc-module",
+    1
+   ]
+  ]
+ },
+ "Raspberry Pi 4": {
+  "kind": "alt",
+  "items": [
+   [
+    "raspberry-pi-5-4gb",
+    1
+   ]
+  ]
+ },
+ "أسطوانة هيليوم إضافية": {
+  "kind": "other"
+ },
+ "أسلاك + حامل اللوح + قاطع": {
+  "kind": "set",
+  "items": [
+   [
+    "40-wires-female-to-male-20cm-40p",
+    1
+   ],
+   [
+    "push-button-switch-on-off-maintained-button-250v-1a-pbs-11a-red",
+    1
+   ]
+  ]
+ },
+ "أسلاك + لوحات تجارب + علب": {
+  "kind": "set",
+  "items": [
+   [
+    "breadboard-wires-65pcs",
+    1
+   ],
+   [
+    "breadboard-830-tie-point-solderless-prototype-board",
+    1
+   ]
+  ]
+ },
+ "أسلاك + لوحة تجارب": {
+  "kind": "set",
+  "items": [
+   [
+    "breadboard-wires-65pcs",
+    1
+   ],
+   [
+    "breadboard-830-tie-point-solderless-prototype-board",
+    1
+   ]
+  ]
+ },
+ "أسلاك + لوحة تجارب + علب": {
+  "kind": "set",
+  "items": [
+   [
+    "breadboard-wires-65pcs",
+    1
+   ],
+   [
+    "breadboard-830-tie-point-solderless-prototype-board",
+    1
+   ]
+  ]
+ },
+ "أسلاك + لوحة تجارب + علبة": {
+  "kind": "set",
+  "items": [
+   [
+    "breadboard-wires-65pcs",
+    1
+   ],
+   [
+    "breadboard-830-tie-point-solderless-prototype-board",
+    1
+   ]
+  ]
+ },
+ "أسلاك + مثبتات + علبة خفيفة": {
+  "kind": "set",
+  "items": [
+   [
+    "40-wires-female-to-male-20cm-40p",
+    1
+   ],
+   [
+    "2-port-lever-wire-connector",
+    1
+   ]
+  ]
+ },
+ "أسلاك + مثبتات خفيفة": {
+  "kind": "set",
+  "items": [
+   [
+    "40-wires-female-to-male-20cm-40p",
+    1
+   ],
+   [
+    "2-port-lever-wire-connector",
+    1
+   ]
+  ]
+ },
+ "أسلاك + موصلات + لوحة تجارب": {
+  "kind": "set",
+  "items": [
+   [
+    "breadboard-wires-65pcs",
+    1
+   ],
+   [
+    "breadboard-830-tie-point-solderless-prototype-board",
+    1
+   ],
+   [
+    "2-port-lever-wire-connector",
+    1
+   ]
+  ]
+ },
+ "أسلاك + موصلات مقاومة للماء": {
+  "kind": "set",
+  "items": [
+   [
+    "40-wires-female-to-male-20cm-40p",
+    1
+   ],
+   [
+    "heat-shrink-328pcstubing-insulation-polyolefin-shrinking-assorted-tube-wire-cable-kit",
+    1
+   ]
+  ]
+ },
+ "أقطاب لاصقة إضافية": {
+  "kind": "other"
+ },
+ "أكريليك ٣ مم مقصوص ليزر": {
+  "kind": "print"
+ },
+ "ألواح PVC + سيليكون عزل": {
+  "kind": "print"
+ },
+ "ألواح PVC مقصوصة يدوياً": {
+  "kind": "print"
+ },
+ "إضاءة أشعة تحت الحمراء": {
+  "kind": "other"
+ },
+ "إضاءة أمامية": {
+  "kind": "alt",
+  "items": [
+   [
+    "led-lights-emitting-diodes-10-mm",
+    1
+   ]
+  ]
+ },
+ "إطار ألمنيوم + عوّامة مغلقة": {
+  "kind": "print"
+ },
+ "إنكودر دوّار": {
+  "kind": "alt",
+  "items": [
+   [
+    "speed-encoder-sensor-u-shape-photoelectric",
+    1
+   ]
+  ]
+ },
+ "بطاريات درون احتياطية": {
+  "kind": "alt",
+  "items": [
+   [
+    "hrb-3s-111v-5000mah-50c-with-trxtxt60ec5-for-rc-traxxascartruckbuggyboat-drone",
+    1
+   ]
+  ]
+ },
+ "بطاريات ومراوح احتياطية": {
+  "kind": "other"
+ },
+ "بطارية NiMH ٩.٦ فولت": {
+  "kind": "set",
+  "items": [
+   [
+    "ni-mh-rechargeable-battery-aa1200mah-12v",
+    8
+   ]
+  ]
+ },
+ "بطارية احتياطية للتشغيل المستمر": {
+  "kind": "set",
+  "items": [
+   [
+    "18650-37v-li-ion-rechargeable-battery-2400mah-up-to-42v",
+    1
+   ],
+   [
+    "18650-lithium-battery-charger-and-protection-module-1a-usb-c-tp4056",
+    1
+   ]
+  ]
+ },
+ "بطارية ليثيوم + شاحن": {
+  "kind": "set",
+  "items": [
+   [
+    "18650-37v-li-ion-rechargeable-battery-2400mah-up-to-42v",
+    1
+   ],
+   [
+    "18650-lithium-battery-charger-and-protection-module-1a-usb-c-tp4056",
+    1
+   ]
+  ]
+ },
+ "بطارية ليثيوم + وحدة شحن": {
+  "kind": "set",
+  "items": [
+   [
+    "18650-37v-li-ion-rechargeable-battery-2400mah-up-to-42v",
+    1
+   ],
+   [
+    "18650-lithium-battery-charger-and-protection-module-1a-usb-c-tp4056",
+    1
+   ]
+  ]
+ },
+ "بطارية ليثيوم بوليمر مسطحة": {
+  "kind": "alt",
+  "items": [
+   [
+    "li-polymer-lipo-37v-1500mah-rechargeable-battery",
+    1
+   ]
+  ]
+ },
+ "بطارية ليثيوم بوليمر ٥٢٠٠": {
+  "kind": "alt",
+  "items": [
+   [
+    "li-polymer-lipo-37v-5200mah-rechargeable-battery",
+    1
+   ]
+  ]
+ },
+ "بطارية ليثيوم ١١.١ فولت": {
+  "kind": "set",
+  "items": [
+   [
+    "18650-37v-li-ion-rechargeable-battery-2400mah-up-to-42v",
+    3
+   ],
+   [
+    "battery-holder-3x18650-37v",
+    1
+   ],
+   [
+    "3s-20a-18650-lithium-battery-protection-board-111v-12v-126v",
+    1
+   ]
+  ]
+ },
+ "بطارية ليثيوم ٣.٧ فولت + شاحن": {
+  "kind": "set",
+  "items": [
+   [
+    "18650-37v-li-ion-rechargeable-battery-2400mah-up-to-42v",
+    1
+   ],
+   [
+    "18650-lithium-battery-charger-and-protection-module-1a-usb-c-tp4056",
+    1
+   ]
+  ]
+ },
+ "بطارية ليثيوم ٣.٧ فولت + وحدة شحن": {
+  "kind": "set",
+  "items": [
+   [
+    "18650-37v-li-ion-rechargeable-battery-2400mah-up-to-42v",
+    1
+   ],
+   [
+    "18650-lithium-battery-charger-and-protection-module-1a-usb-c-tp4056",
+    1
+   ]
+  ]
+ },
+ "بطارية ليثيوم ٥٢٠٠ مللي": {
+  "kind": "alt",
+  "items": [
+   [
+    "li-polymer-lipo-37v-5200mah-rechargeable-battery",
+    1
+   ]
+  ]
+ },
+ "بطارية ٣.٧ فولت + شاحن": {
+  "kind": "set",
+  "items": [
+   [
+    "18650-37v-li-ion-rechargeable-battery-2400mah-up-to-42v",
+    1
+   ],
+   [
+    "18650-lithium-battery-charger-and-protection-module-1a-usb-c-tp4056",
+    1
+   ]
+  ]
+ },
+ "بطاقة تعريف الشحنة": {
+  "kind": "alt",
+  "items": [
+   [
+    "1356mhz-rfid-card",
+    1
+   ]
+  ]
+ },
+ "بكرات + سلك + ياي إرجاع": {
+  "kind": "print"
+ },
+ "جرس + ليد تنبيه": {
+  "kind": "set",
+  "items": [
+   [
+    "5v-magnetic-buzzer",
+    1
+   ],
+   [
+    "red-led-5-mm",
+    1
+   ],
+   [
+    "resistor-220-ohm",
+    1
+   ]
+  ]
+ },
+ "جرس + ليد وامض": {
+  "kind": "set",
+  "items": [
+   [
+    "5v-magnetic-buzzer",
+    1
+   ],
+   [
+    "red-led-5-mm",
+    1
+   ],
+   [
+    "resistor-220-ohm",
+    1
+   ]
+  ]
+ },
+ "جرس + ليدات أخضر وأحمر": {
+  "kind": "set",
+  "items": [
+   [
+    "5v-magnetic-buzzer",
+    1
+   ],
+   [
+    "red-led-5-mm",
+    1
+   ],
+   [
+    "green-led-5-mm",
+    1
+   ],
+   [
+    "resistor-220-ohm",
+    2
+   ]
+  ]
+ },
+ "جرس + ليدات حالة": {
+  "kind": "set",
+  "items": [
+   [
+    "5v-magnetic-buzzer",
+    1
+   ],
+   [
+    "red-led-5-mm",
+    1
+   ],
+   [
+    "green-led-5-mm",
+    1
+   ],
+   [
+    "resistor-220-ohm",
+    2
+   ]
+  ]
+ },
+ "جناح ثابت + محرك دفع + متحكم طيران": {
+  "kind": "other"
+ },
+ "جهاز تحكم ٢.٤ جيجا جاهز": {
+  "kind": "alt",
+  "items": [
+   [
+    "digital-proportional-radio-control-system",
+    1
+   ]
+  ]
+ },
+ "حامل تثبيت على الزجاج + علبة": {
+  "kind": "other"
+ },
+ "حامل محلول طبي جاهز": {
+  "kind": "other"
+ },
+ "حامل مصنّع + خطاف": {
+  "kind": "other"
+ },
+ "حاوية خفيفة + مثبتات": {
+  "kind": "other"
+ },
+ "حساس أشعة فوق بنفسجية": {
+  "kind": "other"
+ },
+ "حساس إزاحة إضافي": {
+  "kind": "alt",
+  "items": [
+   [
+    "potentiometer-10k",
+    1
+   ]
+  ]
+ },
+ "حساس تنقيط بصري": {
+  "kind": "alt",
+  "items": [
+   [
+    "ir-infrared-obstacle-avoidance-module",
+    1
+   ]
+  ]
+ },
+ "حساس تيار ACS712 + حساس جهد": {
+  "kind": "set",
+  "items": [
+   [
+    "acs712-5a-range-hall-current-sensor-module",
+    1
+   ],
+   [
+    "voltage-sensor-detection-module",
+    1
+   ]
+  ]
+ },
+ "حساس ثاني أكسيد الكربون": {
+  "kind": "alt",
+  "items": [
+   [
+    "mq-135-air-quality-gas-sensor-detection-module",
+    1
+   ]
+  ]
+ },
+ "حساس ثاني أكسيد الكربون MH-Z19": {
+  "kind": "alt",
+  "items": [
+   [
+    "mq-135-air-quality-gas-sensor-detection-module",
+    1
+   ]
+  ]
+ },
+ "حساس حموضة التربة pH": {
+  "kind": "alt",
+  "items": [
+   [
+    "liquid-ph-value-detection-sensor-module-monitoring-control-meter-tester-ph-0-14-for-arduino",
+    1
+   ]
+  ]
+ },
+ "حساس حموضة الماء pH": {
+  "kind": "alt",
+  "items": [
+   [
+    "liquid-ph-value-detection-sensor-module-monitoring-control-meter-tester-ph-0-14-for-arduino",
+    1
+   ]
+  ]
+ },
+ "حساس رطوبة": {
+  "kind": "alt",
+  "items": [
+   [
+    "dht22am2302-digital-temperature-humidity-sensor",
+    1
+   ]
+  ]
+ },
+ "حساس سرعة واتجاه الرياح": {
+  "kind": "alt",
+  "items": [
+   [
+    "wind-speed-sensor-voltagesignal-4-20ma-0-5v-output-wind-speed-transmitter-anemometer",
+    1
+   ]
+  ]
+ },
+ "حساس ضغط": {
+  "kind": "alt",
+  "items": [
+   [
+    "bme280-digital-temperaturehumiditybarometric-pressure-sensor-module",
+    1
+   ]
+  ]
+ },
+ "حساس ضغط الموجة": {
+  "kind": "alt",
+  "items": [
+   [
+    "mps20n0040d-40kpa-pressure-sensor-module-for-liquid-level",
+    1
+   ]
+  ]
+ },
+ "حساس متعدد الغازات": {
+  "kind": "alt",
+  "items": [
+   [
+    "9-in-1-mq-gas-sensor-modules-kit",
+    1
+   ]
+  ]
+ },
+ "حساس مسافة إضافي": {
+  "kind": "alt",
+  "items": [
+   [
+    "vl53l0x-flight-time-tof-sensor-extension-board-940nm-gy-vl53l0xv2-laser-distance-module-i2c-interface",
+    1
+   ]
+  ]
+ },
+ "حساس مسافة ثالث": {
+  "kind": "alt",
+  "items": [
+   [
+    "ultrasonic-distance-sensor-hc-sr04",
+    1
+   ]
+  ]
+ },
+ "حساس مستوى تلامسي": {
+  "kind": "alt",
+  "items": [
+   [
+    "rain-water-level-detection-sensor-module",
+    1
+   ]
+  ]
+ },
+ "حساس مقاومي بسيط": {
+  "kind": "alt",
+  "items": [
+   [
+    "soil-humidity-sensor-module",
+    1
+   ]
+  ]
+ },
+ "خشب أبلكاش ٤ مم ليزر": {
+  "kind": "print"
+ },
+ "خلية وزن + HX711": {
+  "kind": "set",
+  "items": [
+   [
+    "load-cell-weighting-sensor-module-5kg",
+    1
+   ],
+   [
+    "hx711-24bit-precision-adc-module",
+    1
+   ]
+  ]
+ },
+ "خلية وزن ١ كغم": {
+  "kind": "alt",
+  "items": [
+   [
+    "load-cell-weighting-sensor-module-5kg",
+    1
+   ]
+  ]
+ },
+ "خلية وزن ٥٠ كغ + HX711": {
+  "kind": "alt",
+  "items": [
+   [
+    "load-cell-weighting-sensor-module-20kg",
+    1
+   ],
+   [
+    "hx711-24bit-precision-adc-module",
+    1
+   ]
+  ]
+ },
+ "خلية وزن ٥٠٠ غم": {
+  "kind": "alt",
+  "items": [
+   [
+    "load-cell-weighting-sensor-module-5kg",
+    1
+   ]
+  ]
+ },
+ "درون جاهز بحمولة قابلة للتركيب": {
+  "kind": "other"
+ },
+ "دهان وتشطيب": {
+  "kind": "other"
+ },
+ "زر ضغط بارز": {
+  "kind": "alt",
+  "items": [
+   [
+    "push-button-switch-on-off-maintained-button-250v-1a-pbs-11a-red",
+    1
+   ]
+  ]
+ },
+ "زر طوارئ بارز": {
+  "kind": "alt",
+  "items": [
+   [
+    "push-button-switch-on-off-maintained-button-250v-1a-pbs-11a-red",
+    1
+   ]
+  ]
+ },
+ "زر كبير بارز": {
+  "kind": "alt",
+  "items": [
+   [
+    "push-button-switch-on-off-maintained-button-250v-1a-pbs-11a-red",
+    1
+   ]
+  ]
+ },
+ "شاحن متوازن للليثيوم": {
+  "kind": "alt",
+  "items": [
+   [
+    "imax-b3-lipo-battery-charger-for-rc-lipo-euplug",
+    1
+   ]
+  ]
+ },
+ "شاشة عرض": {
+  "kind": "alt",
+  "items": [
+   [
+    "lcd16x2-with-i2c",
+    1
+   ]
+  ]
+ },
+ "طقم براغي M3 + جلب + صواميل": {
+  "kind": "alt",
+  "items": [
+   [
+    "210pcs-screw-kit-for-robot-accessories",
+    1
+   ]
+  ]
+ },
+ "طقم ري بالتنقيط للنموذج": {
+  "kind": "other"
+ },
+ "طقم وصلات احتياطية": {
+  "kind": "print"
+ },
+ "عصا + علبة تثبيت خفيفة": {
+  "kind": "other"
+ },
+ "عقدة إضافية لطابق ثانٍ": {
+  "kind": "node",
+  "items": [
+   [
+    "esp32-esp-wroom-32-nodemcu-wi-fi-bluetooth-development-board-cp2102-38-pins",
+    1
+   ]
+  ]
+ },
+ "عقدة استقبال إضافية": {
+  "kind": "node",
+  "items": [
+   [
+    "esp32-esp-wroom-32-nodemcu-wi-fi-bluetooth-development-board-cp2102-38-pins",
+    1
+   ]
+  ]
+ },
+ "عقدة كشف إضافية لغرفة ثانية": {
+  "kind": "node",
+  "items": [
+   [
+    "esp32-esp-wroom-32-nodemcu-wi-fi-bluetooth-development-board-cp2102-38-pins",
+    1
+   ]
+  ]
+ },
+ "علب حماية خارجية": {
+  "kind": "print"
+ },
+ "علب حماية للعقد": {
+  "kind": "print"
+ },
+ "علب صغيرة للوسوم": {
+  "kind": "print"
+ },
+ "علب مقاومة للماء + مثبتات": {
+  "kind": "other"
+ },
+ "علبة IP65 وتركيبات": {
+  "kind": "print"
+ },
+ "علبة تثبيت جدارية": {
+  "kind": "print"
+ },
+ "علبة تغليف طبية المظهر": {
+  "kind": "print"
+ },
+ "علبة تغليف مرتبة": {
+  "kind": "print"
+ },
+ "علبة حماية": {
+  "kind": "print"
+ },
+ "علبة حماية + حاجب شمس": {
+  "kind": "other"
+ },
+ "علبة حماية خارجية": {
+  "kind": "print"
+ },
+ "علبة حماية صناعية": {
+  "kind": "print"
+ },
+ "علبة حماية قابلة للتعقيم": {
+  "kind": "print"
+ },
+ "علبة حماية للتركيب الخارجي": {
+  "kind": "print"
+ },
+ "علبة حماية للحمولة": {
+  "kind": "print"
+ },
+ "علبة حماية للوحدة": {
+  "kind": "print"
+ },
+ "علبة حماية ملساء": {
+  "kind": "print"
+ },
+ "علبة صغيرة + حزام معصم": {
+  "kind": "other"
+ },
+ "علبة صغيرة مقاومة للصدمات": {
+  "kind": "print"
+ },
+ "علبة عزل مقاومة للماء": {
+  "kind": "print"
+ },
+ "علبة مع قاعدة تثبيت": {
+  "kind": "print"
+ },
+ "علبة مع مشبك تثبيت": {
+  "kind": "print"
+ },
+ "علبة مقاومة للغبار + مثبتات خوذة": {
+  "kind": "other"
+ },
+ "علبة مقاومة للماء + حزام رقبة": {
+  "kind": "other"
+ },
+ "علبة مقاومة للماء + مثبتات": {
+  "kind": "other"
+ },
+ "عوامات فوم + قاعدة أكريليك": {
+  "kind": "other"
+ },
+ "عوّامة فوم + إطار PVC": {
+  "kind": "other"
+ },
+ "عوّامة كهربائية": {
+  "kind": "alt",
+  "items": [
+   [
+    "rain-water-level-detection-sensor-module",
+    1
+   ]
+  ]
+ },
+ "غطاء تثبيت + عازل ضوئي": {
+  "kind": "other"
+ },
+ "قاعدة + أعمدة + خطوط مواقف": {
+  "kind": "other"
+ },
+ "قاعدة تثبيت مغناطيسية + علبة": {
+  "kind": "other"
+ },
+ "قاعدة تقاطع + أعمدة + أسلاك": {
+  "kind": "other"
+ },
+ "قاعدة شحن تلقائي": {
+  "kind": "print"
+ },
+ "قاعدة متحركة + عجلات + عمود": {
+  "kind": "other"
+ },
+ "قاعدة وعمود تثبيت على المدخل": {
+  "kind": "print"
+ },
+ "قاعدة وعمود لتثبيت الكاميرا فوق الصفحة": {
+  "kind": "print"
+ },
+ "قاعدة وعمود وذراع الحاجز": {
+  "kind": "print"
+ },
+ "قفل سولينويد ١٢ فولت": {
+  "kind": "alt",
+  "items": [
+   [
+    "mini-door-electric-lock-assembly-solenoid-dc-12v-slim-design-lock27x29x18mm",
+    1
+   ]
+  ]
+ },
+ "قفل كهربائي": {
+  "kind": "alt",
+  "items": [
+   [
+    "mini-door-electric-lock-assembly-solenoid-dc-12v-slim-design-lock27x29x18mm",
+    1
+   ]
+  ]
+ },
+ "قفل كهربائي سولينويد": {
+  "kind": "alt",
+  "items": [
+   [
+    "mini-door-electric-lock-assembly-solenoid-dc-12v-slim-design-lock27x29x18mm",
+    1
+   ]
+  ]
+ },
+ "قواعد تثبيت + علبة حماية": {
+  "kind": "other"
+ },
+ "كاميرا حرارية": {
+  "kind": "other"
+ },
+ "لمبات LED ١٢ فولت مع أعمدة مصغّرة": {
+  "kind": "alt",
+  "items": [
+   [
+    "led-lights-emitting-diodes-10-mm",
+    4
+   ]
+  ]
+ },
+ "لمبات نموذج للخطوط": {
+  "kind": "alt",
+  "items": [
+   [
+    "led-lights-emitting-diodes-10-mm",
+    3
+   ]
+  ]
+ },
+ "لمبات ومروحة صغيرة للنموذج": {
+  "kind": "set",
+  "items": [
+   [
+    "led-lights-emitting-diodes-10-mm",
+    2
+   ],
+   [
+    "12v-40x40x10mm-axial-cooling-fan-brushless-motor-sleeve-bearing-for-3d-printer-robotics-cpu-cooler-radiator-fan",
+    1
+   ]
+  ]
+ },
+ "لوح شمسي + بطارية": {
+  "kind": "set",
+  "items": [
+   [
+    "110135mm-6v2w-solar-panel-moq10pcs",
+    1
+   ],
+   [
+    "cn3791-6v-mppt-solar-charger-module",
+    1
+   ],
+   [
+    "18650-37v-li-ion-rechargeable-battery-2400mah-up-to-42v",
+    1
+   ]
+  ]
+ },
+ "لوح شمسي ١٠ واط + منظّم": {
+  "kind": "set",
+  "items": [
+   [
+    "portable-10w-dc-12v18v-solar-panel",
+    1
+   ],
+   [
+    "solar-panel-battery-rv-boat-pwm-charging-controller-10a12v-24v",
+    1
+   ]
+  ]
+ },
+ "لوح شمسي ٢٠ واط": {
+  "kind": "alt",
+  "items": [
+   [
+    "portable-10w-dc-12v18v-solar-panel",
+    1
+   ]
+  ]
+ },
+ "لوح شمسي ٢٠ واط + منظّم + بطارية": {
+  "kind": "alt",
+  "items": [
+   [
+    "portable-10w-dc-12v18v-solar-panel",
+    1
+   ],
+   [
+    "solar-panel-battery-rv-boat-pwm-charging-controller-10a12v-24v",
+    1
+   ],
+   [
+    "battery-12v-7ah",
+    1
+   ]
+  ]
+ },
+ "لوح شمسي ٥٠ واط": {
+  "kind": "alt",
+  "items": [
+   [
+    "portable-10w-dc-12v18v-solar-panel",
+    2
+   ]
+  ]
+ },
+ "لوح شمسي ٦ واط + بطارية": {
+  "kind": "alt",
+  "items": [
+   [
+    "110135mm-6v2w-solar-panel-moq10pcs",
+    1
+   ],
+   [
+    "cn3791-6v-mppt-solar-charger-module",
+    1
+   ],
+   [
+    "18650-37v-li-ion-rechargeable-battery-2400mah-up-to-42v",
+    1
+   ]
+  ]
+ },
+ "لوحة تجارب وأسلاك": {
+  "kind": "set",
+  "items": [
+   [
+    "breadboard-wires-65pcs",
+    1
+   ],
+   [
+    "breadboard-830-tie-point-solderless-prototype-board",
+    1
+   ]
+  ]
+ },
+ "ليثيوم 18650 + حامل": {
+  "kind": "set",
+  "items": [
+   [
+    "18650-37v-li-ion-rechargeable-battery-2400mah-up-to-42v",
+    1
+   ],
+   [
+    "battery-holder-1x18650-37v",
+    1
+   ]
+  ]
+ },
+ "ليثيوم بوليمر 2000mAh": {
+  "kind": "alt",
+  "items": [
+   [
+    "li-polymer-lipo-37v-1500mah-rechargeable-battery",
+    1
+   ]
+  ]
+ },
+ "ليثيوم ١١.١ فولت ٢٢٠٠ مللي": {
+  "kind": "set",
+  "items": [
+   [
+    "18650-37v-li-ion-rechargeable-battery-2400mah-up-to-42v",
+    3
+   ],
+   [
+    "battery-holder-3x18650-37v",
+    1
+   ],
+   [
+    "3s-20a-18650-lithium-battery-protection-board-111v-12v-126v",
+    1
+   ]
+  ]
+ },
+ "ليثيوم ١١.١ فولت ٥٢٠٠ مللي": {
+  "kind": "alt",
+  "items": [
+   [
+    "hrb-3s-111v-5000mah-50c-with-trxtxt60ec5-for-rc-traxxascartruckbuggyboat-drone",
+    1
+   ]
+  ]
+ },
+ "ليثيوم ٧.٤ فولت ٢٢٠٠ مللي": {
+  "kind": "alt",
+  "items": [
+   [
+    "lithium-battery-hp-18650-2000mah-74v",
+    1
+   ]
+  ]
+ },
+ "ليثيوم ٧.٤ فولت ٥٢٠٠ مللي": {
+  "kind": "alt",
+  "items": [
+   [
+    "lithium-battery-hp-18650-2000mah-74v",
+    2
+   ]
+  ]
+ },
+ "ليد أحمر وأخضر مع مقاومات": {
+  "kind": "set",
+  "items": [
+   [
+    "red-led-5-mm",
+    1
+   ],
+   [
+    "green-led-5-mm",
+    1
+   ],
+   [
+    "resistor-220-ohm",
+    2
+   ]
+  ]
+ },
+ "ليدات أخضر وأحمر": {
+  "kind": "set",
+  "items": [
+   [
+    "red-led-5-mm",
+    1
+   ],
+   [
+    "green-led-5-mm",
+    1
+   ],
+   [
+    "resistor-220-ohm",
+    2
+   ]
+  ]
+ },
+ "ليدات أخضر وأصفر وأحمر": {
+  "kind": "set",
+  "items": [
+   [
+    "red-led-5-mm",
+    1
+   ],
+   [
+    "yellow-led-5-mm",
+    1
+   ],
+   [
+    "green-led-5-mm",
+    1
+   ],
+   [
+    "resistor-220-ohm",
+    3
+   ]
+  ]
+ },
+ "ليدات أشعة تحت الحمراء": {
+  "kind": "other"
+ },
+ "ليدات إشارة الاتجاه": {
+  "kind": "set",
+  "items": [
+   [
+    "yellow-led-5-mm",
+    8
+   ],
+   [
+    "resistor-220-ohm",
+    8
+   ]
+  ]
+ },
+ "ليدات إضاءة بيضاء": {
+  "kind": "alt",
+  "items": [
+   [
+    "led-lights-emitting-diodes-10-mm",
+    1
+   ]
+  ]
+ },
+ "ليدات لكل خط مع مقاومات": {
+  "kind": "set",
+  "items": [
+   [
+    "red-led-5-mm",
+    1
+   ],
+   [
+    "green-led-5-mm",
+    1
+   ],
+   [
+    "resistor-220-ohm",
+    2
+   ]
+  ]
+ },
+ "مجموعة تروس رفع السرعة": {
+  "kind": "set",
+  "items": [
+   [
+    "gt2-pulley-20-teeth-5mm-bore-10mm-width",
+    1
+   ],
+   [
+    "gt2-pulley-48teeth-5mm-bore-6mm-width",
+    1
+   ]
+  ]
+ },
+ "مجموعة ليدات أحمر وأصفر وأخضر": {
+  "kind": "set",
+  "items": [
+   [
+    "red-led-5-mm",
+    1
+   ],
+   [
+    "yellow-led-5-mm",
+    1
+   ],
+   [
+    "green-led-5-mm",
+    1
+   ],
+   [
+    "resistor-220-ohm",
+    3
+   ]
+  ]
+ },
+ "محرك DC 775 كمولّد": {
+  "kind": "alt",
+  "items": [
+   [
+    "rs-395-168v-252v-dc-motor",
+    1
+   ]
+  ]
+ },
+ "محرك اهتزاز + جرس": {
+  "kind": "set",
+  "items": [
+   [
+    "vibration-motor-module",
+    1
+   ],
+   [
+    "5v-magnetic-buzzer",
+    1
+   ]
+  ]
+ },
+ "محرك تتبع الشمس": {
+  "kind": "alt",
+  "items": [
+   [
+    "servos-mg996r-270-degree",
+    1
+   ]
+  ]
+ },
+ "محرك تثبيت الكاميرا": {
+  "kind": "alt",
+  "items": [
+   [
+    "servos-mg996r-270-degree",
+    1
+   ]
+  ]
+ },
+ "محرك دفع غاطس": {
+  "kind": "other"
+ },
+ "محرك مائي بمروحة": {
+  "kind": "set",
+  "items": [
+   [
+    "r380-6-24v-dc-motor-24000rpm-high-speed-micro-motor",
+    1
+   ],
+   [
+    "propeller-props-be-suitable-forminiature-dc-motor-2mm-axis-propeller-small-scale-production-of-motor-fan-blades-by-science-and-technologtightly",
+    1
+   ]
+  ]
+ },
+ "محرك مسنّن دودي": {
+  "kind": "alt",
+  "items": [
+   [
+    "dc-12v-gear-reduction-motor-worm-reversible-high-torque-375-rpm-jgy-370",
+    1
+   ]
+  ]
+ },
+ "محرك مسنّن مع حمل قابل للتعديل": {
+  "kind": "alt",
+  "items": [
+   [
+    "dc-motor-with-gearbox-robot-smart-car-dc-motor-diy-3-6v-grade-b",
+    1
+   ]
+  ]
+ },
+ "محوّل + بطارية احتياطية": {
+  "kind": "set",
+  "items": [
+   [
+    "high-quality-full-amperes-5v-3a-eu-plug-adapter",
+    1
+   ],
+   [
+    "18650-37v-li-ion-rechargeable-battery-2400mah-up-to-42v",
+    1
+   ],
+   [
+    "lithium-li-ion-18650-37v-42v-battery-charger-board-dc-dc-step-up-boost-module-tp4056-kit-parts",
+    1
+   ]
+  ]
+ },
+ "محوّل خافض + أسلاك": {
+  "kind": "set",
+  "items": [
+   [
+    "lm2596s-dc-dc-step-down-power-supply-module-3a-adjustable-step-down",
+    1
+   ],
+   [
+    "40-wires-female-to-male-20cm-40p",
+    1
+   ]
+  ]
+ },
+ "محوّل رافع + منظّم": {
+  "kind": "alt",
+  "items": [
+   [
+    "mini-dc-dc-boost-step-up-converter-board",
+    1
+   ]
+  ]
+ },
+ "محوّل ١٢ فولت + بطارية احتياطية": {
+  "kind": "set",
+  "items": [
+   [
+    "high-quality-full-amperes-12v-2a-eu-plug-adapter",
+    1
+   ],
+   [
+    "battery-12v-7ah",
+    1
+   ]
+  ]
+ },
+ "محوّل ١٢ فولت ٣ أمبير": {
+  "kind": "alt",
+  "items": [
+   [
+    "high-quality-full-amperes-12v-2a-eu-plug-adapter",
+    1
+   ]
+  ]
+ },
+ "محوّل ١٢→٥ فولت + بطارية احتياطية": {
+  "kind": "set",
+  "items": [
+   [
+    "step-down-usb-charger-module-dc-6-24v-12v24v-to-dc-5v-3a",
+    1
+   ],
+   [
+    "18650-37v-li-ion-rechargeable-battery-2400mah-up-to-42v",
+    1
+   ],
+   [
+    "lithium-li-ion-18650-37v-42v-battery-charger-board-dc-dc-step-up-boost-module-tp4056-kit-parts",
+    1
+   ]
+  ]
+ },
+ "مرسل RF 433 ميجا مع هوائي": {
+  "kind": "alt",
+  "items": [
+   [
+    "rf-wireless-tx-rx-module-433mhz",
+    1
+   ]
+  ]
+ },
+ "مروحة ١٢ فولت ١٢٠ مم": {
+  "kind": "alt",
+  "items": [
+   [
+    "dc-cooling-fan-8010-12v-fan-80x80x10mm",
+    1
+   ]
+  ]
+ },
+ "مزود طاقة": {
+  "kind": "alt",
+  "items": [
+   [
+    "high-quality-full-amperes-12v-2a-eu-plug-adapter",
+    1
+   ]
+  ]
+ },
+ "مستقبل RF 433 ميجا": {
+  "kind": "alt",
+  "items": [
+   [
+    "rf-wireless-tx-rx-module-433mhz",
+    1
+   ]
+  ]
+ },
+ "مسننات بلاستيك مع محاور": {
+  "kind": "print"
+ },
+ "مسننات معدنية": {
+  "kind": "other"
+ },
+ "مصباح LED للعرض": {
+  "kind": "alt",
+  "items": [
+   [
+    "led-lights-emitting-diodes-10-mm",
+    1
+   ]
+  ]
+ },
+ "مضخة غاطسة أقوى": {
+  "kind": "alt",
+  "items": [
+   [
+    "mini-aquarium-pump-12v-model-rs-385",
+    1
+   ]
+  ]
+ },
+ "مضخّم صوت + سماعة": {
+  "kind": "set",
+  "items": [
+   [
+    "mini-digital-amplifier-board-2x3w-pam8403",
+    1
+   ],
+   [
+    "high-quality-84db-speaker-3w-4r",
+    1
+   ]
+  ]
+ },
+ "مظلة هبوط طارئة": {
+  "kind": "other"
+ },
+ "مقاومة متغيرة خطية": {
+  "kind": "alt",
+  "items": [
+   [
+    "potentiometer-10k",
+    1
+   ]
+  ]
+ },
+ "مقياس جهد خطي دقيق": {
+  "kind": "alt",
+  "items": [
+   [
+    "potentiometer-10k",
+    1
+   ]
+  ]
+ },
+ "مقياس سرعة واتجاه الرياح": {
+  "kind": "alt",
+  "items": [
+   [
+    "wind-speed-sensor-voltagesignal-4-20ma-0-5v-output-wind-speed-transmitter-anemometer",
+    1
+   ]
+  ]
+ },
+ "مكثف فائق (Supercapacitor)": {
+  "kind": "other"
+ },
+ "مكونات متفرقة": {
+  "kind": "set",
+  "items": [
+   [
+    "breadboard-wires-65pcs",
+    1
+   ],
+   [
+    "breadboard-830-tie-point-solderless-prototype-board",
+    1
+   ]
+  ]
+ },
+ "منطاد هيليوم + حبل ربط + صمام": {
+  "kind": "other"
+ },
+ "منظّم شحن + بطارية ١٢ فولت ٧ أمبير": {
+  "kind": "set",
+  "items": [
+   [
+    "solar-panel-battery-rv-boat-pwm-charging-controller-10a12v-24v",
+    1
+   ],
+   [
+    "battery-12v-7ah",
+    1
+   ]
+  ]
+ },
+ "منظّم شحن فقط": {
+  "kind": "alt",
+  "items": [
+   [
+    "solar-panel-battery-rv-boat-pwm-charging-controller-10a12v-24v",
+    1
+   ]
+  ]
+ },
+ "ميكروفون + سماعة صغيرة": {
+  "kind": "set",
+  "items": [
+   [
+    "microphone-sound-sensor-detection-module",
+    1
+   ],
+   [
+    "05w-8ohm-trumpet-diameter-36mm",
+    1
+   ]
+  ]
+ },
+ "ميكروفون رقمي": {
+  "kind": "alt",
+  "items": [
+   [
+    "i2s-microphone-module-interface-high-precision-low-power-inmp441",
+    1
+   ]
+  ]
+ },
+ "هيكل + محركات + متحكم طيران": {
+  "kind": "other"
+ },
+ "وحدة 4G SIM7600": {
+  "kind": "alt",
+  "items": [
+   [
+    "sim800l-smallest-gsm-module-microsim-card-ttl",
+    1
+   ]
+  ]
+ },
+ "وحدة INA226 عالية الدقة": {
+  "kind": "alt",
+  "items": [
+   [
+    "ina219-i2c-bi-directional-dc-currentpower-monitor-sensor-breakout-module",
+    1
+   ]
+  ]
+ },
+ "وحدة إنذار لاسلكية إضافية": {
+  "kind": "set",
+  "items": [
+   [
+    "esp32-esp-wroom-32-nodemcu-wi-fi-bluetooth-development-board-cp2102-38-pins",
+    1
+   ],
+   [
+    "intermittent-beep-alarm-buzzer-sfm-27-dc-3-24v",
+    1
+   ]
+  ]
+ },
+ "وحدة تعقيم أيدٍ آلية": {
+  "kind": "set",
+  "items": [
+   [
+    "ir-infrared-obstacle-avoidance-module",
+    1
+   ],
+   [
+    "horizontal-mini-submersible-water-pump-120lh-dc-3v-5v",
+    1
+   ],
+   [
+    "relay-module-5v-dc-1-channel",
+    1
+   ]
+  ]
+ },
+ "وحدة توزيع طاقة مع حماية": {
+  "kind": "alt",
+  "items": [
+   [
+    "buck-converter-5a-dc-dc",
+    1
+   ]
+  ]
+ },
+ "وحدة ذاكرة EEPROM": {
+  "kind": "alt",
+  "items": [
+   [
+    "rtc-ds1307-24c32-real-time-clock-module-without-battery",
+    1
+   ]
+  ]
+ },
+ "وحدة سرير ثانية": {
+  "kind": "node",
+  "items": [
+   [
+    "esp32-esp-wroom-32-nodemcu-wi-fi-bluetooth-development-board-cp2102-38-pins",
+    1
+   ]
+  ]
+ },
+ "وحدة شحن ذكية": {
+  "kind": "alt",
+  "items": [
+   [
+    "cn3791-6v-mppt-solar-charger-module",
+    1
+   ]
+  ]
+ },
+ "وحدة قياس ثالثة": {
+  "kind": "node",
+  "items": [
+   [
+    "esp32-esp-wroom-32-nodemcu-wi-fi-bluetooth-development-board-cp2102-38-pins",
+    1
+   ]
+  ]
+ },
+ "وحدة قياس جهد": {
+  "kind": "alt",
+  "items": [
+   [
+    "zmpt101b-single-phase-ac-voltage-sensor-module",
+    1
+   ]
+  ]
+ },
+ "وحدة قياس لغرفة ثانية": {
+  "kind": "node",
+  "items": [
+   [
+    "esp32-esp-wroom-32-nodemcu-wi-fi-bluetooth-development-board-cp2102-38-pins",
+    1
+   ]
+  ]
+ },
+ "وحدة لخزان ثانٍ": {
+  "kind": "node",
+  "items": [
+   [
+    "esp32-esp-wroom-32-nodemcu-wi-fi-bluetooth-development-board-cp2102-38-pins",
+    1
+   ]
+  ]
+ },
+ "وحدة لمحرك ثانٍ": {
+  "kind": "node",
+  "items": [
+   [
+    "esp32-esp-wroom-32-nodemcu-wi-fi-bluetooth-development-board-cp2102-38-pins",
+    1
+   ]
+  ]
+ },
+ "وحدة لمدخل ثانٍ": {
+  "kind": "node",
+  "items": [
+   [
+    "esp32-esp-wroom-32-nodemcu-wi-fi-bluetooth-development-board-cp2102-38-pins",
+    1
+   ]
+  ]
+ },
+ "وحدة مراقبة لثلاجة ثانية": {
+  "kind": "node",
+  "items": [
+   [
+    "esp32-esp-wroom-32-nodemcu-wi-fi-bluetooth-development-board-cp2102-38-pins",
+    1
+   ]
+  ]
+ },
+ "وصلات ومواسير": {
+  "kind": "other"
+ }
+}

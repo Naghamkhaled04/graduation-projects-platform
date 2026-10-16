@@ -15,8 +15,11 @@ export interface Project {
   bom: string[][]; // [الاسم، الكمية، السعر، قسم المتجر]
   leg?: string[][];
   x?: boolean; // حصرية
+  rank?: number; // ترتيب العرض: الأقوى أولاً (محسوب، وقابل للتعديل يدوياً)
+  sw?: boolean; // مشروع برمجي: بدون قطع، التقنيات بدل قائمة القطع
 }
 
-export const projects = raw as Project[];
+/** الترتيب حسب rank: حصرية وعمق وبدائل وحجم السلّة، مع موازنة عشان أول شاشة ما تكون كلها متقدم ولا كلها مقفولة */
+export const projects = (raw as Project[]).slice().sort((a, b) => (a.rank ?? 9e9) - (b.rank ?? 9e9));
 export const levels = ['سهل', 'متوسط', 'متقدم'] as const;
 export const byId = (id: string) => projects.find((p) => p.id === id);

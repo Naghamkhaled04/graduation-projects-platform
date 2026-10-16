@@ -15,21 +15,34 @@ const p = byId(Astro.params.id!)!;
 const d = (details as Record<string, any>)[p.id] ?? {};
 
 // أرقام عربية → لاتينية (٧٫٥ → 7.5)
-const num = (s: string) => Number(String(s).replace(/[٠-٩]/g, (c) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(c))).replace(/٫/g, '.').replace(/[^\d.]/g, '')) || 0;
+const num = (s: string) => Number(String(s).replace(/[٠-٩]/g, (c) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(c))).replace(/٫/g, '.').match(/\d+(\.\d+)?/)?.[0]) || 0;
 
 // المشاريع اللي ما إلها صفحة قديمة: نبني القطع من قائمة الفهرس (بدون بدائل)
 const parts: any[] = d.parts?.length
   ? d.parts
   : p.x
     ? []
-    : p.bom.map((r, i) => ({ id: `b${i}`, nm: r[0], req: true, qty: num(r[1]) || 1, opts: [{ k: 'x', nm: r[0], d: 'من كتالوج المتجر', p: num(r[2]), def: true }] }));
+    : p.bom.map((r, i) => {
+        // سعر الفهرس للسطر كامل، والسلة بتضرب سعر القطعة بالكمية
+        const qty = num(r[1]) || 1;
+        return { id: `b${i}`, nm: r[0], req: true, qty, opts: [{ k: 'x', nm: r[0], d: 'من كتالوج المتجر', p: num(r[2]) / qty, def: true }] };
+      });
 const extras: any[] = d.extras ?? [];
 const description: string = p.d; // المعتمد: وصف الفهرس (ملف index الذي أرسله المستخدم). own-descriptions.json محفوظ للرجوع إليه
 const problem: string = d.problem || p.prob;
 const feats: string[] = d.feats?.length ? d.feats : p.feat;
 const steps: string[][] = d.steps ?? [];
 const chals: string[] = d.chals ?? [];
-const waLink = `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(`مرحباً، بدي أحجز استشارة لمشروع: ${p.t}`)}`;
+// مشاريع قريبة بالفكرة أو القطع، مع سطر يشرح الفرق — حتى يختار الطالب الصح ويأخذ أفكاراً من الباقي
+const related = ((d.rel ?? []) as { id: string; why: string }[])
+  .map((x) => ({ r: byId(x.id)!, why: x.why }))
+  .filter((x) => !!x.r);
+const stack = (d.stack ?? []) as [string, string[]][];
+const AR_D = '٠١٢٣٤٥٦٧٨٩';
+const ar = (n: number) => String(n).replace(/\d/g, (c) => AR_D[+c]);
+/** تمييز عربي: ٣–١٠ جمع، وغيرها مفرد — «٥ طبقات» و«١٤ طبقة» */
+const cnt = (n: number, one: string, many: string) => `${ar(n)} ${n >= 3 && n <= 10 ? many : one}`;
+const waLink =`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(`مرحباً، بدي أحجز استشارة لمشروع: ${p.t}`)}`;
 const waParts = `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(`مرحباً، بدي أفتح قائمة القطع لمشروع: ${p.t}`)}`;
 ---
 
@@ -77,16 +90,53 @@ const waParts = `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(`مرحبا
         </section>
       )}
 
-      {p.x ? (
+      {related.length > 0 && (
+        <section class="wide">
+          <h2>مشاريع شبيهة</h2>
+          <p class="note">قريبة من هذا المشروع بالفكرة أو بالقطع. اقرأ الفرق قبل ما تقرّر — وخُد منها أفكار تضيفها على مشروعك.</p>
+          <div class="rels">
+            {related.map(({ r, why }) => (
+              <a class="relc" href={`/projects/${r.id}`}>
+                <span class="relh"><b>{r.t}</b><span class={`lvl ${r.l}`}>{r.ln}</span></span>
+                <span class="relw">{why}</span>
+                <span class="relm">{r.c} · {r.cost} د.أ <i>←</i></span>
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {p.sw ? (
+        <section class="wide">
+          <div class="head">
+            <h2>التقنيات المقترحة</h2>
+            <span class="cnt">{cnt(stack.length, 'طبقة', 'طبقات')} · {cnt(stack.reduce((n, [, it]) => n + it.length, 0), 'تقنية', 'تقنيات')}</span>
+          </div>
+          <p class="note">مشروع برمجي — ما في قطع تُشترى. هاي الطبقات اللي بننصح فيها، وكل وحدة بتقدر تبدّلها بما بتتقنه.</p>
+          <ol class="stack">
+            {stack.map(([grp, items], i) => (
+              <li class="stk">
+                <span class="sn">{ar(i + 1)}</span>
+                <span class="sg">{grp}</span>
+                <span class="sitems">{items.map((it) => <span>{it}</span>)}</span>
+              </li>
+            ))}
+          </ol>
+          <a class="pill" href={waLink} target="_blank" rel="noopener">احجز استشارة للمسار التقني <i>←</i></a>
+        </section>
+      ) : p.x ? (
         <section class="locked wide">
           <h2 class="lk"><Fragment set:html={svg('lock', 22)} /> فكرة حصرية من أفكارنا</h2>
           <p>هذه فكرة من أفكارنا نحن، وقمنا بتطويرها بأنفسنا، ولهذا نحافظ على تفاصيلها. قائمة القطع الدقيقة بالكميات والبدائل وسلة الطلب الجاهزة نفتحها لك عند التواصل معنا.</p>
-          <div class="range"><span>{d.groups || 'عدة مجموعات قطع'}</span><b>التكلفة التقريبية: {d.range || `${p.cost} د.أ`}</b></div>
+          <div class="range"><span>{d.groups || 'عدة مجموعات قطع'}</span><b>القائمة والأسعار عند التواصل</b></div>
           <ul class="perks"><li>القائمة الدقيقة بالكميات</li><li>البدائل والأسعار</li><li>سلة جاهزة للطلب</li></ul>
           <a class="pill" href={waParts} target="_blank" rel="noopener">تواصل معنا لفتح قائمة القطع <i>←</i></a>
         </section>
       ) : (
-        <section class="wide cartwrap"><Cart parts={parts} extras={extras} project={p.t} /></section>
+        <section class="wide cartwrap">
+          {d.availnote && <p class="avail">{d.availnote}</p>}
+          <Cart parts={parts} extras={extras} project={p.t} />
+        </section>
       )}
 
       <Feedback project={p.id} title={p.t} />
@@ -143,6 +193,37 @@ const waParts = `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(`مرحبا
   .steps { display: grid; gap: 10px; counter-reset: s; }
   .step { display: grid; gap: 4px; background: #fff; border-radius: 18px; padding: 16px 20px; box-shadow: 0 0 0 1px rgba(14, 58, 99,.06); border-inline-start: 4px solid var(--orange); }
   .step b { font-size: 16px; } .step span { color: var(--fg-2); font-size: 14.5px; line-height: 1.8; }
+  /* الطبقات: بطاقة واحدة وصفوف، بدل خمس بطاقات نصّها فاضي */
+  .stack { list-style: none; padding: 10px 6px; margin: 0 0 22px; display: grid; gap: 2px;
+    background: #fff; border-radius: 24px; box-shadow: 0 0 0 1px rgba(14, 58, 99,.06), 0 16px 40px -30px rgba(14, 58, 99,.35); }
+  .stk { position: relative; display: grid; grid-template-columns: 34px minmax(88px, auto) 1fr; align-items: center;
+    gap: 14px; padding: 13px 16px; border-radius: 16px; transition: background .2s; }
+  .stk:hover { background: var(--cream); }
+  .sn { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 10px;
+    background: var(--mint); color: var(--green); font-size: 13px; font-weight: 500; }
+  /* خيط رأسي بيوصل الأرقام فيبيّنوا كطبقات مش كصفوف منفصلة */
+  .stk:not(:last-child) .sn::after { content: ''; position: absolute; top: 41px; inset-inline-start: 30px;
+    width: 2px; height: calc(100% - 28px); background: linear-gradient(var(--mint), transparent); }
+  .sg { font-size: 15px; font-weight: 500; color: var(--green); }
+  .sitems { display: flex; flex-wrap: wrap; gap: 7px; }
+  .sitems span { font-size: 13.5px; padding: 5px 13px; border-radius: 999px; background: var(--cream-2); color: var(--green); }
+  @media (max-width: 620px) {
+    .stk { grid-template-columns: 28px 1fr; row-gap: 9px; padding: 12px 13px; }
+    .sitems { grid-column: 2; }
+    .stk:not(:last-child) .sn::after { inset-inline-start: 26px; }
+  }
+  .avail { margin: 44px 0 -34px; padding: 11px 18px; border-radius: 14px; width: fit-content;
+    background: rgba(61, 183, 166,.12); color: var(--green); font-size: 14px; }
+  .avail::before { content: '✓ '; color: #2F7D5C; font-weight: 600; }
+  .rels { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); }
+  .relc { display: grid; gap: 8px; align-content: start; background: #fff; border-radius: 20px; padding: 18px 20px; text-decoration: none; color: inherit;
+    box-shadow: 0 0 0 1px rgba(14, 58, 99,.06); transition: box-shadow .2s, transform .2s; }
+  .relc:hover, .relc:focus-visible { box-shadow: 0 0 0 1px rgba(61, 183, 166,.45), 0 10px 24px -14px rgba(10, 36, 72,.4); transform: translateY(-2px); }
+  .relh { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .relh b { font-size: 16px; line-height: 1.35; }
+  .relw { color: var(--fg-2); font-size: 14.5px; line-height: 1.8; }
+  .relm { font-size: 13.5px; color: var(--green); }
+  .relm i { font-style: normal; color: var(--orange); }
   .locked, .gate { padding: 28px; border-radius: 26px; }
   .locked { background: var(--cream-2); }
   .locked .pill { margin-top: 16px; }

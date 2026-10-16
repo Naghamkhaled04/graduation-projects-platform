@@ -1,6 +1,6 @@
 ---
 import { WHATSAPP } from '../data/config';
-import { findProduct } from '../data/storelink';
+import { linkedProduct, partAlt } from '../data/storelink';
 import { slugOf } from '../data/storecats';
 
 interface Opt { k: string; nm: string; d: string; p: number; def?: boolean }
@@ -9,15 +9,22 @@ interface Extra { k: string; nm: string; d: string; p: number }
 interface Props { parts: Part[]; extras?: Extra[]; project: string }
 const { parts, extras = [], project } = Astro.props;
 // كل خيار يُربط بمنتجه الحقيقي بالمتجر إن وُجد، فالطالب يطلبه مباشرة
-const linked = parts.map((p) => ({
-  ...p,
-  opts: p.opts.map((o) => {
-    const prod = findProduct(o.nm);
-    return prod ? { ...o, url: `/store/${slugOf(prod.cat)}#p-${prod.id}`, live: prod.p, img: prod.img } : o;
-  }),
-}));
+const hrefOf = (prod: { id: string; cat: string }) => `/store/${slugOf(prod.cat)}#p-${prod.id}`;
+function link<T extends { nm: string; p: number }>(o: T) {
+  // نربط بس لما سعر القطعة بالمشروع نفس سعر المتجر، عشان سعر السطر ما يختلف عن المجموع
+  const prod = linkedProduct(o.nm);
+  if (prod && prod.p === o.p) return { ...o, url: hrefOf(prod), live: prod.p, img: prod.img };
+  // قطعة مش بالمتجر: بديلها أو قطعها من المتجر، مع ملاحظة للطالب
+  const alt = partAlt(o.nm);
+  if (!alt) return o;
+  const first = alt.items[0]?.prod;
+  if (first && alt.total === o.p) return { ...o, url: hrefOf(first), live: alt.total, img: first.img, note: alt.note };
+  return { ...o, note: alt.note };
+}
+const linked = parts.map((p) => ({ ...p, opts: p.opts.map(link) }));
+const linkedExtras = extras.map(link);
 const found = linked.reduce((n, p) => n + p.opts.filter((o: any) => o.url).length, 0);
-const data = JSON.stringify({ parts: linked, extras, project, wa: WHATSAPP });
+const data = JSON.stringify({ parts: linked, extras: linkedExtras, project, wa: WHATSAPP });
 ---
 
 <section class="cart" data-cart={data}>
@@ -87,6 +94,8 @@ const data = JSON.stringify({ parts: linked, extras, project, wa: WHATSAPP });
   .cart .on .rad { border-color: var(--orange); }
   .cart .on .rad::after { content: ''; position: absolute; inset: 2px; background: var(--orange); border-radius: inherit; }
   .cart .an { flex: 1; font-weight: 500; }
+  .cart .note { display: inline-block; margin-top: 6px; padding: 4px 10px; border-radius: 10px; background: #e8f5f2; color: #145f56; font-size: 12.5px; line-height: 1.6; }
+  .cart .ad.note { display: block; width: fit-content; color: #145f56; }
   .cart .ad { display: block; font-weight: 400; font-size: 12.5px; color: var(--fg-2); margin-top: 1px; line-height: 1.6; }
   .cart .ap { white-space: nowrap; font-weight: 700; font-size: 13.5px; }
   .cart .extras-wrap { margin-top: 26px; }

@@ -61,6 +61,15 @@ import { svg } from '../data/icons';
         </a>
       </div>
 
+      <!-- السفير: مين هو، وكيف تصيره -->
+      <section class="c-card amb-cta">
+        <div>
+          <h2>بدك تكون سفير جامعتك؟</h2>
+          <p>السفير هو ليدر مجتمع جامعته على المنصة: بيوافق على منشورات زملائه، بينشر مواعيد التسليم والمعارض، وبيوصله أي منشن <bdi>@السفير</bdi>. وبتطلع جنب اسمه شارة «سفير» جامعته.</p>
+        </div>
+        <a class="c-btn" href="/ambassador">كن سفيراً لجامعتك</a>
+      </section>
+
       <h2 class="ut">مجتمع كل جامعة</h2>
       <div class="ugrid">
         {UNIVERSITIES.map((u) => (
@@ -191,4 +200,9 @@ import { svg } from '../data/icons';
   .com .mine { margin-bottom: 26px; }
   .com .perks2 { list-style: none; padding: 0; margin: 10px 0 16px; display: grid; gap: 6px; font-size: 14px; color: var(--fg-2); }
   .com .perks2 li::before { content: '✓ '; color: var(--orange); font-weight: 600; } .com .mine .c-btn { display: inline-block; text-decoration: none; } .com .c-btn svg { vertical-align: -3px; margin-inline-end: 5px; }
+  .com .amb-cta { display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap; margin: 22px 0 6px;
+    background: #0e3a63; color: #e9f3f8; border-color: #0e3a63; }
+  .com .amb-cta div { flex: 1 1 320px; } .com .amb-cta h2 { font-size: 20px; margin-bottom: 6px; color: #fff; }
+  .com .amb-cta p { line-height: 1.9; color: rgb(233 243 248 / 82%); font-size: 14.5px; }
+  .com .amb-cta .c-btn { background: #3db7a6; color: #fff; }
 </style>

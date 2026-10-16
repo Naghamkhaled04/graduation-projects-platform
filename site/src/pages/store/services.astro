@@ -71,7 +71,9 @@ const LIST = [...SERVICES].sort((a, b) => Number(b.t === 'استشارة تقن�
               )}
               <div class="srv-foot">
                 {d && <span class="price">{d.price}</span>}
-                <a class="nv-btn" href={ask(s.t)} target="_blank" rel="noopener" aria-label={`اطلب ${s.t} على واتساب`}>اطلب</a>
+                {s.t === 'استشارة تقنية'
+                  ? <a class="nv-btn" href="/consult">التفاصيل والحجز</a>
+                  : <a class="nv-btn" href={ask(s.t)} target="_blank" rel="noopener" aria-label={`اطلب ${s.t} على واتساب`}>اطلب</a>}
               </div>
             </article>
           );

@@ -15,6 +15,8 @@ const mobile = [...primary.slice(0, 4), { href: '/profile', icon: 'medal', label
 // القائمة الجانبية: الثانوي
 const groups = [
   { title: 'المزيد', items: [
+    { href: '/team', icon: 'users', label: 'فريقي' },
+    { href: '/contact', icon: 'send', label: 'تواصل مع TFC' },
     { href: '/store/services', icon: 'flask', label: 'الاستشارة ٥ د.أ' },
     { href: '/ambassador', icon: 'medal', label: 'كن سفيراً لجامعتك' },
     { href: '/about', icon: 'building', label: 'من نحن' },
@@ -56,9 +58,10 @@ const cur = (href: string) => (href === here ? { 'aria-current': 'page' as const
   </a>
 
   <nav id="d-nav">
-    {groups.map((g) => (
+    {groups.map((g, n) => (
       <div class="grp">
-        <span class="gt">{g.title}</span>
+        {g.title && <span class="gt">{g.title}</span>}
+        {n === 0 && <div id="d-my" />}
         {g.items.map((i) => <a href={i.href} {...(i.ext ? { target: '_blank', rel: 'noopener' } : {})}><Fragment set:html={svg(i.icon, 17)} /> {i.label}{i.ext && <span class="ext">↗</span>}</a>)}
       </div>
     ))}
@@ -110,15 +113,39 @@ const cur = (href: string) => (href === here ? { 'aria-current': 'page' as const
   onScroll(); addEventListener('scroll', onScroll, { passive: true });
 
   (async () => {
+    const { uniSlug, UNIVERSITIES } = await import('../data/universities');
     const be = await getBackend();
     const [s, p, admin] = await Promise.all([be.session(), be.profile().catch(() => null), be.isAdmin().catch(() => false)]);
     const acct = document.getElementById('d-acct')!, foot = document.getElementById('d-foot')!;
+    const my = document.getElementById('d-my')!;   // خانة «مجتمعي» أول القائمة الجانبية
     const item = (href: string, icon: string, label: string) => `<a href="${href}">${svg(icon, 17)} ${label}</a>`;
 
+    // «مجتمعي» بتظهر للكل — الزائر بيشوف الدعوة والمسجّل بيشوف حالته
+    const mySlug = p?.university ? uniSlug(p.university) : null;
+    const myUni = mySlug ? UNIVERSITIES.find((u) => u.slug === mySlug) : null;
+    const row = (href: string, icon: string, label: string, tag: string, join = false) =>
+      `<a href="${href}" class="mysub-a">${svg(icon, 16)} <span>${label}</span><em class="${join ? 'join' : ''}">${tag}</em></a>`;
+    // خانة وحدة بالقائمة، والثلاث مساحات بتنفتح جوّاها
+    const myBlock = `<div class="mygrp">
+      <button type="button" class="mytog" id="mytog" aria-expanded="false">
+        ${svg('chat', 17)} <span>مجتمعي</span><i class="chv" aria-hidden="true">⌄</i>
+      </button>
+      <div class="mysub" id="mysub" hidden>
+        ${row('/c/general', 'users', 'المجتمع العام', s ? 'عضو' : 'سجّل', !s)}
+        ${myUni
+          ? row(`/c/${myUni.slug}`, 'chat', `مجتمع ${myUni.short}`, 'عضو')
+          : row(s ? '/settings' : '/join', 'chat', 'انضم لمجتمع جامعتك', 'مطلوب', true)}
+        ${row('/c/news', 'medal', 'الإعلانات', s ? 'تتابعها' : 'سجّل', !s)}
+      </div>
+    </div>`;
+
     if (!s || !p) {
+      my.innerHTML = myBlock;
       acct.innerHTML = `<span class="gt">حسابي</span>${item('/join', 'lock', 'تسجيل الدخول أو حساب جديد')}`;
       document.getElementById('d-me')!.setAttribute('href', '/join');
-      foot.innerHTML = '<p>سجّل دخولك لتجمع نقاط وتنضم لمجتمع جامعتك.</p>';
+      const t0 = document.getElementById('mytog'), s0 = document.getElementById('mysub');
+      t0?.addEventListener('click', () => { const o = s0!.hidden; s0!.hidden = !o; t0.setAttribute('aria-expanded', String(o)); });
+      foot.innerHTML = '<p>سجّل دخولك لتنضم لمجتمع جامعتك وتجمع نقاط على تجاربك.</p>';
       return;
     }
     const lvl = levelOf(p.points), first = p.display_name.slice(0, 1);
@@ -127,17 +154,44 @@ const cur = (href: string) => (href === here ? { 'aria-current': 'page' as const
     document.getElementById('d-name')!.textContent = p.display_name;
     document.getElementById('d-sub')!.innerHTML = `${svg('level', 12, lvl.n)} ${lvl.name} · ${ar(p.points)} نقطة`;
 
-    acct.innerHTML = `<span class="gt">حسابي</span>
+    my.innerHTML = myBlock;
+    acct.innerHTML = `
+      <span class="gt">حسابي</span>
       ${item('/profile', 'medal', 'نقاطي وتجاربي')}
       ${item('/u?id=' + encodeURIComponent(p.id), 'eye', 'ملفي العام')}
       ${item('/settings', 'flask', 'الإعدادات')}
       ${admin ? item('/admin', 'building', 'لوحة الأدمن') : ''}`;
+    const tog = document.getElementById('mytog'), sub = document.getElementById('mysub');
+    tog?.addEventListener('click', () => {
+      const open = sub!.hidden;
+      sub!.hidden = !open;
+      tog.setAttribute('aria-expanded', String(open));
+    });
+
     foot.innerHTML = be.mode === 'cloud' ? `<button type="button" id="d-out">${svg('send', 16)} تسجيل الخروج</button>` : '<p>وضع تجريبي: بياناتك بمتصفحك فقط.</p>';
     foot.querySelector('#d-out')?.addEventListener('click', async () => { await be.signOut(); location.reload(); });
   })();
 </script>
 
 <style is:global>
+  /* مجتمعي: خانة زي باقي الروابط، والمساحات بتنفتح جوّاها */
+  .drawer .mytog { display: flex; align-items: center; gap: 12px; width: 100%; padding: 11px 12px; border: 0;
+    border-radius: 13px; background: transparent; color: var(--green); font: 400 14.5px var(--font); cursor: pointer; transition: background .2s, color .2s; }
+  .drawer .mytog:hover { background: var(--cream-2); color: var(--orange); }
+  .drawer .mytog svg { flex: none; opacity: .75; }
+  .drawer .mytog span { flex: 1; text-align: start; }
+  .drawer .mytog .chv { font-style: normal; font-size: 13px; opacity: .5; transition: transform .25s; }
+  .drawer .mytog[aria-expanded='true'] .chv { transform: rotate(180deg); }
+  .drawer .mysub { display: grid; gap: 2px; padding: 2px 0 6px; margin-inline-start: 14px;
+    border-inline-start: 2px solid var(--mint); }
+  .drawer .mysub[hidden] { display: none; }
+  .drawer .mysub-a { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 11px;
+    text-decoration: none; color: var(--green); font-size: 14px; transition: background .2s; }
+  .drawer .mysub-a:hover { background: var(--cream-2); }
+  .drawer .mysub-a svg { flex: none; opacity: .7; }
+  .drawer .mysub-a span { flex: 1; }
+  .drawer .mysub-a em { font-style: normal; font-size: 11px; padding: 3px 8px; border-radius: 999px; background: var(--mint); color: var(--green); }
+  .drawer .mysub-a em.join { background: rgba(61, 183, 166,.18); color: #145f56; }
   #hdr { position: fixed; inset: 0 0 auto 0; z-index: 50; display: flex; justify-content: space-between; align-items: center; gap: 14px; padding: 14px var(--gutter); pointer-events: none; transition: background .3s, box-shadow .3s, padding .3s; }
   #hdr > * { pointer-events: auto; }
   #hdr.solid { background: color-mix(in srgb, var(--hdr-bg) 84%, transparent); backdrop-filter: blur(16px); box-shadow: 0 1px 0 rgba(127,127,127,.16); padding-block: 9px; }

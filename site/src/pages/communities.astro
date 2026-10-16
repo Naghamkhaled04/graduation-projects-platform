@@ -2,6 +2,7 @@
 import Base from '../layouts/Base.astro';
 import '../styles/community.css';
 import { UNIVERSITIES } from '../data/universities';
+import { SPACES } from '../data/spaces';
 import { svg } from '../data/icons';
 ---
 
@@ -11,17 +12,60 @@ import { svg } from '../data/icons';
       <h1>مجتمعات الجامعات</h1>
       <p class="lead">كل جامعة إلها مجتمعها: تسأل فيه سؤالك التقني، تعرض شغلك، تدوّر على شريك لمشروع التخرج، وتشارك مصادر محلية (وين تلاقي قطعة، أي مدرّس بيفهم بالموضوع).</p>
 
+      <!-- شو بتلاقي هون: يفهم أول، وبعدها بنطلب منه ينضم -->
+      <div class="how">
+        <div class="hcard" style="--i:0">
+          <div class="anim chatA">
+            <span class="bub b2"><i></i><i></i><i></i></span>
+          </div>
+          <b>اسأل سؤالك التقني</b>
+          <span>طلاب بنفس كليتك عاشوا نفس المشكلة</span>
+        </div>
+
+        <div class="hcard" style="--i:1">
+          <div class="anim linkA">
+            <span class="av a1"><i></i></span>
+            <span class="track"><span class="dash"></span><span class="spark"></span></span>
+            <span class="av a2"><i></i></span>
+          </div>
+          <b>دوّر على شريك</b>
+          <span>مشروع التخرج فريق — هون بتلاقيه</span>
+        </div>
+
+        <div class="hcard" style="--i:2">
+          <div class="anim pinA">
+            <span class="ripple r1"></span><span class="ripple r2"></span>
+            <span class="pin"></span>
+          </div>
+          <b>مصادر محلية</b>
+          <span>وين تلاقي قطعة، وأي مدرّس بيفهم بالموضوع</span>
+        </div>
+      </div>
+
+      <div class="c-card sec mine" id="my-uni" hidden></div>
+
+      <div class="spaces">
+        {SPACES.map((sp) => (
+          <a class="c-card sp" href={`/c/${sp.slug}`}>
+            <span class="si"><Fragment set:html={svg(sp.icon, 19)} /></span>
+            <b>{sp.name}</b>
+            <span class="d">{sp.desc}</span>
+            <span class="go">ادخل ←</span>
+          </a>
+        ))}
+      </div>
+
+      <h2 class="ut">مجتمع كل جامعة</h2>
       <div class="ugrid">
         {UNIVERSITIES.map((u) => (
           <a class="c-card mini" href={`/c/${u.slug}`} data-uni={u.slug}>
-            <b>{u.short}</b>
-            <span class="d">{u.name}</span>
+            <b>{u.name}</b>
+            <span class="ab">{u.abbr}</span>
             <span class="n" data-count={u.slug}></span>
           </a>
         ))}
       </div>
 
-      <div class="c-card sec mine" id="my-uni" hidden></div>
     </div>
   </main>
 </Base>
@@ -32,6 +76,12 @@ import { svg } from '../data/icons';
   import { uniSlug, UNIVERSITIES } from '../data/universities';
   import { esc, ar } from '../community/ui';
   import { svg } from '../data/icons';
+
+  // الرسوم بتبلّش لما القسم يوصل الشاشة — مش قبل
+  const how = document.querySelector('.how');
+  if (how) new IntersectionObserver((es, o) => es.forEach((e) => {
+    if (e.isIntersecting) { how.classList.add('in'); o.disconnect(); }
+  }), { threshold: 0.3 }).observe(how);
 
   (async () => {
     const [be, com] = await Promise.all([getBackend(), getCommunities()]);
@@ -48,16 +98,91 @@ import { svg } from '../data/icons';
     box.hidden = false;
     box.innerHTML = slug
       ? `<h3>مجتمعك</h3><p class="c-note">أنت مسجّل بـ${esc(p!.university!)}.</p><a class="c-btn" href="/c/${slug}">${svg('chat', 15)} ادخل مجتمع جامعتك</a>`
-      : `<h3>انضم لمجتمع جامعتك</h3><p class="c-note">حدّد جامعتك بملفك، وبتنضم تلقائياً لمجتمعها.</p><a class="c-btn" href="/settings">${svg('building', 15)} حدّد جامعتك</a>`;
+      : `<h3>انضم لمجتمع جامعتك</h3><p class="c-note">حدّد جامعتك بملفك وبتنضم تلقائياً. بعدها بتقدر:</p>
+         <ul class="perks2"><li>تنشر سؤال أو تعرض شغلك</li><li>تدوّر على شريك لمشروع التخرج</li><li>ترد على الطلاب وتجمع نقاط</li></ul>
+         <a class="c-btn" href="/settings">${svg('building', 15)} حدّد جامعتك</a>`;
   })();
 </script>
 
 <style is:global>
   .com h1 { margin-bottom: 12px; } .com .lead { color: var(--fg-2); font-size: 18px; max-width: 66ch; margin-bottom: 28px; line-height: 1.9; }
+  /* المساحتان العامتان: أبرز من بطاقات الجامعات */
+  .com .spaces { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 14px; margin-bottom: 30px; }
+  .com .sp { display: grid; gap: 7px; text-decoration: none; color: inherit; border-inline-start: 4px solid var(--orange);
+    transition: transform .25s, box-shadow .25s; }
+  .com .sp:hover { transform: translateY(-3px); box-shadow: 0 0 0 1px rgba(61, 183, 166,.45), 0 0 28px rgba(61, 183, 166,.2); }
+  .com .sp .si { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 13px; background: var(--mint); color: var(--green); }
+  .com .sp b { font-size: 18px; } .com .sp .d { font-size: 13.5px; color: var(--fg-2); line-height: 1.75; }
+  .com .sp .go { font-size: 13.5px; color: var(--orange); font-weight: 500; }
+  .com .ut { font-size: 21px; margin-bottom: 14px; }
   .com .ugrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
   .com .mini { display: grid; gap: 5px; text-decoration: none; color: inherit; transition: transform .3s, box-shadow .3s; }
   .com .mini:hover { transform: translateY(-4px); box-shadow: 0 0 0 1px rgba(61, 183, 166,.5), 0 0 30px rgba(61, 183, 166,.25); }
-  .com .mini b { font-size: 18px; } .com .mini .d { font-size: 13px; color: var(--fg-2); }
+  /* الاسم العربي فوق والاختصار الإنجليزي تحته */
+  .com .mini b { font-size: 17px; line-height: 1.45; }
+  .com .mini .ab { font-size: 13px; letter-spacing: .6px; direction: ltr; text-align: start; color: var(--fg-2); font-weight: 500; }
+  /* شريط «شو بتلاقي هون»: بيخلي الصفحة مفيدة قبل ما يكون فيها أعضاء */
+  .com .how { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; margin-bottom: 26px; }
+  .com .hcard { display: grid; gap: 5px; padding: 17px 19px; border-radius: 20px; background: #fff; box-shadow: 0 0 0 1px rgba(14, 58, 99,.06); }
+  .com .hcard { opacity: 0; transform: translateY(14px); }
+  .com .how.in .hcard { opacity: 1; transform: none; transition: opacity .6s ease calc(var(--i) * .12s), transform .6s cubic-bezier(.2,.8,.3,1) calc(var(--i) * .12s); }
+
+  /* رسوم مصغّرة بدل أيقونة ثابتة — بتشتغل لما القسم يوصل الشاشة */
+  .com .anim { position: relative; height: 54px; margin-bottom: 6px; display: flex; align-items: center; gap: 7px; }
+
+  /* ١ · فقاعات محادثة بتظهر بالتتابع، والوسطى عم تكتب */
+  .com .chatA .bub { display: flex; align-items: center; justify-content: center; gap: 5px; height: 30px; width: 58px;
+    border-radius: 999px 999px 999px 6px; background: #fff; box-shadow: inset 0 0 0 1px rgba(14, 58, 99,.14); opacity: 0; }
+  .com .chatA .b2 i { width: 5px; height: 5px; border-radius: 50%; background: var(--green); opacity: .35; }
+  .com .how.in .chatA .bub { animation: pop .5s forwards; }
+  .com .how.in .chatA .b2 i { animation: dot 1.1s infinite .5s; }
+  .com .how.in .chatA .b2 i:nth-child(2) { animation-delay: .65s; } .com .how.in .chatA .b2 i:nth-child(3) { animation-delay: .8s; }
+  @keyframes pop { from { opacity: 0; transform: translateY(6px) scale(.9); } to { opacity: 1; transform: none; } }
+  @keyframes dot { 0%, 100% { opacity: .25; transform: none; } 50% { opacity: 1; transform: translateY(-2px); } }
+
+  /* ٢ · طالبان بيقربوا من بعض، الخط بينوصل، وبتطلع شرارة لقاء */
+  .com .linkA { justify-content: center; gap: 0; }
+  .com .linkA .av { position: relative; width: 30px; height: 30px; border-radius: 50%; flex: none; opacity: 0; }
+  .com .linkA .av i { position: absolute; left: 50%; top: 6px; width: 10px; height: 10px; margin-inline-start: -5px;
+    border-radius: 50%; background: rgba(255,255,255,.9); }
+  .com .linkA .av::after { content: ''; position: absolute; left: 50%; bottom: 4px; width: 18px; height: 10px;
+    margin-inline-start: -9px; border-radius: 9px 9px 0 0; background: rgba(255,255,255,.9); }
+  .com .linkA .a1 { background: var(--green); } .com .linkA .a2 { background: var(--orange); }
+  .com .linkA .track { position: relative; width: 56px; height: 2px; margin: 0 6px; }
+  .com .linkA .dash { position: absolute; inset: 0; border-radius: 2px; transform-origin: center;
+    background: repeating-linear-gradient(90deg, var(--green) 0 6px, transparent 6px 11px); opacity: .45; transform: scaleX(0); }
+  .com .linkA .spark { position: absolute; left: 50%; top: 50%; width: 16px; height: 16px; margin: -8px 0 0 -8px;
+    border-radius: 50%; background: var(--orange); opacity: 0; }
+  .com .how.in .linkA .a1 { animation: slideR .6s .15s cubic-bezier(.2,.9,.3,1.2) forwards; }
+  .com .how.in .linkA .a2 { animation: slideL .6s .15s cubic-bezier(.2,.9,.3,1.2) forwards; }
+  .com .how.in .linkA .dash { animation: grow .5s .6s forwards; }
+  .com .how.in .linkA .spark { animation: meet 1.6s 1.05s infinite; }
+  @keyframes slideR { from { opacity: 0; transform: translateX(26px) scale(.7); } to { opacity: 1; transform: none; } }
+  @keyframes slideL { from { opacity: 0; transform: translateX(-26px) scale(.7); } to { opacity: 1; transform: none; } }
+  @keyframes grow { to { transform: scaleX(1); } }
+  @keyframes meet { 0% { opacity: 0; transform: scale(.3); } 25% { opacity: .85; transform: scale(1); } 60%, 100% { opacity: 0; transform: scale(2.1); } }
+
+  /* ٣ · دبوس خريطة بينزل وبيعمل موجات */
+  .com .pinA { justify-content: center; }
+  .com .pinA .pin { position: relative; width: 20px; height: 20px; border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg) translateY(-14px); background: var(--orange); opacity: 0; }
+  .com .pinA .pin::after { content: ''; position: absolute; inset: 6px; border-radius: 50%; background: var(--cream); }
+  .com .how.in .pinA .pin { animation: drop .7s .2s cubic-bezier(.3,1.4,.5,1) forwards; }
+  @keyframes drop { to { opacity: 1; transform: rotate(-45deg) translateY(0); } }
+  .com .pinA .ripple { position: absolute; left: 50%; top: 60%; width: 14px; height: 14px; margin: -7px 0 0 -7px;
+    border-radius: 50%; border: 2px solid rgba(61, 183, 166,.5); opacity: 0; }
+  .com .how.in .pinA .ripple { animation: ring 2.2s .85s infinite; }
+  .com .how.in .pinA .r2 { animation-delay: 1.6s; }
+  @keyframes ring { 0% { opacity: .7; transform: scale(.4); } 100% { opacity: 0; transform: scale(2.6); } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .com .hcard, .com .how.in .hcard { opacity: 1; transform: none; transition: none; }
+    .com .how.in .anim * { animation: none !important; opacity: 1; stroke-dashoffset: 0; transform: none; }
+    .com .how.in .pinA .pin { transform: rotate(-45deg); }
+  }
+  .com .hcard b { font-size: 15.5px; } .com .hcard span:last-child { font-size: 13.5px; color: var(--fg-2); line-height: 1.75; }
   .com .mini .n { font-size: 12.5px; color: var(--orange); font-weight: 500; margin-top: 4px; }
-  .com .mine { margin-top: 28px; } .com .mine .c-btn { display: inline-block; text-decoration: none; } .com .c-btn svg { vertical-align: -3px; margin-inline-end: 5px; }
+  .com .mine { margin-bottom: 26px; }
+  .com .perks2 { list-style: none; padding: 0; margin: 10px 0 16px; display: grid; gap: 6px; font-size: 14px; color: var(--fg-2); }
+  .com .perks2 li::before { content: '✓ '; color: var(--orange); font-weight: 600; } .com .mine .c-btn { display: inline-block; text-decoration: none; } .com .c-btn svg { vertical-align: -3px; margin-inline-end: 5px; }
 </style>

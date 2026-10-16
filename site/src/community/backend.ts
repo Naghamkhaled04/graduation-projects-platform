@@ -1,7 +1,7 @@
 import { POINTS } from './rules';
 import { authReturn } from '../scripts/guard.js';
 import { dataUrlToBlob } from './img';
-import type { Feedback, FeedbackInput, LedgerRow, PendingBuilding, Profile, Redemption, Session } from './types';
+import type { Feedback, FeedbackInput, LedgerRow, Msg, PendingBuilding, Profile, Redemption, Session, Thread } from './types';
 
 export interface Backend {
   mode: 'local' | 'cloud';
@@ -35,6 +35,22 @@ export interface Backend {
   adminSetRedemption(id: string, status: 'used' | 'cancelled'): Promise<void>;
   adminAdjustPoints(userId: string, delta: number, why: string): Promise<void>;
   adminUsers(): Promise<Profile[]>;
+
+  /** مراسلة الإدارة: خيط واحد لكل طالب */
+  myMessages(): Promise<Msg[]>;
+  sendMessage(body: string): Promise<void>;
+  unreadFromAdmin(): Promise<number>;
+  adminThreads(): Promise<Thread[]>;
+  adminThread(userId: string): Promise<Msg[]>;
+  adminReply(userId: string, body: string): Promise<void>;
+  /** نسخة من كل البيانات بملف واحد */
+  adminExport(): Promise<Record<string, unknown[]>>;
+  /** ترقية حساب لأدمن أو إنزاله — يُفحص على الخادم */
+  adminSetRole(userId: string, role: 'student' | 'admin'): Promise<void>;
+  /** معرّفات حسابات الفريق، لعرض الشارة جنب الاسم */
+  adminIds(): Promise<Set<string>>;
+  /** بث لحظي للرسائل. userId فارغ = خيطي أنا. يرجّع دالة إلغاء الاشتراك */
+  onMessages(userId: string | null, cb: () => void): Promise<() => void>;
 }
 
 const clean = (s: string, n: number) => s.replace(/[<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, n);
@@ -141,6 +157,27 @@ class LocalBackend implements Backend {
   async adminSetRedemption(id: string, status: 'used' | 'cancelled') { const s = this.st(), r = s.redemptions.find((x) => x.id === id); if (r) r.status = status; this.put(s); }
   async adminAdjustPoints(uid: string, d: number, why: string) { const s = this.st(); this.award(s, uid, d, 'admin: ' + why); this.put(s); }
   async adminUsers() { return [this.st().me]; }
+  async myMessages() { return this.msgs(); }
+  async sendMessage(body: string) {
+    const b = clean(body, 2000); if (b.length < 2) throw new Error('اكتب رسالتك');
+    const s = this.st() as any; (s.messages ??= []).push({ id: crypto.randomUUID(), user_id: s.me.id, from_admin: false, body: b, read_at: null, created_at: new Date().toISOString() }); this.put(s);
+  }
+  async unreadFromAdmin() { return this.msgs().filter((m) => m.from_admin && !m.read_at).length; }
+  async adminThreads() {
+    const m = this.msgs(); if (!m.length) return [];
+    const last = m[m.length - 1];
+    return [{ user_id: this.st().me.id, name: this.st().me.display_name, last_body: last.body, last_at: last.created_at, unread: 0 }];
+  }
+  async adminThread() { return this.msgs(); }
+  async adminReply(_userId: string, body: string) {
+    const b = clean(body, 2000); if (b.length < 2) throw new Error('اكتب الرد');
+    const s = this.st() as any; (s.messages ??= []).push({ id: crypto.randomUUID(), user_id: s.me.id, from_admin: true, body: b, read_at: null, created_at: new Date().toISOString() }); this.put(s);
+  }
+  async adminExport() { return { ...(this.st() as any) }; }
+  async adminSetRole() {}
+  async adminIds() { return new Set<string>(); }
+  async onMessages() { return () => {}; }
+  private msgs(): Msg[] { return ((this.st() as any).messages ?? []) as Msg[]; }
 }
 
 /* ───────────── Supabase ───────────── */
@@ -223,6 +260,59 @@ class CloudBackend implements Backend {
   async adminSetRedemption(id: string, status: 'used' | 'cancelled') { this.need(await this.sb.from('redemptions').update({ status }).eq('id', id)); }
   async adminAdjustPoints(userId: string, d: number, why: string) { this.need(await this.sb.rpc('admin_adjust_points', { uid: userId, d, why })); }
   async adminUsers() { return this.need(await this.sb.from('profiles').select('*').order('created_at', { ascending: false }).limit(100)); }
+
+  async myMessages() {
+    const u = await this.uid(); if (!u) return [];
+    const r = this.need(await this.sb.from('messages').select('*').eq('user_id', u).order('created_at')) as Msg[];
+    // ما وصل من الإدارة صار مقروءاً بمجرد فتح الخيط
+    const unread = r.filter((m) => m.from_admin && !m.read_at).map((m) => m.id);
+    if (unread.length) await this.sb.from('messages').update({ read_at: new Date().toISOString() }).in('id', unread);
+    return r;
+  }
+  async sendMessage(body: string) {
+    const b = clean(body, 2000); if (b.length < 2) throw new Error('اكتب رسالتك');
+    const u = await this.uid(); if (!u) throw new Error('AUTH');
+    this.need(await this.sb.from('messages').insert({ user_id: u, body: b, from_admin: false }));
+  }
+  async unreadFromAdmin() {
+    const u = await this.uid(); if (!u) return 0;
+    const r = await this.sb.from('messages').select('id', { count: 'exact', head: true }).eq('user_id', u).eq('from_admin', true).is('read_at', null);
+    return r.count ?? 0;
+  }
+  async adminThreads() { return (this.need(await this.sb.rpc('admin_threads')) ?? []).map((t: any) => ({ ...t, unread: Number(t.unread) })); }
+  async adminThread(userId: string) {
+    const r = this.need(await this.sb.from('messages').select('*').eq('user_id', userId).order('created_at')) as Msg[];
+    const unread = r.filter((m) => !m.from_admin && !m.read_at).map((m) => m.id);
+    if (unread.length) await this.sb.from('messages').update({ read_at: new Date().toISOString() }).in('id', unread);
+    return r;
+  }
+  async adminReply(userId: string, body: string) {
+    const b = clean(body, 2000); if (b.length < 2) throw new Error('اكتب الرد');
+    this.need(await this.sb.from('messages').insert({ user_id: userId, body: b, from_admin: true }));
+  }
+  async adminExport() {
+    const tables = ['profiles', 'points_ledger', 'feedback', 'redemptions', 'projects', 'uni_posts', 'uni_replies', 'uni_moderators', 'teams', 'team_members', 'team_tasks', 'team_links', 'team_notes', 'team_activity', 'messages'];
+    const out: Record<string, unknown[]> = {};
+    for (const t of tables) {
+      const r = await this.sb.from(t).select('*').limit(10000);
+      // جدول ما رجع = صلاحيات أو غير موجود؛ بننزّل الباقي بدل ما نفشل الكل
+      out[t] = r.error ? [{ __error: r.error.message }] : (r.data ?? []);
+    }
+    return out;
+  }
+  async adminSetRole(userId: string, role: 'student' | 'admin') { this.need(await this.sb.rpc('admin_set_role', { uid: userId, r: role })); }
+  async adminIds() {
+    const r = await this.sb.rpc('public_roles');
+    return new Set<string>((r.data ?? []).map((x: any) => x.id));
+  }
+  async onMessages(userId: string | null, cb: () => void) {
+    const uid = userId ?? (await this.uid());
+    if (!uid) return () => {};
+    const ch = this.sb.channel('msg:' + uid)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `user_id=eq.${uid}` }, cb)
+      .subscribe();
+    return () => { this.sb.removeChannel(ch); };
+  }
 }
 
 let cached: Promise<Backend> | null = null;

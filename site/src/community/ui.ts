@@ -31,3 +31,7 @@ export async function gate(host: HTMLElement, be: Backend, msg = 'سجّل دخ�
 }
 export const demoBanner = (be: Backend) => be.mode === 'local'
   ? `<div class="c-demo">وضع تجريبي: بياناتك محفوظة بمتصفحك فقط ولا يراها أحد. الحفظ المشترك يشتغل لما تُفعَّل قاعدة البيانات (<code>docs/community-backend.md</code>).</div>` : '';
+
+/** شارة «فريق المنصة» جنب اسم أي حساب أدمن */
+export const adminBadge = (isAdmin: boolean) =>
+  isAdmin ? '<span class="c-team" title="حساب من فريق المنصة">★ فريق المنصة</span>' : '';

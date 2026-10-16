@@ -5,34 +5,41 @@ import { SERVICES, ar, PRODUCTS } from '../../data/storecats';
 import { svg } from '../../data/icons';
 import { WHATSAPP, CONSULT_PRICE } from '../../data/config';
 
-const ask = (s: string) => `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(`مرحباً، بدي أستفسر عن خدمة: ${s}`)}`;
+const ask = (s: string) => `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(`مرحباً، بدي أطلب خدمة: ${s}`)}`;
 
 /** تفاصيل كل خدمة: شو بنعمل بالضبط، وشو بنحتاج منك */
-const DETAIL: Record<string, { does: string[]; need: string[]; note?: string }> = {
+const DETAIL: Record<string, { price: string; does: string[]; need: string[]; note?: string }> = {
   'توفير القطع': {
+    price: 'حسب القطع',
     does: [`${ar(PRODUCTS.length)} قطعة جاهزة بأسعارها`, 'القطعة المش موجودة بنجيبها بالطلب', 'بدائل أرخص أو أدق لكل قطعة'],
     need: ['قائمة قطعك، أو اسم المشروع من موقعنا'],
   },
   'طباعة ثلاثية الأبعاد و CNC': {
+    price: 'حسب الحجم والمادة',
     does: ['علبة لمشروعك أو حامل أو قطعة مخصصة', 'قص وحفر CNC', 'بنساعدك بالتصميم لو ما عندك ملف'],
     need: ['ملف STL أو رسمة بالمقاسات', 'المادة واللون لو عندك تفضيل'],
     note: 'السعر حسب الحجم والمادة ووقت الطباعة. بنرد عليك بالسعر قبل ما نبدأ.',
   },
   'تصميم وتنفيذ دارات أردوينو': {
+    price: 'حسب الفكرة',
     does: ['اختيار القطع المناسبة لفكرتك', 'تصميم الدارة ومخطط التوصيل', 'تجميع نموذج وتجريبه'],
     need: ['وصف الفكرة والقطع اللي عندك', 'الميزانية والوقت المتاح'],
     note: 'هاي منصة طلاب: بنجهّز ونشرح، وشغل المشروع وتسليمه بيضل عليك أنت.',
   },
   'تطبيقات ويب وهواتف': {
+    price: 'حسب الفكرة',
     does: ['لوحة تحكم تقرأ بيانات مشروعك', 'تطبيق موبايل يتابع القراءات', 'ربط مع قاعدة بيانات أو سحابة'],
     need: ['شو البيانات اللي بدك تعرضها', 'ويب ولا موبايل ولا الاثنين'],
   },
   'استشارة تقنية': {
+    price: `${CONSULT_PRICE} د.أ أو ٥٠ نقطة`,
     does: ['المسار التقني خطوة خطوة', 'حل لكل تحدٍّ بمشروعك', 'مستند PDF ونصائح المناقشة'],
     need: ['المشروع اللي اخترته أو فكرتك'],
     note: `${CONSULT_PRICE} د.أ للجلسة، أو مجاناً بـ٥٠ نقطة من نشاطك على المنصة.`,
   },
 };
+// الاستشارة أول وحدة: رابط "الاستشارة" بالقائمة بيوصل هون
+const LIST = [...SERVICES].sort((a, b) => Number(b.t === 'استشارة تقنية') - Number(a.t === 'استشارة تقنية'));
 ---
 
 <Base title="خدماتنا — المتجر" description="توفير القطع، طباعة ثلاثية الأبعاد و CNC، تنفيذ مشاريع أردوينو، تطبيقات، واستشارة تقنية.">
@@ -45,31 +52,27 @@ const DETAIL: Record<string, { does: string[]; need: string[]; note?: string }> 
       </div>
 
       <div class="srv-list">
-        {SERVICES.map((s) => {
+        {LIST.map((s, i) => {
           const d = DETAIL[s.t];
           return (
-            <article class="srv-card">
-              <div class="srv-head">
-                <span class="ic"><Fragment set:html={svg(s.icon, 22)} /></span>
-                <div>
-                  <h2>{s.t}</h2>
-                  <p class="lede">{s.d}</p>
-                </div>
-              </div>
+            <article class:list={['srv-card', { top: i === 0 }]}>
+              <span class="ic"><Fragment set:html={svg(s.icon, 22)} /></span>
+              <h2>{s.t}</h2>
+              <p class="lede">{s.d}</p>
               {d && (
-                <div class="srv-cols">
-                  <div>
-                    <b>شو بنعمل</b>
-                    <ul class="yes">{d.does.map((x) => <li>{x}</li>)}</ul>
-                  </div>
-                  <div>
-                    <b>شو بنحتاج منك</b>
-                    <ul class="need">{d.need.map((x) => <li>{x}</li>)}</ul>
-                  </div>
-                </div>
+                <details class="srv-more">
+                  <summary>شو بنعمل وشو بنحتاج منك</summary>
+                  <b>شو بنعمل</b>
+                  <ul class="yes">{d.does.map((x) => <li>{x}</li>)}</ul>
+                  <b>شو بنحتاج منك</b>
+                  <ul class="need">{d.need.map((x) => <li>{x}</li>)}</ul>
+                  {d.note && <p class="srv-note">{d.note}</p>}
+                </details>
               )}
-              {d?.note && <p class="srv-note">{d.note}</p>}
-              <a class="nv-btn" href={ask(s.t)} target="_blank" rel="noopener">استفسر عن هالخدمة</a>
+              <div class="srv-foot">
+                {d && <span class="price">{d.price}</span>}
+                <a class="nv-btn" href={ask(s.t)} target="_blank" rel="noopener" aria-label={`اطلب ${s.t} على واتساب`}>اطلب</a>
+              </div>
             </article>
           );
         })}
@@ -84,25 +87,39 @@ const DETAIL: Record<string, { does: string[]; need: string[]; note?: string }> 
 </Base>
 
 <style>
-  .srv-list { display: grid; gap: 16px; }
-  .srv-card { background: #fbfdfe; border: 1px solid #d9dee5; border-radius: 18px; padding: clamp(20px, 3vw, 30px);
-    display: grid; gap: 18px; align-content: start; }
-  .srv-head { display: flex; gap: 16px; align-items: flex-start; }
-  .srv-head .ic { flex: none; width: 48px; height: 48px; border-radius: 14px; background: #eaf6f4; color: #18766a;
-    display: grid; place-items: center; }
-  .srv-head h2 { font-size: clamp(19px, 2.4vw, 24px); line-height: 1.3; }
-  .srv-head .lede { color: #5f7084; line-height: 1.85; margin-top: 4px; }
-
-  .srv-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-  .srv-cols b { display: block; font-size: 14px; margin-bottom: 8px; }
-  .srv-cols ul { list-style: none; display: grid; gap: 7px; }
-  .srv-cols li { font-size: 13.5px; line-height: 1.7; color: #5f7084; padding-inline-start: 22px; position: relative; }
-  .srv-cols li::before { position: absolute; inset-inline-start: 0; top: 0; font-weight: 700; }
+  /* كروت مختصرة: الوصف سطر، والتفاصيل مطوية، وزر "اطلب" واحد */
+  .srv-list { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  @media (min-width: 760px) { .srv-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } } /* ٤ خدمات = ٢×٢ بلا كرت لحاله */
+  .srv-card { background: #fbfdfe; border: 1px solid #d9dee5; border-radius: 18px; padding: 22px;
+    display: flex; flex-direction: column; gap: 8px; }
+  .srv-card .ic { width: 44px; height: 44px; border-radius: 13px; background: #eaf6f4; color: #18766a; display: grid; place-items: center; margin-bottom: 4px; }
+  .srv-card h2 { font-size: 19px; line-height: 1.4; }
+  .srv-card .lede { color: #5f7084; font-size: 14.5px; line-height: 1.8; }
+  .srv-more { font-size: 13.5px; color: #5f7084; }
+  .srv-more summary { cursor: pointer; color: #18766a; font-weight: 500; padding: 6px 0; width: fit-content; }
+  .srv-more b { display: block; color: #0e3a63; margin: 10px 0 6px; font-size: 13.5px; }
+  .srv-more ul { list-style: none; display: grid; gap: 5px; }
+  .srv-more li { line-height: 1.7; padding-inline-start: 20px; position: relative; }
+  .srv-more li::before { position: absolute; inset-inline-start: 0; top: 0; font-weight: 700; }
   .yes li::before { content: '✓'; color: #2f7d5c; }
   .need li::before { content: '•'; color: #3db7a6; font-size: 17px; line-height: 1.2; }
-
-  .srv-note { font-size: 13.5px; line-height: 1.85; color: #5f7084; background: #eef3f6; border-radius: 12px; padding: 12px 16px; }
-  .srv-card .nv-btn { justify-self: start; }
-
-  @media (max-width: 640px) { .srv-cols { grid-template-columns: 1fr; } .srv-head { gap: 12px; } }
+  .srv-note { line-height: 1.8; background: #eef3f6; border-radius: 12px; padding: 10px 14px; margin-top: 10px; }
+  .srv-foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: auto; padding-top: 14px; border-top: 1px solid #e6ebf0; }
+  .srv-foot .price { font-size: 14px; font-weight: 600; color: #0e3a63; }
+  .srv-foot .nv-btn { min-height: 44px; padding: 0 26px; font-size: 15px; display: inline-flex; align-items: center; }
+  .srv-more summary:focus-visible { outline: 2px solid #18766a; outline-offset: 2px; border-radius: 6px; }
+  /* الاستشارة: الكرت الوحيد الكحلي، بعرض الصف */
+  .srv-card.top { grid-column: 1 / -1; background: #0e3a63; border-color: #0e3a63; color: #e9f3f8; }
+  .srv-card.top .ic { background: rgb(61 183 166 / 18%); color: #3db7a6; }
+  .srv-card.top .lede, .srv-card.top .srv-more, .srv-card.top .srv-more b { color: rgb(233 243 248 / 82%); }
+  .srv-card.top .srv-more summary, .srv-card.top .srv-foot .price { color: #7fd8cb; }
+  .srv-card.top .srv-note { background: rgb(255 255 255 / 8%); }
+  .srv-card.top .srv-foot { border-top-color: rgb(255 255 255 / 14%); }
+  @media (min-width: 760px) {
+    .srv-card.top { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: 'ic h2 foot' 'ic lede foot' 'ic more foot';
+      column-gap: 20px; row-gap: 6px; align-items: start; padding: 26px 28px; }
+    .srv-card.top .ic { grid-area: ic; margin: 0; } .srv-card.top h2 { grid-area: h2; } .srv-card.top .lede { grid-area: lede; }
+    .srv-card.top .srv-more { grid-area: more; }
+    .srv-card.top .srv-foot { grid-area: foot; align-self: center; flex-direction: column; align-items: stretch; text-align: center; border: 0; padding: 0; margin: 0; }
+  }
 </style>

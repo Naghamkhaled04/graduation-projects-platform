@@ -48,7 +48,7 @@ const strip = [...CATEGORIES].sort((a, b) => b.n - a.n).slice(0, TOP).map((c) =>
   .nv-strip { display: flex; gap: 10px; height: clamp(240px, 34vw, 360px); overflow: hidden; }
   .nv-strip__panel {
     position: relative; flex: 1 1 0; min-width: 62px; border-radius: 18px; overflow: hidden;
-    text-decoration: none; background: #efe6d8; border: 0.8px solid #d9dee5;
+    text-decoration: none; background: #e3ebf0; border: 0.8px solid #d9dee5;
     transition: flex-grow .45s cubic-bezier(.22,1,.36,1), border-color .3s;
   }
   .nv-strip__panel.is-open { flex-grow: 4.2; border-color: #3db7a6; }
@@ -59,7 +59,7 @@ const strip = [...CATEGORIES].sort((a, b) => b.n - a.n).slice(0, TOP).map((c) =>
 
   .nv-strip__body {
     position: absolute; inset-inline: 12px; bottom: 12px; display: grid; gap: 2px;
-    background: rgba(26,22,19,.82); color: #fbfdfe; backdrop-filter: blur(6px);
+    background: rgba(10, 36, 72, .85); color: #fbfdfe; backdrop-filter: blur(6px);
     border-radius: 14px; padding: 12px 16px; opacity: 0; transform: translateY(8px);
     transition: opacity .3s .1s, transform .35s .1s;
   }

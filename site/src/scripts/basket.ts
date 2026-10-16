@@ -14,6 +14,13 @@ export function mountBasket(root: ParentNode = document) {
   const list = box.querySelector<HTMLElement>('.list')!;
   const total = box.querySelector<HTMLElement>('.total')!;
   const fabN = fab.querySelector<HTMLElement>('span')!;
+  const tip = root.querySelector<HTMLElement>('.btoast');
+  let tipT = 0;
+  // الإضافة ما بتفتح السلة: إشعار صغير + زر السلة بينبض، والسلة بتفتح بس لما تكبسي عليها
+  const added = (nm: string) => {
+    if (tip) { tip.textContent = `انضافت للسلة ✓ ${nm}`; tip.hidden = false; clearTimeout(tipT); tipT = window.setTimeout(() => (tip.hidden = true), 2200); }
+    fab.classList.remove('pop'); void fab.offsetWidth; fab.classList.add('pop');
+  };
 
   let bag: Record<string, Line> = {};
   try { bag = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch { /* فاضية */ }
@@ -40,7 +47,7 @@ export function mountBasket(root: ParentNode = document) {
       const b = (e.target as HTMLElement).closest<HTMLElement>('.add'); if (!b) return;
       const el = b.closest<HTMLElement>('.nv-card')!, id = el.dataset.id!;
       bag[id] = { id, nm: el.dataset.nm!, p: Number(el.dataset.price) || 0, img: el.dataset.img || '', n: (bag[id]?.n ?? 0) + 1 };
-      save(); paint(); box.hidden = false;
+      save(); paint(); added(el.dataset.nm!);
       b.textContent = '✓'; setTimeout(() => (b.textContent = 'أضف'), 1000);
     }));
 

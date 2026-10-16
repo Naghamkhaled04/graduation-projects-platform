@@ -31,8 +31,8 @@ const linked = PRODUCTS.filter((p) => usedBy(p.id).length).length;
 
         <div>
           <div class="nv-bar">
-            <input id="q" type="search" placeholder="ابحث… (ESP32، حساس، محرك)" autocomplete="off" enterkeyhint="search" />
-            <select id="sort">
+            <input id="q" type="search" aria-label="ابحث بالقطع" placeholder="ابحث… (ESP32، حساس، محرك)" autocomplete="off" enterkeyhint="search" />
+            <select id="sort" aria-label="ترتيب القطع">
               <option value="">الترتيب الافتراضي</option>
               <option value="p">الأرخص أولاً</option>
               <option value="-p">الأغلى أولاً</option>
@@ -55,6 +55,7 @@ const linked = PRODUCTS.filter((p) => usedBy(p.id).length).length;
 </Base>
 
 <script>
+  import { readState, toQuery } from '../../scripts/storeurl.js';
   const ar = (n: number) => n.toLocaleString('ar-EG');
   const grid = document.getElementById('grid')!;
   const all = [...grid.querySelectorAll<HTMLElement>('.nv-card')];
@@ -85,10 +86,13 @@ const linked = PRODUCTS.filter((p) => usedBy(p.id).length).length;
       matched.forEach((el) => grid.appendChild(el));
     }
     render();
+    history.replaceState(null, '', location.pathname + toQuery({ q: q.value, sort: dir, only }) + location.hash);
   }
 
-  const pre = new URLSearchParams(location.search).get('q');
-  if (pre) q.value = pre;
+  const st = readState(location.search);
+  if (st.q) q.value = st.q;
+  if (st.sort && [...sort.options].some((o) => o.value === st.sort)) sort.value = st.sort;
+  onlyp.checked = st.only;
 
   let deb = 0;
   q.addEventListener('input', () => { clearTimeout(deb); deb = window.setTimeout(filter, 180); });

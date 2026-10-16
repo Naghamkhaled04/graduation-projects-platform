@@ -14,6 +14,9 @@ export function mountCart(root: HTMLElement) {
     extras.forEach((e) => (extraOn[e.k] = false));
     const q = <T extends HTMLElement>(s: string) => root.querySelector<T>(s)!;
     const items = q('.items'), extrasEl = root.querySelector<HTMLElement>('.extras');
+    // البدائل مطوية؛ بنتذكر المفتوح لأن السلة بتنرسم من جديد مع كل كبسة
+    const openAlts = new Set<string>();
+    root.addEventListener('toggle', (e) => { const d = e.target as HTMLDetailsElement; if (!d.dataset?.part) return; if (d.open) openAlts.add(d.dataset.part); else openAlts.delete(d.dataset.part); }, true);
 
     function render() {
       items.innerHTML = parts.map((p) => {
@@ -30,10 +33,10 @@ export function mountCart(root: HTMLElement) {
             </div>
             <div class="pr">${AR((sel.live ?? sel.p) * st.qty)} د.أ<small>${AR(sel.live ?? sel.p)} للقطعة</small></div>
           </div>
-          ${st.on && multi ? `<div class="alts"><div class="altlbl">بدائل متاحة</div>${p.opts.map((o) => `
+          ${st.on && multi ? `<details class="alts" data-part="${p.id}"${openAlts.has(p.id) ? ' open' : ''}><summary class="altlbl">بدائل (${AR(p.opts.length - 1)})</summary><div class="altl">${p.opts.map((o) => `
             <button type="button" class="alt ${o.k === st.pick ? 'on' : ''}" data-pick="${p.id}:${o.k}">
               <span class="rad"></span><span class="an">${esc(o.nm)}<span class="ad">${esc(o.d)}</span></span><span class="ap">${AR(o.p)} د.أ</span>
-            </button>`).join('')}</div>` : ''}
+            </button>`).join('')}</div></details>` : ''}
         </div>`;
       }).join('');
       if (extrasEl) extrasEl.innerHTML = extras.map((e) => `

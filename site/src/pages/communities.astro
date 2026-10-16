@@ -111,6 +111,8 @@ import { svg } from '../data/icons';
     const slug = p?.university ? uniSlug(p.university) : null;
     const box = document.getElementById('my-uni')!;
     box.hidden = false;
+    // الطالب المسجّل بجامعة بيشوف مجتمعاته أول، وكروت الشرح بتنزل تحتها
+    if (slug) { const how = document.querySelector('.how'); if (how) document.querySelector('.spaces')?.after(how); }
     box.innerHTML = slug
       ? `<h3>مجتمعك</h3><p class="c-note">أنت مسجّل بـ${esc(p!.university!)}.</p><a class="c-btn" href="/c/${slug}">${svg('chat', 15)} ادخل مجتمع جامعتك</a>`
       : `<h3>انضم لمجتمع جامعتك</h3><p class="c-note">حدّد جامعتك بملفك وبتنضم تلقائياً. بعدها بتقدر:</p>

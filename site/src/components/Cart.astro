@@ -84,7 +84,12 @@ const data = JSON.stringify({ parts: linked, extras: linkedExtras, project, wa: 
   .cart .qty span { min-width: 26px; text-align: center; font-weight: 700; font-size: 14px; }
   .cart .pr { text-align: end; font-weight: 700; white-space: nowrap; }
   .cart .pr small { display: block; font-weight: 400; font-size: 11.5px; color: var(--fg-2); }
-  .cart .alts { margin-top: 14px; padding-top: 14px; border-top: 1px dashed rgba(14, 58, 99,.15); display: grid; gap: 6px; }
+  .cart .alts { margin-top: 12px; padding-top: 10px; border-top: 1px dashed rgba(14, 58, 99,.15); }
+  .cart .alts summary { cursor: pointer; list-style: none; display: inline-flex; align-items: center; gap: 6px; padding: 4px 0; font-weight: 500; color: var(--green); }
+  .cart .alts summary::-webkit-details-marker { display: none; }
+  .cart .alts summary::after { content: '＋'; color: var(--orange); } .cart .alts[open] summary::after { content: '−'; }
+  .cart .alts summary:focus-visible { outline: 2px solid #18766a; outline-offset: 2px; border-radius: 6px; }
+  .cart .altl { display: grid; gap: 6px; margin-top: 8px; }
   .cart .altlbl, .cart .lbl { font-size: 12.5px; color: var(--fg-2); margin-bottom: 2px; }
   .cart .alt, .cart .addrow { display: flex; align-items: center; gap: 12px; text-align: start; width: 100%; font: 400 14px var(--font); color: var(--green); background: var(--cream); border: 1px solid transparent; border-radius: 14px; padding: 10px 14px; cursor: pointer; transition: border-color .2s, background .2s; }
   .cart .alt:hover, .cart .addrow:hover { border-color: rgba(61, 183, 166,.5); }

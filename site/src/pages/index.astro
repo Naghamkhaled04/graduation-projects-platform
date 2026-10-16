@@ -1,7 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
 import { intro } from '../data/intro';
-const { hero, idea, goal, team, why, competitions, port } = intro;
+const { hero, idea, goal, team, why, notDo, competitions, port } = intro;
 const Ex = '<span class="ex">مثال · عبّيه</span>';
 ---
 
@@ -55,6 +55,8 @@ const Ex = '<span class="ex">مثال · عبّيه</span>';
         <div class="why">
           {why.map((w) => (<div><b class="silk">{w.k}</b><h3>{w.h}</h3><p>{w.p}</p></div>))}
         </div>
+        <h3 class="comp-h">شو ما بنعمله</h3>
+        <ul class="nodo">{notDo.map((t) => <li>{t}</li>)}</ul>
         <h3 class="comp-h">شاركنا في</h3>
         <ul class="comps">
           {competitions.map((c) => (<li><span class="silk">{c.year}</span><b>{c.name}</b><span>{c.result}</span>{c.example && <Fragment set:html={Ex} />}</li>))}
@@ -148,6 +150,7 @@ const Ex = '<span class="ex">مثال · عبّيه</span>';
     .why { display: grid; gap: 22px; margin-top: 10px; }
     .why h3 { font-size: 22px; margin: 2px 0 4px; }
     .comp-h { margin-top: 40px; font-size: 18px; color: var(--in-fg); }
+    .nodo { margin: 10px 0 0; padding-inline-start: 20px; display: grid; gap: 6px; color: var(--in-fg2); line-height: 1.9; }
     .comps { list-style: none; padding: 0; margin: 10px 0 0; display: grid; gap: 8px; }
     .comps li { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; padding: 12px 0; border-top: 1px solid color-mix(in srgb, var(--in-muted) 30%, transparent); }
     .comps b { font-weight: 600; }

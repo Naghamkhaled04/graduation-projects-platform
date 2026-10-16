@@ -307,6 +307,20 @@ create table if not exists public.uni_replies (
 
 create index if not exists uni_replies_post on public.uni_replies (post_id, created_at);
 
+-- منشورات زي لينكد إن: لحد ٤ صور (روابط من Storage) وعدّاد إعجابات.
+-- alter عشان تنضاف على قاعدة قايمة كمان
+alter table public.uni_posts add column if not exists images text[] not null default '{}'
+  check (coalesce(array_length(images, 1), 0) <= 4);
+
+alter table public.uni_posts add column if not exists like_count int not null default 0;
+
+create table if not exists public.post_likes (
+  post_id    uuid not null references public.uni_posts(id) on delete cascade,
+  user_id    uuid not null default auth.uid() references public.profiles(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (post_id, user_id)
+);
+
 create table if not exists public.uni_moderators (
   user_id    uuid not null default auth.uid() references public.profiles(id) on delete cascade,
   uni        text not null,
@@ -350,11 +364,31 @@ begin
   return null;
 end; $$;
 
+drop trigger if exists uni_replies_count on public.uni_replies;
+
 create trigger uni_replies_count
 after insert or delete on public.uni_replies
 for each row execute function public.bump_reply_count();
 
+-- عدّاد الإعجابات يُحدَّث تلقائياً
+create or replace function public.bump_like_count() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  update public.uni_posts
+     set like_count = greatest(0, like_count + case when tg_op = 'INSERT' then 1 else -1 end)
+   where id = coalesce(new.post_id, old.post_id);
+  return null;
+end; $$;
+
+drop trigger if exists post_likes_count on public.post_likes;
+
+create trigger post_likes_count
+after insert or delete on public.post_likes
+for each row execute function public.bump_like_count();
+
 -- ============ الصلاحيات ============
+
+alter table public.post_likes     enable row level security;
 
 alter table public.uni_posts      enable row level security;
 
@@ -402,6 +436,36 @@ drop policy if exists "replies delete" on public.uni_replies;
 create policy "replies delete" on public.uni_replies for delete to authenticated
   using (user_id = auth.uid()
     or exists (select 1 from public.uni_posts p where p.id = post_id and public.is_moderator_of(p.uni)));
+
+drop policy if exists "likes read own" on public.post_likes;
+-- الإعجابات: كل واحد بيشوف إعجاباته، وبيعجب بمنشور معتمد مرة وحدة، وبيشيل إعجابه
+create policy "likes read own" on public.post_likes for select to authenticated
+  using (user_id = auth.uid());
+
+drop policy if exists "likes insert" on public.post_likes;
+create policy "likes insert" on public.post_likes for insert to authenticated
+  with check (user_id = auth.uid()
+    and exists (select 1 from public.uni_posts p where p.id = post_id and p.status = 'approved'));
+
+drop policy if exists "likes delete own" on public.post_likes;
+create policy "likes delete own" on public.post_likes for delete to authenticated
+  using (user_id = auth.uid());
+
+-- صور المنشورات: عامة للقراءة، وكل طالب بيرفع بمجلده بس (حد ١.٥ ميغا للصورة)
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('post-images', 'post-images', true, 1572864, array['image/jpeg','image/webp','image/png'])
+on conflict (id) do nothing;
+
+drop policy if exists "post images read" on storage.objects;
+create policy "post images read" on storage.objects for select using (bucket_id = 'post-images');
+
+drop policy if exists "post images upload own folder" on storage.objects;
+create policy "post images upload own folder" on storage.objects for insert to authenticated
+  with check (bucket_id = 'post-images' and (storage.foldername(name))[1] = auth.uid()::text);
+
+drop policy if exists "post images delete own" on storage.objects;
+create policy "post images delete own" on storage.objects for delete to authenticated
+  using (bucket_id = 'post-images' and (storage.foldername(name))[1] = auth.uid()::text);
 
 drop policy if exists "mods read" on public.uni_moderators;
 -- المشرفون: القائمة ظاهرة، والطلب من صاحبه، والاعتماد من الأدمن فقط

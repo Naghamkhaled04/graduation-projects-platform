@@ -32,6 +32,8 @@ export async function gate(host: HTMLElement, be: Backend, msg = 'سجّل دخ�
 export const demoBanner = (be: Backend) => be.mode === 'local'
   ? `<div class="c-demo">وضع تجريبي: بياناتك محفوظة بمتصفحك فقط ولا يراها أحد. الحفظ المشترك يشتغل لما تُفعَّل قاعدة البيانات (<code>docs/community-backend.md</code>).</div>` : '';
 
-/** شارة «فريق المنصة» جنب اسم أي حساب أدمن */
+/** شارة الليدر جنب الاسم: TFC لأدمن المنصة، وسفير الجامعة لليدرها */
 export const adminBadge = (isAdmin: boolean) =>
-  isAdmin ? '<span class="c-team" title="حساب من فريق المنصة">★ فريق المنصة</span>' : '';
+  isAdmin ? '<span class="c-team" title="فريق TFC، إدارة المنصة">★ TFC</span>' : '';
+export const ambBadge = (uniShort: string) =>
+  `<span class="c-team amb" title="ليدر مجتمع الجامعة">سفير ${esc(uniShort)}</span>`;

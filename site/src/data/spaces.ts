@@ -31,10 +31,13 @@ export const ALL_SPACES: Space[] = [
 export function linkMentions(escaped: string): string {
   return escaped.replace(/@([\p{L}A-Za-z]{2,24})/gu, (m, tag: string) => {
     const t = tag.toLowerCase();
+    // الليدرز: أدمن المنصة وسفير الجامعة
+    if (t === 'tfc') return '<a class="ment lead" dir="ltr" href="/contact">@TFC</a>';
+    if (tag === 'السفير') return '<span class="ment lead" dir="rtl">@السفير</span>';
     const u = UNIVERSITIES.find(
       (x) => x.abbr.toLowerCase() === t || x.short === tag || x.name.includes(tag),
     );
-    return u ? `<a class="ment" href="/c/${u.slug}">@${u.abbr}</a>` : m;
+    return u ? `<a class="ment" dir="ltr" href="/c/${u.slug}">@${u.abbr}</a>` : m;
   });
 }
 

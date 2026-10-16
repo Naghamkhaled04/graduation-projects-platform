@@ -1,4 +1,5 @@
 import { UNIVERSITIES } from '../data/universities';
+import { dataUrlToBlob } from './img';
 
 /** مجتمع جامعة: منشورات الطلاب وردودها، ومشرف من نفس الجامعة */
 export interface Post {
@@ -6,7 +7,10 @@ export interface Post {
   title: string; body: string; status: 'pending' | 'approved' | 'rejected'; created_at: string; replies: number;
   /** لمنشورات موعد التسليم */
   due?: string | null;
+  /** صور المنشور (لحد ٤) وإعجاباته، وجامعة الكاتب تحت اسمه زي لينكد إن */
+  images?: string[]; like_count?: number; liked?: boolean; author_uni?: string | null;
 }
+export const MAX_IMAGES = 4;
 export interface Reply { id: string; post_id: string; user_id: string; author?: string; body: string; created_at: string; mine: boolean }
 export type PostKind = 'question' | 'showcase' | 'partner' | 'resource' | 'deadline' | 'request';
 
@@ -37,7 +41,9 @@ export interface Communities {
   /** عدد الأعضاء المنشور لكل جامعة */
   counts(): Promise<Record<string, number>>;
   posts(uni: string): Promise<Post[]>;
-  addPost(uni: string, kind: PostKind, title: string, body: string, due?: string | null): Promise<void>;
+  addPost(uni: string, kind: PostKind, title: string, body: string, due?: string | null, images?: string[]): Promise<void>;
+  /** إعجاب أو إلغاؤه */
+  toggleLike(postId: string): Promise<void>;
   /** منشورات لم يرها الطالب بعد (مواعيد وردود على منشوراته) */
   unseen(uni: string): Promise<Post[]>;
   markSeen(uni: string): Promise<void>;
@@ -57,18 +63,30 @@ export interface Communities {
   setModerator(uni: string, userId: string, status: 'active' | 'rejected'): Promise<void>;
 }
 
-interface LocalState { posts: Post[]; replies: Reply[]; mod: string[] }
+interface LocalState { posts: Post[]; replies: Reply[]; mod: string[]; likes?: string[] }
 class LocalCommunities implements Communities {
   mode = 'local' as const; private key = 'communities.local.v1';
   private st(): LocalState { try { const s = JSON.parse(localStorage.getItem(this.key) || 'null'); if (s) return s; } catch { /* جديد */ } return { posts: [], replies: [], mod: [] }; }
   private put(s: LocalState) { localStorage.setItem(this.key, JSON.stringify(s)); }
   private me() { try { return JSON.parse(localStorage.getItem('community.demo.v1') || 'null')?.me ?? null; } catch { return null; } }
   async counts() { const u = this.me()?.university; return u ? { [u]: 1 } : {}; }
-  async posts(uni: string) { const s = this.st(); return s.posts.filter((p) => p.uni === uni).map((p) => ({ ...p, replies: s.replies.filter((r) => r.post_id === p.id).length })).reverse(); }
-  async addPost(uni: string, kind: PostKind, title: string, body: string, due?: string | null) {
+  async posts(uni: string) {
+    const s = this.st(), liked = new Set(s.likes ?? []);
+    return s.posts.filter((p) => p.uni === uni).map((p) => ({ ...p, replies: s.replies.filter((r) => r.post_id === p.id).length,
+      liked: liked.has(p.id), like_count: liked.has(p.id) ? 1 : 0 })).reverse();
+  }
+  async addPost(uni: string, kind: PostKind, title: string, body: string, due?: string | null, images: string[] = []) {
     const { t, b } = check(title, body), s = this.st();
-    s.posts.push({ id: crypto.randomUUID(), uni, user_id: 'me', author: this.me()?.display_name ?? 'أنت', kind, title: t, body: b, status: 'pending', created_at: new Date().toISOString(), replies: 0, due: due || null });
-    this.put(s);
+    if (images.length > MAX_IMAGES) throw new Error('الحد الأقصى ٤ صور');
+    s.posts.push({ id: crypto.randomUUID(), uni, user_id: 'me', author: this.me()?.display_name ?? 'أنت', author_uni: this.me()?.university ?? null,
+      kind, title: t, body: b, status: 'pending', created_at: new Date().toISOString(), replies: 0, due: due || null, images });
+    // ponytail: الصور بالوضع التجريبي بتنحفظ بالمتصفح (حد التخزين ~٥ ميغا)، والسحابي بيرفعها لـStorage
+    try { this.put(s); } catch { throw new Error('مساحة المتصفح امتلت: جرّب صور أقل'); }
+  }
+  async toggleLike(postId: string) {
+    const s = this.st(), l = new Set(s.likes ?? []);
+    if (l.has(postId)) l.delete(postId); else l.add(postId);
+    s.likes = [...l]; this.put(s);
   }
   async unseen(uni: string) { const seen = localStorage.getItem('com.seen.' + uni) ?? ''; return (await this.posts(uni)).filter((p) => p.status === 'approved' && p.created_at > seen); }
   async markSeen(uni: string) { localStorage.setItem('com.seen.' + uni, new Date().toISOString()); }
@@ -78,7 +96,7 @@ class LocalCommunities implements Communities {
     const s = this.st(); s.replies.push({ id: crypto.randomUUID(), post_id: postId, user_id: 'me', author: this.me()?.display_name ?? 'أنت', body: b, created_at: new Date().toISOString(), mine: true }); this.put(s);
   }
   async canModerate(uni: string) { return this.me()?.role === 'admin' || this.st().mod.includes(uni); }
-  async moderators() { return []; }
+  async moderators(uni: string) { const me = this.me(); return me && this.st().mod.includes(uni) ? [{ id: 'me', name: me.display_name as string }] : []; }
   async moderate(id: string, status: 'approved' | 'rejected') { const s = this.st(); const p = s.posts.find((x) => x.id === id); if (p) p.status = status; this.put(s); }
   async removeReply(id: string) { const s = this.st(); s.replies = s.replies.filter((r) => r.id !== id); this.put(s); }
   async applyModerator(uni: string) { const s = this.st(); if (!s.mod.includes(uni)) s.mod.push(uni); this.put(s); }
@@ -98,13 +116,27 @@ class CloudCommunities implements Communities {
     return Object.fromEntries((r.data ?? []).map((x: any) => [x.uni, Number(x.n)]));
   }
   async posts(uni: string) {
-    const r = this.need(await this.sb.from('uni_posts').select('*,profiles(display_name)').eq('uni', uni).order('created_at', { ascending: false }).limit(60));
-    return (r as any[]).map((p) => ({ ...p, author: p.profiles?.display_name, replies: p.reply_count ?? 0 }));
+    const r = this.need(await this.sb.from('uni_posts').select('*,profiles(display_name,university)').eq('uni', uni).order('created_at', { ascending: false }).limit(60)) as any[];
+    const u = await this.uid();
+    const mine = u && r.length ? new Set(((await this.sb.from('post_likes').select('post_id').eq('user_id', u).in('post_id', r.map((p) => p.id))).data ?? []).map((x: any) => x.post_id)) : new Set();
+    return r.map((p) => ({ ...p, author: p.profiles?.display_name, author_uni: p.profiles?.university ?? null, replies: p.reply_count ?? 0, liked: mine.has(p.id) }));
   }
-  async addPost(uni: string, kind: PostKind, title: string, body: string, due?: string | null) {
+  async addPost(uni: string, kind: PostKind, title: string, body: string, due?: string | null, images: string[] = []) {
     const { t, b } = check(title, body);
-    if (!(await this.uid())) throw new Error('AUTH');
-    this.need(await this.sb.from('uni_posts').insert({ uni, kind, title: t, body: b, due: due || null }));
+    const u = await this.uid(); if (!u) throw new Error('AUTH');
+    if (images.length > MAX_IMAGES) throw new Error('الحد الأقصى ٤ صور');
+    const urls: string[] = [];
+    for (const d of images) {
+      const path = `${u}/${crypto.randomUUID()}.jpg`;
+      this.need(await this.sb.storage.from('post-images').upload(path, await dataUrlToBlob(d), { contentType: 'image/jpeg' }));
+      urls.push(this.sb.storage.from('post-images').getPublicUrl(path).data.publicUrl);
+    }
+    this.need(await this.sb.from('uni_posts').insert({ uni, kind, title: t, body: b, due: due || null, images: urls }));
+  }
+  async toggleLike(postId: string) {
+    const u = await this.uid(); if (!u) throw new Error('AUTH');
+    const had = (await this.sb.from('post_likes').select('post_id').eq('post_id', postId).eq('user_id', u)).data?.length;
+    this.need(had ? await this.sb.from('post_likes').delete().eq('post_id', postId).eq('user_id', u) : await this.sb.from('post_likes').insert({ post_id: postId }));
   }
   async unseen(uni: string) {
     const seen = localStorage.getItem('com.seen.' + uni) ?? new Date(Date.now() - 6048e5).toISOString();

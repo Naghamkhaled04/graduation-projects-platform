@@ -1,13 +1,14 @@
 ---
 import { DOMAINS } from '../data/taxonomy';
 import { svg } from '../data/icons';
+import { WHATSAPP } from '../data/config';
 const { compact = false } = Astro.props;
 ---
 
 <div class:list={['bot', { sm: compact }]} id="bot" hidden>
   <button type="button" class="bubble" aria-label="مستشار المشاريع"><span class="ic" set:html={svg('chat', 20)}></span><span class="tx">احكيلي فكرتك</span></button>
   <section class="win" hidden aria-label="مستشار المشاريع">
-    <header><b>مستشار المشاريع</b><small>اسحبني من هون</small><button type="button" class="x" aria-label="إغلاق">×</button></header>
+    <header><b>مستشار المشاريع</b><small>اسحبني من هون</small><a class="wa" href={`https://wa.me/${WHATSAPP}`} target="_blank" rel="noopener" aria-label="راسلنا على واتساب"><Fragment set:html={svg('phone', 15)} /> واتساب</a><button type="button" class="x" aria-label="إغلاق">×</button></header>
     <div class="msgs" aria-live="polite"></div>
     <div class="quick"></div>
     <form class="in"><input type="text" placeholder="اكتب فكرتك بجملة أو اثنتين…" autocomplete="off" maxlength="300" /><button type="submit" aria-label="إرسال">←</button></form>
@@ -48,7 +49,7 @@ const { compact = false } = Astro.props;
   place(); addEventListener('resize', place);
   const drag = (handle: HTMLElement, onTap?: () => void) => {
     let sx = 0, sy = 0, ox = 0, oy = 0, moved = false, on = false;
-    handle.addEventListener('pointerdown', (e) => { if ((e.target as HTMLElement).closest('.x')) return; on = true; moved = false; sx = e.clientX; sy = e.clientY; ox = pos.x; oy = pos.y; handle.setPointerCapture(e.pointerId); });
+    handle.addEventListener('pointerdown', (e) => { if ((e.target as HTMLElement).closest('.x, .wa')) return; on = true; moved = false; sx = e.clientX; sy = e.clientY; ox = pos.x; oy = pos.y; handle.setPointerCapture(e.pointerId); });
     handle.addEventListener('pointermove', (e) => { if (!on) return; const dx = e.clientX - sx, dy = e.clientY - sy; if (!moved && Math.hypot(dx, dy) < 5) return; moved = true; pos.x = ox + dx; pos.y = oy + dy; place(); });
     handle.addEventListener('pointerup', () => { if (!on) return; on = false; if (moved) { try { localStorage.setItem(KEY, JSON.stringify(pos)); } catch { /* اختياري */ } } else onTap?.(); });
   };
@@ -226,6 +227,9 @@ const { compact = false } = Astro.props;
   }
   .bot header { display: flex; align-items: center; gap: 10px; padding: 14px 18px; background: var(--green); color: var(--cream); cursor: grab; touch-action: none; user-select: none; }
   .bot header b { font-size: 15px; } .bot header small { opacity: .6; font-size: 11.5px; margin-inline-end: auto; }
+  /* واتساب جوّا المساعد: بالموبايل هو الزر العائم الوحيد */
+  .bot header .wa { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 500; text-decoration: none; color: inherit; padding: 6px 11px; border-radius: 999px; background: rgba(61, 183, 166, .18); }
+  .bot header .wa:focus-visible { outline: 2px solid #3db7a6; outline-offset: 2px; }
   .bot .x { border: 0; background: rgba(255,255,255,.14); color: var(--cream); width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-size: 17px; }
   .bot .msgs { flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 8px; }
   .bot .m { max-width: 92%; padding: 10px 14px; border-radius: 18px; font-size: 14px; line-height: 1.8; }

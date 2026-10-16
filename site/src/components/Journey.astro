@@ -35,6 +35,11 @@ const PATH = 'M1100 140 C 930 140 980 330 780 330 S 590 130 430 250 S 330 440 10
         </g>
       </g>
     </svg>
+
+    <!-- الموبايل: الخطوات قائمة قصيرة بدل مشهد التمرير الطويل -->
+    <ol class="jr-list">
+      {steps.map((s) => <li><b>{s.t}</b><span>{s.d}</span></li>)}
+    </ol>
   </div>
 </section>
 
@@ -117,5 +122,20 @@ const PATH = 'M1100 140 C 930 140 980 330 780 330 S 590 130 430 250 S 330 440 10
   .jr .st.on circle.o { fill: var(--orange); stroke: var(--orange); stroke-opacity: 1; filter: drop-shadow(0 0 10px rgba(61, 183, 166, 0.7)); }
   .jr .st.on text { opacity: 1; }
   .jr .led { animation: jrblink 1.2s steps(2) infinite; }
+  .jr-list { display: none; }
+  @media (max-width: 760px) {
+    .jr { height: auto; }
+    .jr-stage { position: relative; height: auto; display: block; padding: 88px 24px 76px; }
+    .jr .map, .jr .word, .jr-title p { display: none; }
+    .jr-title { position: static; padding: 0; margin-bottom: 28px; }
+    .jr-list { display: grid; gap: 0; list-style: none; margin: 0 auto; padding: 0; max-width: 420px; counter-reset: s; position: relative; z-index: 2; }
+    .jr-list li { counter-increment: s; position: relative; display: grid; gap: 3px; padding: 0 0 26px; padding-inline-start: 56px; }
+    .jr-list li::before { content: counter(s, arabic-indic); position: absolute; inset-inline-start: 0; top: -2px; width: 38px; height: 38px; border-radius: 50%;
+      display: grid; place-items: center; font-weight: 700; background: var(--orange); color: #fff; box-shadow: 0 0 14px rgba(61, 183, 166, .55); }
+    /* خط بيوصل الخطوات: نفس فكرة الطريق، بشكل عمودي */
+    .jr-list li:not(:last-child)::after { content: ''; position: absolute; inset-inline-start: 18px; top: 40px; bottom: 2px; width: 2px;
+      background: repeating-linear-gradient(currentColor 0 6px, transparent 6px 12px); opacity: .3; }
+    .jr-list b { font-size: 20px; } .jr-list span { font-size: 15px; opacity: .8; line-height: 1.7; }
+  }
   @keyframes jrblink { 50% { opacity: 0.25; } }
 </style>

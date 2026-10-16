@@ -26,5 +26,6 @@ import { WHATSAPP } from '../data/config';
   .wafab:hover, .wafab:focus-visible { gap: 10px; padding: 0 20px; }
   .wafab:hover .t, .wafab:focus-visible .t { max-width: 90px; opacity: 1; }
   .wafab .i { display: inline-flex; }
-  @media (max-width: 640px) { .wafab { right: 14px; bottom: calc(16px + var(--bnav, 0px)); height: 50px; } }
+  /* بالموبايل والتابلت (لما يكون في شريط تحت) زر عائم واحد بس: المساعد، وواتساب جوّاه */
+  @media (max-width: 1023px) { .wafab { display: none; } }
 </style>

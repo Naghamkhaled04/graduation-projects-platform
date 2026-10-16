@@ -44,7 +44,7 @@ const items = productsOf(c.cat).sort((a, b) => a.p - b.p);
             <span class="cnt" id="cnt"></span>
           </div>
 
-          <div class="nv-grid" id="grid">
+          <div class="nv-grid nv-grid--cat" id="grid">
             {items.map((p) => <ProdCard p={p} used={usedBy(p.id)} />)}
           </div>
           <p class="none" id="none" hidden>ما لقينا قطعة بهالاسم.</p>
@@ -64,6 +64,8 @@ const items = productsOf(c.cat).sort((a, b) => a.p - b.p);
   const q = document.getElementById('q') as HTMLInputElement;
   const sort = document.getElementById('sort') as HTMLSelectElement;
   const cnt = document.getElementById('cnt')!, none = document.getElementById('none')!;
+  // القسم الحالي بيبيّن بنص شريط الأقسام (الموبايل) أو قائمتها (الكمبيوتر)
+  document.querySelector('.nv-side a.on')?.scrollIntoView({ block: 'nearest', inline: 'center' });
 
   function apply() {
     const t = q.value.trim().toLowerCase();

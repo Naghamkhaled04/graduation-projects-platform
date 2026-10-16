@@ -139,15 +139,25 @@
 
 @media (max-width: 900px) {
   .nv-layout { grid-template-columns: minmax(0, 1fr); } /* minmax: شريط الأقسام الأفقي ما بيوسّع الصفحة */
-  .nv-side { position: static; max-height: none; min-width: 0; }
-  .nv-side ul { display: flex; gap: 6px; overflow-x: auto; max-height: none; padding-bottom: 4px; }
-  .nv-side a { flex: none; white-space: nowrap; }
+  /* الأقسام شريط شرائح ثابت تحت الهيدر؛ الخلفية بتمتد لعرض الشاشة بالـbox-shadow بدون ما توسّع الصفحة */
+  .nv-side { position: sticky; top: 62px; z-index: 40; min-width: 0; max-height: none; padding: 10px 0; border: 0; border-radius: 0;
+    background: rgb(238 243 246 / 94%); box-shadow: 0 0 0 100vmax rgb(238 243 246 / 94%); clip-path: inset(0 -100vmax -1px);
+    border-bottom: 1px solid rgb(14 58 99 / 8%); backdrop-filter: blur(8px); }
+  .nv-side h2 { display: none; }
+  .nv-side ul { display: flex; gap: 8px; overflow-x: auto; max-height: none; scrollbar-width: none; overscroll-behavior-x: contain; }
+  .nv-side ul::-webkit-scrollbar { display: none; }
+  .nv-side a { flex: none; white-space: nowrap; min-height: 40px; padding: 0 14px; border-radius: 999px; background: #fff;
+    box-shadow: inset 0 0 0 1px rgb(14 58 99 / 12%); }
+  .nv-side a.on { box-shadow: none; }
 }
 @media (max-width: 640px) {
   .nv { padding: 84px 0 72px; }
   .nv-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
   .nv-cats { grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); }
-  .nv-bar .cnt { width: 100%; }
+  /* البحث سطر كامل، والترتيب والعدد سطر تحته */
+  .nv-bar input { flex: 1 1 100%; }
+  .nv-bar select { flex: 1; }
+  .nv-bar .cnt { flex: none; }
 }
 
 /* لمسة أخضر من هوية موقعنا داخل المتجر: للقطع المربوطة بمشاريعنا */
@@ -213,6 +223,7 @@
 .nv-card__media:has(img.img-off) .nv-card__ic { display: grid; }
 .nv-card__body { display: flex; flex-direction: column; gap: 6px; padding: 12px 14px 14px; flex: 1; min-width: 0; }
 .nv-card__tag { align-self: flex-start; font-size: 12px; color: #4a6380; }
+.nv-grid--cat .nv-card__tag { display: none; } /* جوّا القسم اسمه مكرر على كل كرت */
 .nv-card__title { font-size: 14.5px; font-weight: 600; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
 .nv-card__title a { color: #0e3a63; text-decoration: none; } .nv-card__title a:hover { color: #18766a; }
 .nv-card__used { align-self: flex-start; font-size: 12px; line-height: 1.5; padding: 3px 10px; border-radius: 999px; background: rgba(61, 183, 166, .14); color: #18766a;

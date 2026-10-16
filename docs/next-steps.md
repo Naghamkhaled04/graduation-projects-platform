@@ -15,6 +15,11 @@
    - نشيل سجل التشغيل «> LINK … READY».
    - «٥٠ فكرة مشروع جاهزة» تنحسب من البيانات (هلأ ٩٨).
 
+## نسخة المعاينة على السيرفر
+- نسختنا مرفوعة على `http://beta.projects.tfs.ink` (المجلد `~/beta-site`)، ومخفية عن جوجل بـ`robots.txt` وهيدر noindex.
+- **HTTPS لسا ناقص:** acme.sh ما قدر يتحقق، لأنه مسار `/.well-known/acme-challenge` بيرجّع 404 على هالـsubdomain (وعلى projects.tfs.ink كمان). وAutoSSL مش مفعّل بالحساب. نجرّب التحقق بالـDNS، أو نسأل Namecheap.
+- لتحديث النسخة: `npm run build` وبعدين نرفع `site/dist` لـ`~/beta-site` (لازم نحافظ على `.htaccess` و`robots.txt`).
+
 ## قبل الإطلاق
 - رقم واتساب حقيقي بـ`site/src/data/config.ts` (هلأ `962790000000`).
 - ربط Supabase: `docs/supabase-setup.sql` + مفتاحين بـCloudflare Pages + حساب أدمن باسم The Four Coders.

@@ -4,9 +4,8 @@ import '../../styles/store.css';
 import Basket from '../../components/Basket.astro';
 import HeroBoards from '../../components/HeroBoards.astro';
 import Boards from '../../components/Boards.astro';
-import ProdCard from '../../components/ProdCard.astro';
 import CatStrip from '../../components/CatStrip.astro';
-import { CATEGORIES, PRODUCTS, FEATURED, SERVICES, ar } from '../../data/storecats';
+import { CATEGORIES, PRODUCTS, SERVICES, ar } from '../../data/storecats';
 import { usedBy } from '../../data/projectparts';
 import { svg } from '../../data/icons';
 import { WHATSAPP } from '../../data/config';
@@ -30,14 +29,6 @@ const linked = PRODUCTS.filter((p) => usedBy(p.id).length).length;
           {CATEGORIES.slice(0, 8).map((c) => <a href={`/store/${c.slug}`}><Fragment set:html={svg(c.icon, 16)} />{c.cat}</a>)}
           <a class="all" href="/store/all">كل الأقسام</a>
         </nav>
-      </section>
-
-      <section class="nv-sec">
-        <h2>قطع بيبلّش فيها الكل</h2>
-        <p>أرخص خيار من كل قسم أساسي.</p>
-        <div class="nv-grid">
-          {FEATURED.map((p) => <ProdCard p={p} used={usedBy(p.id)} />)}
-        </div>
       </section>
 
       <Boards />

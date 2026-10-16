@@ -1,12 +1,14 @@
 ---
 import Base from '../layouts/Base.astro';
 import '../styles/auth.css';
+import AuthArt from '../components/AuthArt.astro';
 import { UNIVERSITIES } from '../data/universities';
 ---
 
 <Base title="حساب جديد — مشاريع" description="أنشئ حسابك بخطوتين: طالب جامعي ببريد جامعتك، أو ضيف." isPublic>
   <main class="auth">
     <div class="box" id="j"><p class="c-note">جارٍ التحميل…</p></div>
+    <AuthArt />
   </main>
 </Base>
 
@@ -42,8 +44,7 @@ import { UNIVERSITIES } from '../data/universities';
     <div class="brand"><b>مشاريع</b><span>حساب جديد بخطوتين</span></div>
       <nav class="tabs">
         <a href="/login${location.search}" class="${MODE === 'login' ? 'on' : ''}">تسجيل الدخول</a>
-        <a href="/join${location.search}" class="${MODE === 'join' ? 'on' : ''}">إنشاء حساب جديد</a>
-        <a href="#" id="tab-forgot">استعادة كلمة المرور</a>
+        <a href="/join${location.search}" class="${MODE === 'join' ? 'on' : ''}">حساب جديد</a>
       </nav>
     <div class="card">
       <div class="steps"><i class="${stepOn >= 1 ? 'on' : ''}"></i><i class="${stepOn >= 2 ? 'on' : ''}"></i></div>

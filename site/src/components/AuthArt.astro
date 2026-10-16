@@ -1,0 +1,35 @@
+---
+// لوحة البوردة بصفحتي الدخول والتسجيل: نفس قصة آخر صفحة التعريف ("شبّك حالك.")، وضوء حالة بيتبع الفورم.
+interface Props { line?: string }
+const { line = 'منصة مشاريع التخرج لطلاب الحاسوب وإنترنت الأشياء.' } = Astro.props;
+---
+
+<aside class="auth-art" aria-hidden="true">
+  <svg class="art-board" viewBox="0 0 420 300">
+    <rect x="10" y="10" width="400" height="280" rx="22" fill="#0d4d6b" stroke="#3db7a6" stroke-opacity=".35" stroke-width="2" />
+    <g fill="none" stroke="#3db7a6" stroke-opacity=".28" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M60 60 H150 V110 H210" /><path d="M60 240 H120 V190 H210" /><path d="M240 60 V100 H300" />
+      <path d="M250 250 V200 H320" /><path d="M150 150 H90 V200" /><path d="M300 150 H340" />
+    </g>
+    <g fill="#e3c25a" opacity=".75">
+      <circle cx="60" cy="60" r="6" /><circle cx="60" cy="240" r="6" /><circle cx="240" cy="60" r="6" /><circle cx="250" cy="250" r="6" /><circle cx="90" cy="200" r="6" />
+    </g>
+    <rect x="160" y="105" width="110" height="90" rx="8" fill="#071a33" />
+    <g fill="#d9dde2">{[0, 1, 2, 3, 4, 5].map((i) => <><rect x={172 + i * 16} y="96" width="6" height="10" rx="1" /><rect x={172 + i * 16} y="194" width="6" height="10" rx="1" /></>)}</g>
+    <!-- منفذ الـUSB على طرف البوردة، مواجه للفورم -->
+    <g class="art-usb">
+      <rect x="352" y="118" width="62" height="64" rx="6" fill="#c5ccd6" />
+      <rect x="370" y="132" width="44" height="36" rx="3" fill="#071a33" />
+      <rect x="378" y="144" width="30" height="12" rx="2" fill="#3a4660" class="art-slot" />
+    </g>
+    <circle class="art-led" cx="330" cy="230" r="9" />
+  </svg>
+  <p class="art-h">شبّك حالك.</p>
+  <p class="art-p">{line}</p>
+</aside>
+
+<script>
+  import { initAuthLed } from '../scripts/authled.js';
+  const main = document.querySelector<HTMLElement>('main.auth');
+  if (main) initAuthLed(main);
+</script>

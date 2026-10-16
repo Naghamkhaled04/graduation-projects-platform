@@ -1,11 +1,13 @@
 ---
 import Base from '../layouts/Base.astro';
 import '../styles/auth.css';
+import AuthArt from '../components/AuthArt.astro';
 ---
 
 <Base title="تسجيل الدخول — مشاريع" description="ادخل لحسابك بالبريد أو رقم موبايلك." isPublic>
   <main class="auth">
     <div class="box" id="lg"><p class="c-note">جارٍ التحميل…</p></div>
+    <AuthArt />
   </main>
 </Base>
 
@@ -26,8 +28,7 @@ import '../styles/auth.css';
       <div class="brand"><b>مشاريع</b><span>ادخل لحسابك</span></div>
       <nav class="tabs">
         <a href="/login${location.search}" class="${MODE === 'login' ? 'on' : ''}">تسجيل الدخول</a>
-        <a href="/join${location.search}" class="${MODE === 'join' ? 'on' : ''}">إنشاء حساب جديد</a>
-        <a href="#" id="tab-forgot">استعادة كلمة المرور</a>
+        <a href="/join${location.search}" class="${MODE === 'join' ? 'on' : ''}">حساب جديد</a>
       </nav>
       <div class="card">
         <h1>تسجيل الدخول</h1>

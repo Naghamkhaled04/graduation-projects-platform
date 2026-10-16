@@ -24,6 +24,7 @@ addEventListener('error', function (e) { onImgError(e.target); }, true);
 addEventListener('DOMContentLoaded', function () { document.querySelectorAll('img').forEach(function (i) { if (i.complete && !i.naturalWidth && i.getAttribute('src')) onImgError(i); }); });`;
 const path = Astro.url.pathname.replace(/\/$/, '');
 const chrome = !bare && !['/admin', '/login', '/join'].includes(path); // صفحات الدخول نظيفة: بلا مساعد وواتساب فوق الحقول
+const store = path.startsWith('/store'); // بالمتجر زر عائم واحد (السلة): الواتساب جوّا السلة والمساعد أيقونة بس
 ---
 
 <!doctype html>
@@ -48,8 +49,8 @@ const chrome = !bare && !['/admin', '/login', '/join'].includes(path); // صفح
   <body>
     {!bare && <Header />}
     <slot />
-    {chrome && <ChatAdvisor />}
-    {chrome && <WhatsAppFab />}
+    {chrome && <ChatAdvisor compact={store} />}
+    {chrome && !store && <WhatsAppFab />}
     {chrome && <Footer />}
 
     <script is:inline>

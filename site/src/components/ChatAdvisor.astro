@@ -1,9 +1,10 @@
 ---
 import { DOMAINS } from '../data/taxonomy';
 import { svg } from '../data/icons';
+const { compact = false } = Astro.props;
 ---
 
-<div class="bot" id="bot" hidden>
+<div class:list={['bot', { sm: compact }]} id="bot" hidden>
   <button type="button" class="bubble" aria-label="مستشار المشاريع"><span class="ic" set:html={svg('chat', 20)}></span><span class="tx">احكيلي فكرتك</span></button>
   <section class="win" hidden aria-label="مستشار المشاريع">
     <header><b>مستشار المشاريع</b><small>اسحبني من هون</small><button type="button" class="x" aria-label="إغلاق">×</button></header>
@@ -34,7 +35,10 @@ import { svg } from '../data/icons';
 
   /* ---------- سحب البالون/النافذة ---------- */
   const KEY = 'bot.pos.v1';
-  let pos = { x: 20, y: innerHeight - 170 };
+  // بالمتجر: فوق زر السلة على اليمين، بعيد عن أزرار "أضف" اللي على يسار الكروت
+  let pos = root.classList.contains('sm')
+    ? { x: innerWidth - 60, y: innerHeight - 140 - (document.querySelector<HTMLElement>('.bnav')?.offsetHeight ?? 0) }
+    : { x: 20, y: innerHeight - 170 };
   try { const s = JSON.parse(localStorage.getItem(KEY) || 'null'); if (s) pos = s; } catch { /* اختياري */ }
   const place = () => {
     pos.x = Math.min(Math.max(8, pos.x), innerWidth - (bubble.offsetWidth || 70) - 8); pos.y = Math.min(Math.max(70, pos.y), innerHeight - 70 - (document.querySelector<HTMLElement>('.bnav')?.offsetHeight ?? 0));
@@ -241,5 +245,6 @@ import { svg } from '../data/icons';
   .bot .in { display: flex; gap: 6px; padding: 10px 12px; border-top: 1px solid rgba(14, 58, 99,.08); }
   .bot .in input { flex: 1; font: 400 14px var(--font); padding: 10px 14px; border-radius: 999px; border: 1px solid rgba(14, 58, 99,.18); background: #fff; color: var(--green); outline: none; } .bot .in input:focus { border-color: var(--orange); }
   @media (max-width: 640px) { .bot .bubble .tx { display: none; } .bot .bubble { padding: 13px; } }
+  .bot.sm .bubble .tx { display: none; } .bot.sm .bubble { padding: 13px; }
   .bot .in button { width: 40px; border: 0; border-radius: 50%; background: var(--green); color: var(--cream); cursor: pointer; font-size: 16px; }
 </style>

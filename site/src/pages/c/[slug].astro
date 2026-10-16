@@ -213,7 +213,7 @@ const { u } = Astro.props;
       // بوست الفريق المثبّت: بيفتح المساحة بدل ما تبلّش فاضية
       const pin = PINNED[kind] ?? PINNED.uni;
       const pinned = (!filter && !uniFilter) ? card({
-        id: 'pin', av: 'T', who: 'TFC', team: true, sub: 'فريق منصة مشاريع', when: '', badge: '',
+        id: 'pin', av: 'T', who: 'The Four Coders', team: true, sub: 'فريق منصة مشاريع', when: '', badge: '',
         kind: '', title: pin.title.replaceAll('{uni}', uni), body: esc(pin.body.replaceAll('{uni}', uni)).replace(/\n/g, '<br>'), foot: '', pin: true,
       }) : '';
 

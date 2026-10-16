@@ -30,7 +30,7 @@ export async function gate(host: HTMLElement, be: Backend, msg = 'سجّل دخ�
   return null;
 }
 export const demoBanner = (be: Backend) => be.mode === 'local'
-  ? `<div class="c-demo">وضع تجريبي: بياناتك محفوظة بمتصفحك فقط ولا يراها أحد. الحفظ المشترك يشتغل لما تُفعَّل قاعدة البيانات (<code>docs/community-backend.md</code>).</div>` : '';
+  ? `<div class="c-demo">نسخة تجريبية: بياناتك محفوظة على جهازك بس، وما حدا غيرك بيشوفها.</div>` : '';
 
 /** شارة الليدر جنب الاسم: TFC لأدمن المنصة، وسفير الجامعة لليدرها */
 export const adminBadge = (isAdmin: boolean) =>

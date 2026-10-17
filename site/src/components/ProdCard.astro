@@ -1,14 +1,15 @@
 ---
-import { slugOf, ar } from '../data/storecats';
+import { slugOf, ar, imgFallback } from '../data/storecats';
 interface Props { p: { id: string; nm: string; cat: string; p: number; img: string }; used?: { id: string; t: string }[] }
 const { p, used = [] } = Astro.props;
+const IMG = '/img/part.svg';
 const href = `/store/${slugOf(p.cat)}#p-${p.id}`;
 ---
 
 <article class="nv-card" id={`p-${p.id}`} data-id={p.id} data-nm={p.nm} data-price={p.p} data-img={p.img}
   data-cat={p.cat} data-used={used.length} data-search={(p.nm + ' ' + p.cat).toLowerCase()}>
   <a class="nv-card__media" href={href}>
-    <img src={p.img} alt={p.nm} loading="lazy" decoding="async" width="240" height="240" />
+    <img src={p.img || IMG} alt={p.nm} onerror={imgFallback} loading="lazy" decoding="async" width="240" height="240" />
   </a>
   <div class="nv-card__body">
     <span class="nv-card__tag">{p.cat}</span>

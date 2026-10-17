@@ -38,17 +38,9 @@ const linked = PRODUCTS.filter((p) => usedBy(p.id).length).length;
         </div>
       </section>
 
-      <section class="nv-sec">
-        <h2>قطع بيبلّش فيها الكل</h2>
-        <p>أرخص خيار من كل قسم أساسي.</p>
-        <div class="nv-grid">
-          {FEATURED.map((p) => <ProdCard p={p} used={usedBy(p.id)} />)}
-        </div>
-      </section>
+      <CatStrip />
 
       <Boards />
-
-      <CatStrip />
 
       <section class="nv-sec">
         <h2>خدماتنا</h2>

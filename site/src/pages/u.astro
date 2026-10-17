@@ -47,7 +47,7 @@ import '../styles/community.css';
         ${bstats ? `<div class="kpi"><b>${ar(bstats.likes)}</b><span>${svg('heart', 14)} إعجاب</span></div>
         <div class="kpi"><b>${ar(bstats.visits)}</b><span>${svg('eye', 14)} زيارة</span></div>` : ''}
       </div>
-      ${b ? `<div class="c-card sec bcard"><div><h3>${esc(b.sign)}</h3><p class="c-note">مبناه بالمدينة · ${ar(b.projects.length)} مشاريع</p></div><a class="c-btn" href="/city?b=${encodeURIComponent(b.id)}">${svg('building', 15)} افتح مبناه</a></div>` : ''}
+
       <div class="c-card sec"><h3>المشاريع اللي شارك تجربته فيها</h3>
         ${fb.length ? fb.map((f) => `<div class="c-row"><span><a href="/projects/${f.project_id}">${esc(titleOf(f.project_id))}</a> <span class="c-stars">${stars(f.rating)}</span></span><span>${f.images.length ? svg('camera', 16) : ''}</span></div><p class="c-note">${esc(f.comment)}</p>`).join('') : '<p class="c-note">لا توجد تجارب معتمدة بعد.</p>'}
       </div>`;

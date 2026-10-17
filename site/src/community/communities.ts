@@ -50,6 +50,11 @@ export interface Communities {
   removeReply(id: string): Promise<void>;
   /** طلب أن يكون مشرفاً: يصل للأدمن ليوافق */
   applyModerator(uni: string, why: string): Promise<void>;
+
+  /** للأدمن: كل المنشورات المعلّقة بكل المساحات، ولوحة طلبات الإشراف */
+  allPending(): Promise<Post[]>;
+  modApplications(): Promise<{ uni: string; user_id: string; name: string; why: string | null; created_at: string }[]>;
+  setModerator(uni: string, userId: string, status: 'active' | 'rejected'): Promise<void>;
 }
 
 interface LocalState { posts: Post[]; replies: Reply[]; mod: string[] }
@@ -77,6 +82,9 @@ class LocalCommunities implements Communities {
   async moderate(id: string, status: 'approved' | 'rejected') { const s = this.st(); const p = s.posts.find((x) => x.id === id); if (p) p.status = status; this.put(s); }
   async removeReply(id: string) { const s = this.st(); s.replies = s.replies.filter((r) => r.id !== id); this.put(s); }
   async applyModerator(uni: string) { const s = this.st(); if (!s.mod.includes(uni)) s.mod.push(uni); this.put(s); }
+  async allPending() { return this.st().posts.filter((p) => p.status === 'pending'); }
+  async modApplications() { return []; }
+  async setModerator() {}
   /** للمعاينة فقط: تفعيل الإشراف بالوضع التجريبي */
   demoMod(uni: string, on: boolean) { const s = this.st(); s.mod = on ? [...new Set([...s.mod, uni])] : s.mod.filter((x) => x !== uni); this.put(s); }
 }
@@ -124,6 +132,17 @@ class CloudCommunities implements Communities {
   async applyModerator(uni: string, why: string) {
     if (!(await this.uid())) throw new Error('AUTH');
     this.need(await this.sb.from('uni_moderators').upsert({ uni, why: clean(why, 400), status: 'pending' }, { onConflict: 'uni,user_id' }));
+  }
+  async allPending() {
+    const r = this.need(await this.sb.from('uni_posts').select('*,profiles(display_name)').eq('status', 'pending').order('created_at').limit(200));
+    return (r as any[]).map((p) => ({ ...p, author: p.profiles?.display_name, replies: p.reply_count ?? 0 }));
+  }
+  async modApplications() {
+    const r = await this.sb.from('uni_moderators').select('uni,user_id,why,created_at,profiles(display_name)').eq('status', 'pending').order('created_at');
+    return (r.data ?? []).map((x: any) => ({ uni: x.uni, user_id: x.user_id, name: x.profiles?.display_name ?? 'طالب', why: x.why, created_at: x.created_at }));
+  }
+  async setModerator(uni: string, userId: string, status: 'active' | 'rejected') {
+    this.need(await this.sb.from('uni_moderators').update({ status }).eq('uni', uni).eq('user_id', userId));
   }
 }
 

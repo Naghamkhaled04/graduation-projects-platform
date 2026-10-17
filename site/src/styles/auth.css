@@ -57,3 +57,20 @@
   content: ''; position: absolute; inset-inline: 18%; bottom: -7px; height: 3px;
   border-radius: 3px; background: var(--orange);
 }
+
+/* قسم الطالب: مطوي لأنه اختياري — ما بدنا الصفحة تبيّن أطول مما هي */
+.auth .more { background: var(--cream); border-radius: 18px; margin-bottom: 16px; overflow: hidden; border: 1px solid transparent; transition: border-color .2s; }
+.auth .more[open] { border-color: rgba(15,61,62,.14); }
+.auth .more summary { cursor: pointer; padding: 14px 16px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; font-size: 14px; list-style: none; }
+.auth .more summary::-webkit-details-marker { display: none; }
+.auth .more summary::after { content: '＋'; margin-inline-start: auto; color: var(--orange); font-size: 17px; line-height: 1; }
+.auth .more[open] summary::after { content: '−'; }
+.auth .more summary span { color: var(--fg-2); font-size: 12.5px; }
+.auth .more .in { padding: 0 16px 14px; }
+.auth .more label:last-of-type { margin-bottom: 0; }
+
+/* نتيجة التعرّف على الجامعة من نطاق البريد */
+.auth .found { display: flex; align-items: center; gap: 7px; font-size: 13px; line-height: 1.7;
+  background: #f3e2a9; border-radius: 12px; padding: 9px 13px; margin: -6px 0 14px; }
+.auth .found.ok { background: var(--mint); color: var(--green); }
+.auth .found b { font-weight: 600; }

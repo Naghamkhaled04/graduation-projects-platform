@@ -1,5 +1,6 @@
 ---
 import { projects, levels } from '../data/projects';
+import { SHOTS } from '../data/shots';
 import { DOMAINS, tagsOf } from '../data/taxonomy';
 import { svg } from '../data/icons';
 ---
@@ -30,6 +31,7 @@ import { svg } from '../data/icons';
         <a class="card" href={`/projects/${p.id}`} data-lvl={p.ln} data-tags={tagsOf(p.id).join('|')}>
           <div class="thumb">
             <canvas data-id={p.id} aria-hidden="true"></canvas>
+            {SHOTS.has(p.id) && <img class="shot" src={`/img/projects/${p.id}.jpg`} alt="" loading="lazy" decoding="async" width="1800" height="1005" />}
             <span class={`lvl ${p.l}`}>{p.ln}</span>
             {p.x && <span class="lock"><Fragment set:html={svg('lock', 13)} /> حصرية</span>}
           </div>
@@ -124,6 +126,10 @@ import { svg } from '../data/icons';
   .card:hover { transform: translateY(-8px); box-shadow: 0 0 0 1px rgba(232, 116, 59, 0.5), 0 0 40px rgba(232, 116, 59, 0.35), 0 24px 60px -20px rgba(232, 116, 59, 0.45); }
   .thumb { position: relative; aspect-ratio: 3 / 2; background: radial-gradient(120% 90% at 50% 100%, #e4d8c3 0%, var(--cream-2) 55%, var(--cream) 100%); }
   .thumb canvas { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; transition: opacity 0.6s; }
+  /* صورة المشروع بتغطي المجسم. اللي ما إله صورة بيضل مجسمه ظاهر */
+  .thumb .shot { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
+  .card:hover .shot { transform: scale(1.04); }
+  .thumb .shot { transition: transform .6s cubic-bezier(.2,.8,.2,1); }
   .thumb canvas.ready { opacity: 1; }
   .cbody { display: flex; flex-direction: column; flex: 1; padding: 22px 26px 26px; }
   .lvl { position: absolute; top: 16px; inset-inline-start: 16px; z-index: 2; font-size: 12px; padding: 4px 12px; border-radius: 999px; background: var(--mint); color: var(--green); }

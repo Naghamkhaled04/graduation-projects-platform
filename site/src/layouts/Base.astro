@@ -18,6 +18,8 @@ const { title, description = 'مشاريع تخرج لطلاب الحاسوب و
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta name="description" content={description} />
+    {/* وضع الخلفية وقت البناء: فحص بنظرة إنّ متغيّرات سوبابيس وصلت للنشر */}
+    <meta name="x-backend" content={import.meta.env.PUBLIC_SUPABASE_URL && import.meta.env.PUBLIC_SUPABASE_ANON_KEY ? 'cloud' : 'local'} />
     <title>{title}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

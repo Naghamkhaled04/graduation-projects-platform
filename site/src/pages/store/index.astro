@@ -4,9 +4,8 @@ import '../../styles/store.css';
 import Basket from '../../components/Basket.astro';
 import HeroBoards from '../../components/HeroBoards.astro';
 import Boards from '../../components/Boards.astro';
-import ProdCard from '../../components/ProdCard.astro';
 import CatStrip from '../../components/CatStrip.astro';
-import { CATEGORIES, PRODUCTS, FEATURED, SERVICES, ar } from '../../data/storecats';
+import { CATEGORIES, PRODUCTS, SERVICES, ar } from '../../data/storecats';
 import { usedBy } from '../../data/projectparts';
 import { svg } from '../../data/icons';
 import { WHATSAPP } from '../../data/config';
@@ -18,37 +17,23 @@ const linked = PRODUCTS.filter((p) => usedBy(p.id).length).length;
 <Base title="المتجر — مشاريع" description={`${ar(PRODUCTS.length)} قطعة إلكترونيات بأسعارها: متحكمات، حساسات، محركات، شاشات وأكثر.`}>
   <main class="nv">
     <div class="wrap">
-      <section class="nv-hero">
-        <div class="in">
-          <span class="k">المتجر</span>
-          <h1>كل قطع مشروعك، بمكان واحد</h1>
-          <p>
-            <b>{ar(PRODUCTS.length)} قطعة</b> بأسعارها مكتوبة قدامك، مقسّمة على <b>{ar(CATEGORIES.length)} قسم</b>.
-            و<b>{ar(linked)} قطعة</b> منها مربوطة بمشاريعنا، فبتعرف ليش بتشتريها وبأي مشروع بتنستعمل.
-          </p>
-          <form class="nv-search" action="/store/all">
-            <input type="search" name="q" placeholder="ابحث… (ESP32، حساس حرارة، محرك)" aria-label="ابحث بالمتجر" />
-            <button type="submit">ابحث</button>
-          </form>
-        </div>
-        <div class="nv-stats">
-          <div><b>{ar(PRODUCTS.length)}</b><span>قطعة</span></div>
-          <div><b>{ar(CATEGORIES.length)}</b><span>قسم</span></div>
-          <div><b>{ar(linked)}</b><span>مربوطة بمشاريعنا</span></div>
-        </div>
+      <section class="nv-find">
+        <h1>كل قطع مشروعك، بمكان واحد</h1>
+        <form class="nv-find__bar" action="/store/all" role="search">
+          <span class="nv-find__ic" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg></span>
+          <input type="search" name="q" placeholder="ابحث… ESP32، حساس حرارة، محرك" aria-label="ابحث بالمتجر" autocomplete="off" enterkeyhint="search" />
+          <button type="submit">ابحث</button>
+        </form>
+        <p class="nv-find__meta"><b>{ar(PRODUCTS.length)}</b> قطعة · <b>{ar(CATEGORIES.length)}</b> قسم · <b>{ar(linked)}</b> مربوطة بمشاريعنا</p>
+        <nav class="nv-chips" aria-label="الأقسام">
+          {CATEGORIES.slice(0, 8).map((c) => <a href={`/store/${c.slug}`}><Fragment set:html={svg(c.icon, 16)} />{c.cat}</a>)}
+          <a class="all" href="/store/all">كل الأقسام</a>
+        </nav>
       </section>
-
-      <section class="nv-sec">
-        <h2>قطع بيبلّش فيها الكل</h2>
-        <p>أرخص خيار من كل قسم أساسي.</p>
-        <div class="nv-grid">
-          {FEATURED.map((p) => <ProdCard p={p} used={usedBy(p.id)} />)}
-        </div>
-      </section>
-
-      <Boards />
 
       <CatStrip />
+
+      <Boards />
 
       <section class="nv-sec">
         <h2>خدماتنا</h2>

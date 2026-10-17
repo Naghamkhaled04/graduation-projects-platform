@@ -4,33 +4,64 @@ import Header from '../components/Header.astro';
 import ChatAdvisor from '../components/ChatAdvisor.astro';
 import WhatsAppFab from '../components/WhatsAppFab.astro';
 import Footer from '../components/Footer.astro';
+import guardSrc from '../scripts/guard.js?raw';
+import { inlineGuard } from '../scripts/guard-inline.js';
+import imgFallbackSrc from '../scripts/imgfallback.js?raw';
 
 interface Props {
   title: string;
   description?: string;
+  /** صفحة مفتوحة بدون تسجيل دخول */
+  isPublic?: boolean;
+  /** بدون الهيدر والمساعد والواتساب والفوتر (صفحة التعريف) */
+  bare?: boolean;
 }
-const { title, description = 'مشاريع تخرج لطلاب الحاسوب وإنترنت الأشياء: أفكار، قطع، وسلة جاهزة.' } = Astro.props;
+const { title, description = 'مشاريع تخرج لطلاب الحاسوب وإنترنت الأشياء: أفكار، قطع، وسلة جاهزة.', isPublic = false, bare = false } = Astro.props;
+const guard = inlineGuard(guardSrc);
+// صور مكسورة → صورة بديلة. capture عشان أخطاء الصور ما بتطلع لفوق؛ والـsweep بيلقط اللي فشلت قبل ما السكربت يشتغل
+const imgFallback = imgFallbackSrc.replace(/^export /gm, '') + `
+addEventListener('error', function (e) { onImgError(e.target); }, true);
+addEventListener('DOMContentLoaded', function () { document.querySelectorAll('img').forEach(function (i) { if (i.complete && !i.naturalWidth && i.getAttribute('src')) onImgError(i); }); });`;
+const path = Astro.url.pathname.replace(/\/$/, '');
+const chrome = !bare && !['/admin', '/login', '/join'].includes(path); // صفحات الدخول نظيفة: بلا مساعد وواتساب فوق الحقول
+const store = path.startsWith('/store'); // بالمتجر زر عائم واحد (السلة): الواتساب جوّا السلة والمساعد أيقونة بس
 ---
 
 <!doctype html>
 <html lang="ar" dir="rtl">
   <head>
     <meta charset="utf-8" />
+    {!isPublic && <script is:inline set:html={guard}></script>}
+    <script is:inline set:html={imgFallback}></script>
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta name="description" content={description} />
+    {/* وضع الخلفية وقت البناء: فحص بنظرة إنّ متغيّرات سوبابيس وصلت للنشر */}
+    <meta name="x-backend" content={import.meta.env.PUBLIC_SUPABASE_URL && import.meta.env.PUBLIC_SUPABASE_ANON_KEY ? 'cloud' : 'local'} />
     <title>{title}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
+    <!-- GSAP & ScrollTrigger — محرك الحركة السينمائية -->
+    <script is:inline src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script is:inline src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
   </head>
   <body>
-    <Header />
+    {!bare && <Header />}
     <slot />
-    {!['/city', '/admin'].includes(Astro.url.pathname.replace(/\/$/, '')) && <ChatAdvisor />}
-    {!['/city', '/admin'].includes(Astro.url.pathname.replace(/\/$/, '')) && <WhatsAppFab />}
-    {!['/city', '/admin'].includes(Astro.url.pathname.replace(/\/$/, '')) && <Footer />}
+    {chrome && <ChatAdvisor compact={store} />}
+    {chrome && !store && <WhatsAppFab />}
+    {chrome && <Footer />}
+
+    <script is:inline>
+      // تسجيل إضافة ScrollTrigger فور جاهزية الصفحة
+      if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
+        gsap.registerPlugin(ScrollTrigger);
+        // تكوين إعدادات افتراضية ناعمة
+        ScrollTrigger.config({ limitCallbacks: true, ignoreMobileResize: true });
+      }
+    </script>
   </body>
 </html>

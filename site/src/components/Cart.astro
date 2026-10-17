@@ -1,6 +1,6 @@
 ---
 import { WHATSAPP } from '../data/config';
-import { findProduct } from '../data/storelink';
+import { linkedProduct, partAlt } from '../data/storelink';
 import { slugOf } from '../data/storecats';
 
 interface Opt { k: string; nm: string; d: string; p: number; def?: boolean }
@@ -9,15 +9,22 @@ interface Extra { k: string; nm: string; d: string; p: number }
 interface Props { parts: Part[]; extras?: Extra[]; project: string }
 const { parts, extras = [], project } = Astro.props;
 // كل خيار يُربط بمنتجه الحقيقي بالمتجر إن وُجد، فالطالب يطلبه مباشرة
-const linked = parts.map((p) => ({
-  ...p,
-  opts: p.opts.map((o) => {
-    const prod = findProduct(o.nm);
-    return prod ? { ...o, url: `/store/${slugOf(prod.cat)}#p-${prod.id}`, live: prod.p, img: prod.img } : o;
-  }),
-}));
+const hrefOf = (prod: { id: string; cat: string }) => `/store/${slugOf(prod.cat)}#p-${prod.id}`;
+function link<T extends { nm: string; p: number }>(o: T) {
+  // نربط بس لما سعر القطعة بالمشروع نفس سعر المتجر، عشان سعر السطر ما يختلف عن المجموع
+  const prod = linkedProduct(o.nm);
+  if (prod && prod.p === o.p) return { ...o, url: hrefOf(prod), live: prod.p, img: prod.img };
+  // قطعة مش بالمتجر: بديلها أو قطعها من المتجر، مع ملاحظة للطالب
+  const alt = partAlt(o.nm);
+  if (!alt) return o;
+  const first = alt.items[0]?.prod;
+  if (first && alt.total === o.p) return { ...o, url: hrefOf(first), live: alt.total, img: first.img, note: alt.note };
+  return { ...o, note: alt.note };
+}
+const linked = parts.map((p) => ({ ...p, opts: p.opts.map(link) }));
+const linkedExtras = extras.map(link);
 const found = linked.reduce((n, p) => n + p.opts.filter((o: any) => o.url).length, 0);
-const data = JSON.stringify({ parts: linked, extras, project, wa: WHATSAPP });
+const data = JSON.stringify({ parts: linked, extras: linkedExtras, project, wa: WHATSAPP });
 ---
 
 <section class="cart" data-cart={data}>
@@ -56,18 +63,18 @@ const data = JSON.stringify({ parts: linked, extras, project, wa: WHATSAPP });
   .cart .cnt { font-size: 13px; color: var(--fg-2); }
   .cart .hint { color: var(--fg-2); margin: 6px 0 18px; }
   .cart .items { display: grid; gap: 12px; }
-  .cart .item { background: #fff; border-radius: 22px; padding: 18px; box-shadow: 0 0 0 1px rgba(15,61,62,.06), 0 16px 40px -26px rgba(15,61,62,.35); transition: opacity .25s; }
+  .cart .item { background: #fff; border-radius: 22px; padding: 18px; box-shadow: 0 0 0 1px rgba(14, 58, 99,.06), 0 16px 40px -26px rgba(14, 58, 99,.35); transition: opacity .25s; }
   .cart .item.off { opacity: .5; }
   .cart .row1 { display: flex; gap: 14px; align-items: flex-start; }
-  .cart .chk { flex: none; width: 24px; height: 24px; border-radius: 8px; border: 2px solid rgba(15,61,62,.25); background: transparent; display: grid; place-items: center; cursor: pointer; margin-top: 2px; transition: all .2s; }
+  .cart .chk { flex: none; width: 24px; height: 24px; border-radius: 8px; border: 2px solid rgba(14, 58, 99,.25); background: transparent; display: grid; place-items: center; cursor: pointer; margin-top: 2px; transition: all .2s; }
   .cart .chk svg { opacity: 0; }
-  .cart .chk.on { background: var(--orange); border-color: var(--orange); box-shadow: 0 0 14px rgba(232,116,59,.5); }
+  .cart .chk.on { background: var(--orange); border-color: var(--orange); box-shadow: 0 0 14px rgba(61, 183, 166,.5); }
   .cart .chk.on svg { opacity: 1; }
   .cart .mid { flex: 1; min-width: 0; }
   .cart .nm { font-weight: 700; font-size: 16px; }
   .cart .pimg { flex: none; width: 54px; height: 54px; border-radius: 14px; overflow: hidden; background: var(--cream); display: block; }
   .cart .pimg img { width: 100%; height: 100%; object-fit: contain; display: block; mix-blend-mode: multiply; }
-  .cart .plink { color: inherit; text-decoration: none; border-bottom: 1px dotted rgba(15,61,62,.35); }
+  .cart .plink { color: inherit; text-decoration: none; border-bottom: 1px dotted rgba(14, 58, 99,.35); }
   .cart .plink:hover { color: var(--orange); border-color: var(--orange); }
   .cart .plink i { font-style: normal; font-size: 12px; opacity: .55; }
   .cart .req { font-size: 11px; font-weight: 500; background: var(--mint); color: var(--green); padding: 2px 9px; border-radius: 999px; margin-inline-start: 8px; vertical-align: 1px; }
@@ -77,26 +84,33 @@ const data = JSON.stringify({ parts: linked, extras, project, wa: WHATSAPP });
   .cart .qty span { min-width: 26px; text-align: center; font-weight: 700; font-size: 14px; }
   .cart .pr { text-align: end; font-weight: 700; white-space: nowrap; }
   .cart .pr small { display: block; font-weight: 400; font-size: 11.5px; color: var(--fg-2); }
-  .cart .alts { margin-top: 14px; padding-top: 14px; border-top: 1px dashed rgba(15,61,62,.15); display: grid; gap: 6px; }
+  .cart .alts { margin-top: 12px; padding-top: 10px; border-top: 1px dashed rgba(14, 58, 99,.15); }
+  .cart .alts summary { cursor: pointer; list-style: none; display: inline-flex; align-items: center; gap: 6px; padding: 4px 0; font-weight: 500; color: var(--green); }
+  .cart .alts summary::-webkit-details-marker { display: none; }
+  .cart .alts summary::after { content: '＋'; color: var(--orange); } .cart .alts[open] summary::after { content: '−'; }
+  .cart .alts summary:focus-visible { outline: 2px solid #18766a; outline-offset: 2px; border-radius: 6px; }
+  .cart .altl { display: grid; gap: 6px; margin-top: 8px; }
   .cart .altlbl, .cart .lbl { font-size: 12.5px; color: var(--fg-2); margin-bottom: 2px; }
   .cart .alt, .cart .addrow { display: flex; align-items: center; gap: 12px; text-align: start; width: 100%; font: 400 14px var(--font); color: var(--green); background: var(--cream); border: 1px solid transparent; border-radius: 14px; padding: 10px 14px; cursor: pointer; transition: border-color .2s, background .2s; }
-  .cart .alt:hover, .cart .addrow:hover { border-color: rgba(232,116,59,.5); }
-  .cart .alt.on, .cart .addrow.on { background: #fff4ec; border-color: var(--orange); }
-  .cart .rad { flex: none; width: 16px; height: 16px; border-radius: 50%; border: 2px solid rgba(15,61,62,.3); position: relative; }
+  .cart .alt:hover, .cart .addrow:hover { border-color: rgba(61, 183, 166,.5); }
+  .cart .alt.on, .cart .addrow.on { background: #eef8f6; border-color: var(--orange); }
+  .cart .rad { flex: none; width: 16px; height: 16px; border-radius: 50%; border: 2px solid rgba(14, 58, 99,.3); position: relative; }
   .cart .rad.sq { border-radius: 5px; }
   .cart .on .rad { border-color: var(--orange); }
   .cart .on .rad::after { content: ''; position: absolute; inset: 2px; background: var(--orange); border-radius: inherit; }
   .cart .an { flex: 1; font-weight: 500; }
+  .cart .note { display: inline-block; margin-top: 6px; padding: 4px 10px; border-radius: 10px; background: #e8f5f2; color: #145f56; font-size: 12.5px; line-height: 1.6; }
+  .cart .ad.note { display: block; width: fit-content; color: #145f56; }
   .cart .ad { display: block; font-weight: 400; font-size: 12.5px; color: var(--fg-2); margin-top: 1px; line-height: 1.6; }
   .cart .ap { white-space: nowrap; font-weight: 700; font-size: 13.5px; }
   .cart .extras-wrap { margin-top: 26px; }
   .cart .extras { display: grid; gap: 6px; margin-top: 8px; }
-  .cart .total { margin-top: 26px; background: var(--green); color: var(--cream); border-radius: 24px; padding: 22px 24px; box-shadow: 0 0 0 1px rgba(232,116,59,.35), 0 0 40px rgba(232,116,59,.12); }
+  .cart .total { margin-top: 26px; background: var(--green); color: var(--cream); border-radius: 24px; padding: 22px 24px; box-shadow: 0 0 0 1px rgba(61, 183, 166,.35), 0 0 40px rgba(61, 183, 166,.12); }
   .cart .trow { display: flex; justify-content: space-between; padding: 6px 0; opacity: .85; }
   .cart .trow.big { font-size: 22px; font-weight: 700; opacity: 1; border-top: 1px solid rgba(255,255,255,.14); margin-top: 8px; padding-top: 14px; }
   .cart .order { margin-top: 16px; width: 100%; justify-content: space-between; border: 0; cursor: pointer; color: var(--green); }
   .cart .sendlist { margin-top: 10px; width: 100%; font: 500 14px var(--font); color: var(--cream); background: transparent; border: 1px solid rgba(255,255,255,.28); border-radius: 999px; padding: 11px 16px; cursor: pointer; transition: border-color .2s, background .2s; }
-  .cart .sendlist:hover { border-color: var(--orange); background: rgba(232,116,59,.16); }
+  .cart .sendlist:hover { border-color: var(--orange); background: rgba(61, 183, 166,.16); }
   .cart .fine { font-size: 12px; opacity: .6; margin-top: 12px; line-height: 1.7; }
   /* أهداف لمس 40px على الشاشات اللمسية بدون تغيير الشكل */
   @media (pointer: coarse) {

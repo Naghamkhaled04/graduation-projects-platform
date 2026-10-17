@@ -5,15 +5,23 @@ import { svg } from '../data/icons';
 
 <section class="bd" id="boards">
   <div class="container">
-    <button type="button" class="bd-toggle" id="bd-toggle" aria-expanded="false" aria-controls="bd-body">
+    <button type="button" class="bd-toggle" id="bd-toggle" aria-expanded="true" aria-controls="bd-body">
       <span class="tx">
-        <b>شو الفرق بين الألواح؟</b>
-        <small>Arduino · ESP32 · Raspberry Pi · Pico — شو بيقدر يعمل كل واحد، ووين بيفشل</small>
+        <b>شو الفرق بين المتحكمات والألواح؟</b>
+        <small>قبل ما تشتري: شو الفرق بين المتحكم والحاسوب، وشو بيقدر يعمل كل لوح ووين بيفشل</small>
       </span>
-      <span class="chev" aria-hidden="true">＋</span>
+      <span class="chev" aria-hidden="true">−</span>
     </button>
 
-    <div class="bd-wrap" id="bd-body" hidden>
+    <div class="bd-wrap" id="bd-body">
+    <div class="bd-pick" role="tablist" aria-label="ألواح التحكم">
+      {BOARDS.map((b, i) => (
+        <button type="button" class:list={['chip', { on: i === 1 }]} data-id={b.id} role="tab" aria-selected={i === 1}>
+          <b>{b.name}</b>
+          <span>{b.kind === 'حاسوب' ? 'حاسوب كامل' : 'متحكم دقيق'}</span>
+        </button>
+      ))}
+    </div>
     <div class="bd-main">
       <div class="bd-stage">
         <canvas aria-label="نموذج ثلاثي الأبعاد للوحة التحكم"></canvas>
@@ -51,14 +59,6 @@ import { svg } from '../data/icons';
       </div>
     </div>
 
-    <div class="bd-pick" role="tablist" aria-label="ألواح التحكم">
-      {BOARDS.map((b, i) => (
-        <button type="button" class:list={['chip', { on: i === 1 }]} data-id={b.id} role="tab" aria-selected={i === 1}>
-          <b>{b.name}</b>
-          <span>{b.kind === 'حاسوب' ? 'حاسوب كامل' : 'متحكم دقيق'}</span>
-        </button>
-      ))}
-    </div>
 
     <p class="bd-note">
       <Fragment set:html={svg('box', 15)} />
@@ -77,12 +77,17 @@ import { svg } from '../data/icons';
     // مطوي افتراضياً: المجسّم ما بيتحمّل إلا لما يفتحه الطالب
     const toggle = document.getElementById('bd-toggle')!, body = document.getElementById('bd-body')!;
     let started = false;
+    const begin = () => { if (!started) { started = true; start(); } };
+    // مفتوح من البداية: نشغّله لما يوصل الشاشة، مش فوراً، حتى ما نحمّل WebGL بلا داعي
+    if (!body.hidden) new IntersectionObserver((es, o) => es.forEach((e) => {
+      if (e.isIntersecting) { begin(); o.disconnect(); }
+    }), { rootMargin: '220px' }).observe(body);
     toggle.addEventListener('click', () => {
       const open = body.hidden;
       body.hidden = !open;
       toggle.setAttribute('aria-expanded', String(open));
       toggle.querySelector('.chev')!.textContent = open ? '−' : '＋';
-      if (open && !started) { started = true; start(); }
+      if (open) begin();
       if (open) body.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     });
   }
@@ -100,13 +105,27 @@ import { svg } from '../data/icons';
       cards.forEach((c) => { const on = c.dataset.id === id; c.hidden = !on; if (on) { c.classList.remove('in'); void c.offsetWidth; c.classList.add('in'); } });
       viewer.show(id as BoardId);
     };
-    chips.forEach((c) => c.addEventListener('click', () => pick(c.dataset.id!)));
+    // بيتنقّل بين الألواح لحاله ليبيّن إنها قابلة للتبديل — وبيوقف أول ما يتدخّل الطالب
+    let auto: number | undefined;
+    const stopAuto = () => { if (auto) { clearInterval(auto); auto = undefined; } root.querySelector('.bd-pick')!.classList.remove('auto'); };
+    const startAuto = () => {
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      root.querySelector('.bd-pick')!.classList.add('auto');
+      auto = window.setInterval(() => {
+        const i = chips.findIndex((c) => c.classList.contains('on'));
+        pick(chips[(i + 1) % chips.length].dataset.id!);
+      }, 2600);
+    };
+    chips.forEach((c) => c.addEventListener('click', () => { stopAuto(); pick(c.dataset.id!); }));
+    root.querySelector('.bd-stage')!.addEventListener('pointerdown', stopAuto);
+    startAuto();
 
     // أسهم الكيبورد بين الألواح
     root.querySelector('.bd-pick')!.addEventListener('keydown', (e) => {
       const k = (e as KeyboardEvent).key;
       if (k !== 'ArrowRight' && k !== 'ArrowLeft') return;
       const i = chips.findIndex((c) => c.classList.contains('on'));
+      stopAuto();
       const next = chips[(i + (k === 'ArrowLeft' ? 1 : chips.length - 1)) % chips.length];
       next.focus(); pick(next.dataset.id!);
     });
@@ -117,16 +136,19 @@ import { svg } from '../data/icons';
 <style>
   .bd { background: var(--cream); padding: 40px 0; position: relative; z-index: 1; }
   .bd-toggle { display: flex; align-items: center; justify-content: space-between; gap: 16px; width: 100%;
-    text-align: start; background: #fffdf9; border: 1px solid #e6dccd; border-radius: 18px;
+    text-align: start; background: #fbfdfe; border: 1px solid #d9dee5; border-radius: 18px;
     padding: 20px 24px; cursor: pointer; transition: border-color .25s, box-shadow .25s; font: inherit; color: inherit; }
-  .bd-toggle:hover { border-color: #fa7b19; box-shadow: 0 2px 8px rgb(26 22 19 / 7%), 0 22px 54px rgb(26 22 19 / 10%); }
+  .bd-toggle:hover { border-color: #3db7a6; box-shadow: 0 2px 8px rgb(11 18 48 / 7%), 0 22px 54px rgb(11 18 48 / 10%); }
   .bd-toggle .tx { display: grid; gap: 4px; }
   .bd-toggle b { font-size: clamp(17px, 2.2vw, 22px); }
-  .bd-toggle small { font-size: 13px; color: #7a7168; line-height: 1.7; }
-  .bd-toggle .chev { flex: none; width: 38px; height: 38px; border-radius: 50%; background: #fff1e3; color: #d9640b;
+  .bd-toggle small { font-size: 13px; color: #5f7084; line-height: 1.7; }
+  .bd-toggle .chev { flex: none; width: 38px; height: 38px; border-radius: 50%; background: #eaf6f4; color: #18766a;
     display: grid; place-items: center; font-size: 20px; }
   .bd-wrap { margin-top: 18px; animation: bdOpen .35s cubic-bezier(.22,1,.36,1); }
   .bd-wrap[hidden] { display: none; }
+  .bd-pick.auto .chip.on { animation: chipPulse 2.6s ease-in-out infinite; }
+  @keyframes chipPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(61, 183, 166,0); } 18% { box-shadow: 0 0 0 4px rgba(61, 183, 166,.18); } }
+  @media (prefers-reduced-motion: reduce) { .bd-pick.auto .chip.on { animation: none; } }
   @keyframes bdOpen { from { opacity: 0; transform: translateY(-8px); } }
   .bd-head { max-width: 62ch; margin-bottom: 34px; }
   .k { display: inline-block; font-size: 13px; background: var(--green); color: var(--cream); padding: 4px 14px; border-radius: 999px; margin-bottom: 12px; }
@@ -137,14 +159,14 @@ import { svg } from '../data/icons';
 
   .bd-stage { position: relative; min-height: 420px; border-radius: 30px; overflow: hidden;
     background: radial-gradient(120% 95% at 50% 105%, #e6dac6 0%, var(--cream-2) 60%, var(--cream) 100%);
-    box-shadow: inset 0 0 0 1px rgba(15,61,62,.07); }
+    box-shadow: inset 0 0 0 1px rgba(14, 58, 99,.07); }
   .bd-stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: grab; }
   .bd-stage canvas:active { cursor: grabbing; }
   .bd-hint { position: absolute; bottom: 14px; inset-inline-start: 18px; font-size: 12px; color: var(--fg-2); pointer-events: none; }
 
   .bd-info { position: relative; }
   .bd-card { background: #fff; border-radius: 30px; padding: clamp(20px, 3vw, 28px); height: 100%;
-    box-shadow: 0 0 0 1px rgba(15,61,62,.07), 0 26px 60px -40px rgba(15,61,62,.5); }
+    box-shadow: 0 0 0 1px rgba(14, 58, 99,.07), 0 26px 60px -40px rgba(14, 58, 99,.5); }
   .bd-card[hidden] { display: none; }
   .bd-card.in { animation: bdIn .42s cubic-bezier(.2,.8,.2,1); }
   @keyframes bdIn { from { opacity: 0; transform: translateY(14px); } }
@@ -155,7 +177,7 @@ import { svg } from '../data/icons';
   .badge { flex: none; font-size: 12px; font-weight: 500; background: var(--mint); color: var(--green); padding: 5px 12px; border-radius: 999px; }
 
   .specs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 18px; margin-bottom: 18px; }
-  .specs div { display: grid; gap: 2px; padding-bottom: 8px; border-bottom: 1px dashed rgba(15,61,62,.12); }
+  .specs div { display: grid; gap: 2px; padding-bottom: 8px; border-bottom: 1px dashed rgba(14, 58, 99,.12); }
   .specs dt { font-size: 11.5px; color: var(--fg-2); }
   .specs dd { font-size: 13.5px; line-height: 1.6; }
   .specs .pr { color: var(--orange); font-weight: 700; }
@@ -165,18 +187,18 @@ import { svg } from '../data/icons';
   .pros li { font-size: 13px; line-height: 1.65; padding-inline-start: 20px; position: relative; color: var(--fg-2); }
   .pros li::before { position: absolute; inset-inline-start: 0; top: 0; font-weight: 700; }
   .good li::before { content: '+'; color: #2f7d5c; }
-  .bad li::before { content: '−'; color: #b4553a; }
+  .bad li::before { content: '−'; color: #18766a; }
 
   .use { font-size: 14px; line-height: 1.9; color: var(--fg-2); background: var(--cream); border-radius: 16px; padding: 12px 16px; }
   .use b { color: var(--green); }
 
   .bd-pick { display: flex; gap: 8px; margin-top: 18px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
   .chip { flex: none; display: grid; gap: 1px; text-align: start; font: 400 13px var(--font); color: var(--green);
-    background: #fff; border: 1px solid rgba(15,61,62,.14); border-radius: 18px; padding: 11px 18px; cursor: pointer; transition: all .22s; }
+    background: #fff; border: 1px solid rgba(14, 58, 99,.14); border-radius: 18px; padding: 11px 18px; cursor: pointer; transition: all .22s; }
   .chip b { font-size: 14.5px; } .chip span { font-size: 11.5px; color: var(--fg-2); }
   .chip:hover { border-color: var(--orange); }
   .chip.on { background: var(--green); border-color: var(--green); color: var(--cream); }
-  .chip.on span { color: rgba(247,239,227,.7); }
+  .chip.on span { color: rgba(233, 243, 248,.7); }
 
   .bd-note { display: flex; align-items: center; gap: 10px; margin-top: 22px; font-size: 14.5px; line-height: 1.9; color: var(--fg-2); }
   .bd-note b { color: var(--green); }

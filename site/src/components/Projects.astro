@@ -2,31 +2,48 @@
 import { projects, levels } from '../data/projects';
 import { DOMAINS, tagsOf } from '../data/taxonomy';
 import { svg } from '../data/icons';
+
+interface Props {
+  /** بالرئيسية: عرض مختصر (أول N مشروع) بدون فلاتر، وزر لصفحة كل المشاريع */
+  limit?: number;
+}
+const { limit } = Astro.props;
+const H = limit ? 'h2' : 'h1'; // صفحة المشاريع لحالها: العنوان هو عنوان الصفحة
+const list = limit ? projects.slice(0, limit) : projects;
+const ar = (n: number) => n.toLocaleString('ar-EG');
 ---
 
-<section class="pj" id="projects">
-  <div class="container">
-    <h2>مشاريع جاهزة لتبدأ فيها</h2>
-    <p class="sub">الوصف والمكونات والتكلفة مجاناً. المسار التفصيلي بالاستشارة.</p>
+<section class="pj" id="projects" data-limit={limit}>
+  <div class="ambient-glow" style="top: 15%; right: 10%; width: 500px; height: 500px; background: radial-gradient(circle, rgba(61, 183, 166,0.12) 0%, transparent 70%);"></div>
+  <div class="ambient-glow" style="bottom: 20%; left: 5%; width: 600px; height: 600px; background: radial-gradient(circle, rgba(28, 95, 119,0.10) 0%, transparent 70%);"></div>
 
-    <div class="filterbar">
-      <label>المجال
+  <div class="container" style="position: relative; z-index: 2;">
+    <div class="pj-header">
+      <span class="eyebrow"><i class="dot"></i>كتالوج شامل</span>
+      <H>مشاريع جاهزة لتبدأ فيها فوراً</H>
+      <p class="sub">الوصف والمكونات والتكلفة مجاناً. المسار والمخططات وحلول التحديات بالاستشارة.</p>
+    </div>
+
+    {!limit && <div class="filterbar glass-panel">
+      <label>
+        <span>المجال</span>
         <select id="f-dom">
           <option value="">كل المجالات ({projects.length})</option>
           {DOMAINS.map((d) => <option value={d.k}>{d.k} ({projects.filter((p) => tagsOf(p.id).includes(d.k)).length})</option>)}
         </select>
       </label>
-      <label>المستوى
+      <label>
+        <span>المستوى</span>
         <select id="f-lvl">
           <option value="">كل المستويات</option>
           {levels.map((l) => <option value={l}>{l} ({projects.filter((p) => p.ln === l).length})</option>)}
         </select>
       </label>
-      <span class="count" id="f-count" aria-live="polite"></span>
-    </div>
+      <div class="count-badge" id="f-count" aria-live="polite"></div>
+    </div>}
 
     <div class="grid">
-      {projects.map((p) => (
+      {list.map((p) => (
         <a class="card" href={`/projects/${p.id}`} data-lvl={p.ln} data-tags={tagsOf(p.id).join('|')}>
           <div class="thumb">
             <canvas data-id={p.id} aria-hidden="true"></canvas>
@@ -37,15 +54,27 @@ import { svg } from '../data/icons';
             <h3>{p.t}</h3>
             <p>{p.d}</p>
             <div class="tags">{p.p.map((t) => <span>{t}</span>)}</div>
-  <div class="foot"><span class="go">التفاصيل ←</span></div>
+            <div class="foot">
+              <span class="go">استكشف التفاصيل <i class="arrow">←</i></span>
+            </div>
           </div>
         </a>
       ))}
     </div>
 
+    {limit && <div class="pj-more"><a class="pill" href="/projects"><span>شوف كل المشاريع ({ar(projects.length)})</span><i>←</i></a></div>}
+
     <div class="split">
-      <div class="l"><small>مجاني</small>الفكرة، المشكلة، المكونات، التكلفة.</div>
-      <div class="r"><small>٥ د.أ</small>المسار، المكتبات، مخطط التوصيل، وحلول التحديات.</div>
+      <div class="l">
+        <span class="badge-tier">مجاني بالكامل</span>
+        <h3>المحتوى الأساسي</h3>
+        <p>الفكرة الواضحة، تحليل المشكلة، قائمة المكونات المعتمدة، والتكلفة الدقيقة من كتالوج المورّد.</p>
+      </div>
+      <div class="r">
+        <span class="badge-tier premium">استشارة ٥ د.أ</span>
+        <h3>المسار والتنفيذ</h3>
+        <p>المسار البرمجي خطوة بخطوة، المكتبات المناسبة، مخطط التوصيل العملي، وحلول التحديات أمام اللجنة.</p>
+      </div>
     </div>
   </div>
 </section>
@@ -54,7 +83,9 @@ import { svg } from '../data/icons';
   import { initThumbs } from '../scripts/thumbs';
   import { loadRuntime, toCard } from '../projects/store';
 
-  // مشاريع الأدمن (قاعدة البيانات) فوق المشاريع الثابتة: تعديل / إضافة / إخفاء، بدون إعادة بناء الموقع
+  declare const gsap: any;
+  declare const ScrollTrigger: any;
+
   (async () => {
     const grid = document.querySelector<HTMLElement>('.pj .grid');
     const first = grid?.querySelector<HTMLElement>('.card');
@@ -69,79 +100,403 @@ import { svg } from '../data/icons';
       };
       rt.hidden.forEach((id) => grid?.querySelector<HTMLElement>(`.card canvas[data-id="${id}"]`)?.closest('.card')?.remove());
       rt.changed.forEach((d) => { const c = grid?.querySelector<HTMLElement>(`.card canvas[data-id="${d.id}"]`)?.closest<HTMLElement>('.card'); if (c) fill(c, toCard(d)); });
-      if (first && grid) rt.added.forEach((d) => { const c = first.cloneNode(true) as HTMLElement; c.classList.remove('in'); c.hidden = false; fill(c, toCard(d)); const cv = c.querySelector('canvas')!; cv.classList.remove('ready'); grid.prepend(c); });
+      const limited = grid?.closest<HTMLElement>('.pj')?.dataset.limit;
+      if (first && grid && !limited) rt.added.forEach((d) => { const c = first.cloneNode(true) as HTMLElement; c.classList.remove('in'); c.hidden = false; fill(c, toCard(d)); const cv = c.querySelector('canvas')!; cv.classList.remove('ready'); grid.prepend(c); });
     } catch (e) { console.warn(e); }
+
     initThumbs([...document.querySelectorAll<HTMLCanvasElement>('.pj .thumb canvas')]);
-    document.querySelectorAll<HTMLElement>('.pj .card').forEach((c) => setTimeout(() => c.classList.add('in'), 400));
+
+    // GSAP ScrollTrigger Batch Animation for Cards
+    if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
+      ScrollTrigger.batch('.pj .card', {
+        interval: 0.1,
+        batchMax: 6,
+        onEnter: (batch: HTMLElement[]) => {
+          gsap.fromTo(batch, 
+            { opacity: 0, y: 35, scale: 0.97 },
+            { opacity: 1, y: 0, scale: 1, duration: 0.7, stagger: 0.08, ease: 'power3.out', overwrite: 'auto' }
+          );
+        },
+        once: true
+      });
+    } else {
+      document.querySelectorAll<HTMLElement>('.pj .card').forEach((c) => c.classList.add('in'));
+    }
   })();
+
   // فلترة مركّبة بقائمتين: المجال + المستوى
   const selDom = document.getElementById('f-dom') as HTMLSelectElement, selLvl = document.getElementById('f-lvl') as HTMLSelectElement;
   const applyFilter = () => {
     let shown = 0; const total = document.querySelectorAll('.pj .card').length;
     document.querySelectorAll<HTMLElement>('.pj .card').forEach((k) => {
       const tags = (k.dataset.tags ?? '').split('|');
-      k.hidden = (!!selDom.value && !tags.includes(selDom.value)) || (!!selLvl.value && k.dataset.lvl !== selLvl.value);
-      if (!k.hidden) shown++;
+      const isVisible = (!selDom.value || tags.includes(selDom.value)) && (!selLvl.value || k.dataset.lvl === selLvl.value);
+      k.hidden = !isVisible;
+      if (isVisible) shown++;
     });
-    const c = document.getElementById('f-count'); if (c) c.textContent = selDom.value || selLvl.value ? `${shown.toLocaleString('ar-EG')} من ${total.toLocaleString('ar-EG')} مشروع` : '';
+    const c = document.getElementById('f-count');
+    if (c) {
+      if (selDom.value || selLvl.value) {
+        c.textContent = `${shown.toLocaleString('ar-EG')} من ${total.toLocaleString('ar-EG')} مشروع`;
+        c.classList.add('active');
+      } else {
+        c.textContent = '';
+        c.classList.remove('active');
+      }
+    }
+    // Re-refresh ScrollTrigger if present
+    if (typeof ScrollTrigger !== 'undefined') ScrollTrigger.refresh();
   };
-  selDom.addEventListener('change', applyFilter); selLvl.addEventListener('change', applyFilter);
-  // من المستشار: افتح المجال المطلوب
-  addEventListener('projects:filter', (e) => { const d = (e as CustomEvent).detail ?? {}; selDom.value = d.dom ?? ''; selLvl.value = d.lvl ?? ''; applyFilter(); });
-  const io = new IntersectionObserver(
-    (es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }),
-    { threshold: 0.1 },
-  );
-  const cards = document.querySelectorAll<HTMLElement>('.pj .card');
-  cards.forEach((c) => io.observe(c));
-  setTimeout(() => cards.forEach((c) => c.classList.add('in')), 3000);
+  // بالعرض المختصر (الرئيسية) ما في فلاتر
+  if (selDom && selLvl) { selDom.addEventListener('change', applyFilter); selLvl.addEventListener('change', applyFilter); }
+
+  addEventListener('projects:filter', (e) => {
+    const d = (e as CustomEvent).detail ?? {};
+    selDom.value = d.dom ?? '';
+    selLvl.value = d.lvl ?? '';
+    applyFilter();
+  });
 </script>
 
 <style>
-  .pj { background: var(--cream); padding: 110px 0; position: relative; z-index: 1; }
-  h2 { font-size: clamp(28px, 4vw, 48px); text-align: center; margin-bottom: 8px; }
-  .sub { text-align: center; color: var(--fg-2); margin-bottom: 34px; }
-  .filters { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 40px; }
-  .filterbar { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end; justify-content: center; margin-bottom: 38px; }
-  .filterbar label { display: grid; gap: 6px; font-size: 13px; color: var(--fg-2); }
-  .filterbar select { font: 500 15px var(--font); min-width: 210px; padding: 12px 40px 12px 16px; border-radius: 16px; border: 1px solid rgba(15,61,62,.2); background: #fff; color: var(--green); cursor: pointer; outline: none; appearance: none; -webkit-appearance: none; background-image: linear-gradient(45deg, transparent 50%, var(--green) 50%), linear-gradient(135deg, var(--green) 50%, transparent 50%); background-position: calc(100% - 22px) 55%, calc(100% - 16px) 55%; background-size: 6px 6px; background-repeat: no-repeat; }
-  [dir='rtl'] .filterbar select { background-position: 22px 55%, 16px 55%; padding: 12px 16px 12px 40px; }
-  .filterbar select:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(232,116,59,.2); }
-  .filterbar .count { font-size: 13px; color: var(--fg-2); padding-bottom: 14px; }
-  .chip { font: 500 14px var(--font); border: 1px solid rgba(15, 61, 62, 0.18); background: transparent; color: var(--green); padding: 8px 18px; border-radius: 999px; cursor: pointer; transition: all 0.25s; }
-  .chip small { opacity: 0.55; margin-inline-start: 4px; }
-  .chip.on { background: var(--green); color: var(--cream); border-color: var(--green); }
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 24px; }
-  .card {
-    position: relative; display: flex; flex-direction: column; text-decoration: none; padding: 0; border-radius: 28px; overflow: hidden;
-    background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(8px);
-    box-shadow: 0 0 0 1px rgba(15, 61, 62, 0.06), 0 20px 50px -20px rgba(15, 61, 62, 0.25);
-    opacity: 0; transform: translateY(36px);
-    transition: opacity 0.8s, transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.4s;
+  .pj {
+    background: var(--cream);
+    padding: clamp(80px, 12vw, 140px) 0 100px;
+    position: relative;
+    z-index: 1;
+    overflow: hidden;
   }
-  .card[hidden] { display: none; }
-  .card.in { opacity: 1; transform: none; }
-  .card:hover { transform: translateY(-8px); box-shadow: 0 0 0 1px rgba(232, 116, 59, 0.5), 0 0 40px rgba(232, 116, 59, 0.35), 0 24px 60px -20px rgba(232, 116, 59, 0.45); }
-  .thumb { position: relative; aspect-ratio: 3 / 2; background: radial-gradient(120% 90% at 50% 100%, #e4d8c3 0%, var(--cream-2) 55%, var(--cream) 100%); }
-  .thumb canvas { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; transition: opacity 0.6s; }
-  .thumb canvas.ready { opacity: 1; }
-  .cbody { display: flex; flex-direction: column; flex: 1; padding: 22px 26px 26px; }
-  .lvl { position: absolute; top: 16px; inset-inline-start: 16px; z-index: 2; font-size: 12px; padding: 4px 12px; border-radius: 999px; background: var(--mint); color: var(--green); }
+  .pj-header {
+    text-align: center;
+    max-width: 680px;
+    margin: 0 auto 40px;
+  }
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--orange);
+    background: rgba(61, 183, 166, 0.1);
+    border: 1px solid rgba(61, 183, 166, 0.25);
+    padding: 5px 16px;
+    border-radius: var(--radius-pill);
+    margin-bottom: 16px;
+    letter-spacing: 0.02em;
+  }
+  .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--orange);
+    box-shadow: 0 0 8px var(--orange);
+    animation: dotPulse 2s infinite ease-in-out;
+  }
+  @keyframes dotPulse {
+    0%, 100% { transform: scale(1); opacity: 0.8; }
+    50% { transform: scale(1.4); opacity: 1; }
+  }
+  h1, h2 {
+    font-size: clamp(32px, 5vw, 54px);
+    line-height: 1.15;
+    margin-bottom: 12px;
+    color: var(--green);
+    font-weight: 700;
+    letter-spacing: -0.015em;
+  }
+  .sub {
+    color: var(--fg-2);
+    font-size: clamp(15px, 1.8vw, 18px);
+    line-height: 1.8;
+  }
+
+  /* Filter bar */
+  .filterbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 48px;
+    padding: 16px 24px;
+    border-radius: var(--radius-lg);
+    max-width: 760px;
+  }
+  .filterbar label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--fg-2);
+  }
+  .filterbar select {
+    font: 500 14.5px var(--font);
+    min-width: 190px;
+    padding: 11px 36px 11px 16px;
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(14, 58, 99, 0.15);
+    background: #ffffff;
+    color: var(--green);
+    cursor: pointer;
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: linear-gradient(45deg, transparent 50%, var(--green) 50%), linear-gradient(135deg, var(--green) 50%, transparent 50%);
+    background-position: calc(100% - 20px) 55%, calc(100% - 14px) 55%;
+    background-size: 5px 5px;
+    background-repeat: no-repeat;
+    transition: all 0.25s ease;
+  }
+  [dir='rtl'] .filterbar select {
+    background-position: 18px 55%, 12px 55%;
+    padding: 11px 16px 11px 36px;
+  }
+  .filterbar select:hover {
+    border-color: rgba(61, 183, 166, 0.5);
+  }
+  .filterbar select:focus {
+    border-color: var(--orange);
+    box-shadow: 0 0 0 3px rgba(61, 183, 166, 0.2);
+  }
+  .count-badge {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--orange);
+    padding: 6px 14px;
+    border-radius: var(--radius-pill);
+    background: rgba(61, 183, 166, 0.12);
+    display: none;
+  }
+  .count-badge.active {
+    display: inline-block;
+  }
+
+  /* Grid & Cards */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+    gap: 28px;
+  }
+  .card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    text-decoration: none;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(14, 58, 99, 0.08);
+    box-shadow: 0 10px 32px -12px rgba(10, 36, 72, 0.12);
+    transition: transform 0.4s var(--ease-spring), box-shadow 0.4s var(--ease-spring), border-color 0.4s ease;
+  }
+  .card.in {
+    opacity: 1;
+    transform: none;
+  }
+  .card:hover {
+    transform: translateY(-8px) scale(1.01);
+    border-color: rgba(61, 183, 166, 0.45);
+    box-shadow: 0 0 0 1px rgba(61, 183, 166, 0.4),
+                0 0 36px rgba(61, 183, 166, 0.22),
+                0 28px 64px -16px rgba(10, 36, 72, 0.26);
+  }
+  .thumb {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    background: radial-gradient(120% 90% at 50% 100%, #e6dac6 0%, var(--cream-2) 55%, var(--cream) 100%);
+    overflow: hidden;
+    border-bottom: 1px solid rgba(14, 58, 99, 0.06);
+  }
+  .thumb canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    transition: opacity 0.6s ease, transform 0.6s var(--ease-spring);
+  }
+  .thumb canvas.ready {
+    opacity: 1;
+  }
+  .card:hover .thumb canvas.ready {
+    transform: scale(1.04);
+  }
+
+  .lvl {
+    position: absolute;
+    top: 14px;
+    inset-inline-start: 14px;
+    z-index: 2;
+    font-size: 11.5px;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: var(--radius-pill);
+    background: var(--mint);
+    color: var(--green);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  }
   .lvl.m { background: #e5dcae; }
-  .lvl.h { background: #f1c9b3; }
-  .lock { display: inline-flex; align-items: center; gap: 5px; position: absolute; top: 16px; inset-inline-end: 16px; z-index: 2; font-size: 12px; background: rgba(255,255,255,.75); padding: 3px 10px; border-radius: 999px; }
-  h3 { font-size: 20px; line-height: 1.35; margin-bottom: 10px; }
-  p { color: var(--fg-2); font-size: 14.5px; line-height: 1.8; display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-  .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
-  .tags span { font-size: 12px; padding: 3px 10px; border-radius: 999px; background: var(--cream-2); }
-  .foot { display: flex; justify-content: flex-start; align-items: center; margin-top: auto; padding-top: 18px; border-top: 1px solid rgba(15, 61, 62, 0.1); }
-  .card > .tags + .foot { margin-top: 20px; }
-  .price { font-weight: 700; font-size: 19px; }
-  .go { color: var(--orange); font-size: 14px; font-weight: 500; }
-  .split { margin: 80px auto 0; max-width: 1000px; border-radius: 32px; overflow: hidden; display: grid; grid-template-columns: 1fr 1fr; }
-  .split div { padding: 34px; font-size: 18px; line-height: 1.8; }
-  .split .l { background: var(--cream-2); }
-  .split .r { background: var(--green); color: var(--cream); }
-  .split small { display: block; opacity: 0.6; margin-bottom: 6px; font-size: 13px; letter-spacing: 0.08em; }
-  @media (max-width: 640px) { .split { grid-template-columns: 1fr; } }
+  .lvl.h { background: #bfe6df; color: #a43a18; }
+
+  .lock {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    position: absolute;
+    top: 14px;
+    inset-inline-end: 14px;
+    z-index: 2;
+    font-size: 11.5px;
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(6px);
+    padding: 4px 11px;
+    border-radius: var(--radius-pill);
+    color: var(--orange);
+    border: 1px solid rgba(61, 183, 166, 0.25);
+  }
+
+  .cbody {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    padding: 24px 26px;
+  }
+  h3 {
+    font-size: 19.5px;
+    font-weight: 700;
+    line-height: 1.35;
+    margin-bottom: 10px;
+    color: var(--green);
+    transition: color 0.25s ease;
+  }
+  .card:hover h3 {
+    color: var(--orange);
+  }
+  p {
+    color: var(--fg-2);
+    font-size: 14px;
+    line-height: 1.8;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 16px;
+  }
+  .tags span {
+    font-size: 11.5px;
+    font-weight: 500;
+    padding: 4px 11px;
+    border-radius: var(--radius-pill);
+    background: var(--cream-2);
+    color: var(--fg-2);
+  }
+  .foot {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    margin-top: auto;
+    padding-top: 18px;
+    border-top: 1px solid rgba(14, 58, 99, 0.08);
+  }
+  .go {
+    color: var(--orange);
+    font-size: 14px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: gap 0.25s ease;
+  }
+  .card:hover .go {
+    gap: 12px;
+  }
+  .arrow {
+    font-style: normal;
+    transition: transform 0.25s ease;
+  }
+  .card:hover .arrow {
+    transform: translateX(-4px);
+  }
+
+  /* Split Banner — Contrast Box */
+  .pj-more { display: flex; justify-content: center; margin: 34px 0 10px; }
+  .split {
+    margin: 90px auto 0;
+    max-width: 1040px;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    box-shadow: 0 0 0 1px rgba(14, 58, 99, 0.1), 0 30px 70px -20px rgba(10, 36, 72, 0.25);
+  }
+  .split div {
+    padding: clamp(32px, 5vw, 48px);
+    font-size: 16px;
+    line-height: 1.85;
+  }
+  .split .l {
+    background: #ffffff;
+    color: var(--green);
+  }
+  .split .r {
+    background: var(--green-2);
+    color: var(--cream);
+    position: relative;
+  }
+  .badge-tier {
+    display: inline-block;
+    font-size: 12.5px;
+    font-weight: 600;
+    padding: 4px 14px;
+    border-radius: var(--radius-pill);
+    background: var(--cream-2);
+    color: var(--green);
+    margin-bottom: 14px;
+  }
+  .badge-tier.premium {
+    background: var(--orange);
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(61, 183, 166, 0.4);
+  }
+  .split h3 {
+    font-size: 24px;
+    margin-bottom: 10px;
+  }
+  .split .r h3 {
+    color: var(--cream);
+  }
+  .split p {
+    color: inherit;
+    opacity: 0.85;
+    font-size: 15px;
+    display: block;
+    line-clamp: unset;
+    -webkit-line-clamp: unset;
+  }
+
+  @media (max-width: 760px) {
+    .split {
+      grid-template-columns: 1fr;
+    }
+    /* الفلترين بسطر واحد صغير، فالمشاريع بتبيّن من أول شاشة */
+    .pj { padding-top: 92px; }
+    .pj-header { margin-bottom: 18px; }
+    .pj-header .eyebrow { display: none; }
+    .filterbar { gap: 8px; padding: 8px; margin-bottom: 22px; }
+    .filterbar label { flex: 1 1 40%; min-width: 0; }
+    .filterbar label span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+    .filterbar select { min-width: 0; width: 100%; font-size: 14px; }
+    .count-badge.active { flex-basis: 100%; text-align: center; }
+  }
 </style>

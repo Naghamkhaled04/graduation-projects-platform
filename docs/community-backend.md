@@ -31,6 +31,10 @@ create table public.profiles (
   points       int  not null default 0,
   created_at   timestamptz not null default now()
 );
+-- البريد الجامعي: للعرض على الإدارة ولاستنتاج الجامعة. غير مؤكّد —
+-- حساب الطالب على بريده الشخصي ليصله كود الاستعادة دائماً.
+alter table public.profiles add column if not exists uni_email text check (char_length(uni_email) <= 120);
+
 alter table public.profiles enable row level security;
 
 create or replace function public.is_admin() returns boolean
@@ -523,3 +527,10 @@ perform pay_invite(new.user_id);
 **الحماية:** الداعي يُثبَّت عند التسجيل ولا يتغير بعدها، ولا يدعو الطالب نفسه، والمكافأة تُدفع مرة واحدة فقط لكل مدعو، وبسقف ١٠ أصدقاء. ومع ذلك تبقى ثغرة واحدة: **شخص يفتح حسابات بأسماء مختلفة ويكتب تعليقاً حقيقياً بكل واحد**. الحاجز الوحيد هنا هو مراجعتكم للمحتوى، فانتبهوا لتعليقات متشابهة تصل بوقت متقارب.
 
 **لم يُختبر** على Supabase. الوضع المحلي مختبر: التسجيل بالرابط ← تعليق ← اعتماد ← نزلت ١٠ للداعي و٥ للمدعو، ولم تتكرر عند اعتماد محتوى ثانٍ.
+
+---
+
+## جداول المجتمع
+
+هذا الملف لا ينشئ جداول منشورات المجتمع. بعد تشغيل ما فوق، شغّل **`docs/communities-sql.md`** —
+فيه `uni_posts` و`uni_replies` و`uni_moderators` ودالّتا `community_counts` و`is_moderator_of`.

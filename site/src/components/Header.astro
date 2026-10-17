@@ -1,28 +1,48 @@
 ---
 import { svg } from '../data/icons';
+import { activeHref } from '../scripts/navmatch.js';
 
+// الأقسام الرئيسية: ظاهرة دايماً (شريط فوق بالكمبيوتر، تحت بالموبايل)
+const primary = [
+  { href: '/home', icon: 'home', label: 'الرئيسية' },
+  { href: '/projects', icon: 'box', label: 'المشاريع', match: ['/projects', '/p'] },
+  { href: '/store', icon: 'store', label: 'المتجر' },
+  { href: '/communities', icon: 'chat', label: 'المجتمع', match: ['/communities', '/c'] },
+  { href: '/consult', icon: 'flask', label: 'الاستشارة' },
+];
+// الموبايل: ٥ أيقونات بس، والاستشارة بتنزل للقائمة الجانبية
+const mobile = [...primary.slice(0, 4), { href: '/profile', icon: 'medal', label: 'حسابي', match: ['/profile', '/u', '/settings'] }];
+// القائمة الجانبية: الثانوي
 const groups = [
-  { title: 'تصفّح', items: [
-    { href: '/', icon: 'home', label: 'الرئيسية' },
-    { href: '/#projects', icon: 'box', label: 'المشاريع' },
-    { href: '/store', icon: 'store', label: 'المتجر' },
-    { href: '/city', icon: 'compass', label: 'المدينة الذكية' },
-  ] },
-  { title: 'المجتمع', items: [
-    { href: '/communities', icon: 'chat', label: 'مجتمعات الجامعات' },
+  { title: 'المزيد', items: [
+    { href: '/events', icon: 'medal', label: 'مسابقات وإيفنتات' },
+    { href: '/team', icon: 'users', label: 'فريقي' },
+    { href: '/contact', icon: 'send', label: 'تواصل مع TFC' },
+    { href: '/store/services', icon: 'store', label: 'خدمات المتجر' },
+    { href: '/ambassador', icon: 'medal', label: 'كن سفيراً لجامعتك' },
     { href: '/about', icon: 'building', label: 'من نحن' },
-    { href: '/ambassador', icon: 'medal', label: 'كن سفيراً' },
+    { href: '/terms', icon: 'lock', label: 'الشروط والأحكام' },
   ] },
 ];
+const here = activeHref(Astro.url.pathname, [...primary, mobile[4]]);
+const cur = (href: string) => (href === here ? { 'aria-current': 'page' as const, class: 'on' } : {});
 ---
 
 <header id="hdr">
-  <a class="logo" href="/">مشاريع</a>
+  <a class="logo" href="/home">مشاريع</a>
+
+  <nav class="topnav" aria-label="الأقسام">
+    {primary.map((i) => <a href={i.href} {...cur(i.href)}>{i.label}</a>)}
+  </nav>
 
   <div class="right">
     <button type="button" class="burger" id="burger" aria-label="القائمة" aria-expanded="false" aria-controls="drawer"><span></span><span></span><span></span></button>
   </div>
 </header>
+
+<nav class="bnav" aria-label="الأقسام">
+  {mobile.map((i) => <a href={i.href} {...cur(i.href)}><Fragment set:html={svg(i.icon, 21)} /><span>{i.label}</span></a>)}
+</nav>
 
 <div class="scrim" id="scrim" hidden></div>
 
@@ -39,9 +59,10 @@ const groups = [
   </a>
 
   <nav id="d-nav">
-    {groups.map((g) => (
+    {groups.map((g, n) => (
       <div class="grp">
-        <span class="gt">{g.title}</span>
+        {g.title && <span class="gt">{g.title}</span>}
+        {n === 0 && <div id="d-my" />}
         {g.items.map((i) => <a href={i.href} {...(i.ext ? { target: '_blank', rel: 'noopener' } : {})}><Fragment set:html={svg(i.icon, 17)} /> {i.label}{i.ext && <span class="ext">↗</span>}</a>)}
       </div>
     ))}
@@ -93,15 +114,39 @@ const groups = [
   onScroll(); addEventListener('scroll', onScroll, { passive: true });
 
   (async () => {
+    const { uniSlug, UNIVERSITIES } = await import('../data/universities');
     const be = await getBackend();
     const [s, p, admin] = await Promise.all([be.session(), be.profile().catch(() => null), be.isAdmin().catch(() => false)]);
     const acct = document.getElementById('d-acct')!, foot = document.getElementById('d-foot')!;
+    const my = document.getElementById('d-my')!;   // خانة «مجتمعي» أول القائمة الجانبية
     const item = (href: string, icon: string, label: string) => `<a href="${href}">${svg(icon, 17)} ${label}</a>`;
 
+    // «مجتمعي» بتظهر للكل — الزائر بيشوف الدعوة والمسجّل بيشوف حالته
+    const mySlug = p?.university ? uniSlug(p.university) : null;
+    const myUni = mySlug ? UNIVERSITIES.find((u) => u.slug === mySlug) : null;
+    const row = (href: string, icon: string, label: string, tag: string, join = false) =>
+      `<a href="${href}" class="mysub-a">${svg(icon, 16)} <span>${label}</span><em class="${join ? 'join' : ''}">${tag}</em></a>`;
+    // خانة وحدة بالقائمة، والثلاث مساحات بتنفتح جوّاها
+    const myBlock = `<div class="mygrp">
+      <button type="button" class="mytog" id="mytog" aria-expanded="false">
+        ${svg('chat', 17)} <span>مجتمعي</span><i class="chv" aria-hidden="true">⌄</i>
+      </button>
+      <div class="mysub" id="mysub" hidden>
+        ${row('/c/general', 'users', 'المجتمع العام', s ? 'عضو' : 'سجّل', !s)}
+        ${myUni
+          ? row(`/c/${myUni.slug}`, 'chat', `مجتمع ${myUni.short}`, 'عضو')
+          : row(s ? '/settings' : '/join', 'chat', 'انضم لمجتمع جامعتك', 'مطلوب', true)}
+        ${row('/c/news', 'medal', 'الإعلانات', s ? 'تتابعها' : 'سجّل', !s)}
+      </div>
+    </div>`;
+
     if (!s || !p) {
+      my.innerHTML = myBlock;
       acct.innerHTML = `<span class="gt">حسابي</span>${item('/join', 'lock', 'تسجيل الدخول أو حساب جديد')}`;
       document.getElementById('d-me')!.setAttribute('href', '/join');
-      foot.innerHTML = '<p>سجّل دخولك لتجمع نقاط، تبني مبناك، وتنضم لمجتمع جامعتك.</p>';
+      const t0 = document.getElementById('mytog'), s0 = document.getElementById('mysub');
+      t0?.addEventListener('click', () => { const o = s0!.hidden; s0!.hidden = !o; t0.setAttribute('aria-expanded', String(o)); });
+      foot.innerHTML = '<p>سجّل دخولك لتنضم لمجتمع جامعتك وتجمع نقاط على تجاربك.</p>';
       return;
     }
     const lvl = levelOf(p.points), first = p.display_name.slice(0, 1);
@@ -110,22 +155,72 @@ const groups = [
     document.getElementById('d-name')!.textContent = p.display_name;
     document.getElementById('d-sub')!.innerHTML = `${svg('level', 12, lvl.n)} ${lvl.name} · ${ar(p.points)} نقطة`;
 
-    acct.innerHTML = `<span class="gt">حسابي</span>
+    my.innerHTML = myBlock;
+    acct.innerHTML = `
+      <span class="gt">حسابي</span>
       ${item('/profile', 'medal', 'نقاطي وتجاربي')}
       ${item('/u?id=' + encodeURIComponent(p.id), 'eye', 'ملفي العام')}
       ${item('/settings', 'flask', 'الإعدادات')}
       ${admin ? item('/admin', 'building', 'لوحة الأدمن') : ''}`;
+    const tog = document.getElementById('mytog'), sub = document.getElementById('mysub');
+    tog?.addEventListener('click', () => {
+      const open = sub!.hidden;
+      sub!.hidden = !open;
+      tog.setAttribute('aria-expanded', String(open));
+    });
+
     foot.innerHTML = be.mode === 'cloud' ? `<button type="button" id="d-out">${svg('send', 16)} تسجيل الخروج</button>` : '<p>وضع تجريبي: بياناتك بمتصفحك فقط.</p>';
     foot.querySelector('#d-out')?.addEventListener('click', async () => { await be.signOut(); location.reload(); });
   })();
 </script>
 
 <style is:global>
+  /* مجتمعي: خانة زي باقي الروابط، والمساحات بتنفتح جوّاها */
+  .drawer .mytog { display: flex; align-items: center; gap: 12px; width: 100%; padding: 11px 12px; border: 0;
+    border-radius: 13px; background: transparent; color: var(--green); font: 400 14.5px var(--font); cursor: pointer; transition: background .2s, color .2s; }
+  .drawer .mytog:hover { background: var(--cream-2); color: var(--orange); }
+  .drawer .mytog svg { flex: none; opacity: .75; }
+  .drawer .mytog span { flex: 1; text-align: start; }
+  .drawer .mytog .chv { font-style: normal; font-size: 13px; opacity: .5; transition: transform .25s; }
+  .drawer .mytog[aria-expanded='true'] .chv { transform: rotate(180deg); }
+  .drawer .mysub { display: grid; gap: 2px; padding: 2px 0 6px; margin-inline-start: 14px;
+    border-inline-start: 2px solid var(--mint); }
+  .drawer .mysub[hidden] { display: none; }
+  .drawer .mysub-a { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 11px;
+    text-decoration: none; color: var(--green); font-size: 14px; transition: background .2s; }
+  .drawer .mysub-a:hover { background: var(--cream-2); }
+  .drawer .mysub-a svg { flex: none; opacity: .7; }
+  .drawer .mysub-a span { flex: 1; }
+  .drawer .mysub-a em { font-style: normal; font-size: 11px; padding: 3px 8px; border-radius: 999px; background: var(--mint); color: var(--green); }
+  .drawer .mysub-a em.join { background: rgba(61, 183, 166,.18); color: #145f56; }
   #hdr { position: fixed; inset: 0 0 auto 0; z-index: 50; display: flex; justify-content: space-between; align-items: center; gap: 14px; padding: 14px var(--gutter); pointer-events: none; transition: background .3s, box-shadow .3s, padding .3s; }
   #hdr > * { pointer-events: auto; }
   #hdr.solid { background: color-mix(in srgb, var(--hdr-bg) 84%, transparent); backdrop-filter: blur(16px); box-shadow: 0 1px 0 rgba(127,127,127,.16); padding-block: 9px; }
   #hdr .logo { font-weight: 700; font-size: 21px; text-decoration: none; color: var(--hdr-fg); }
   #hdr .right { display: flex; align-items: center; gap: 8px; }
+
+  /* الأقسام الرئيسية فوق (الكمبيوتر) */
+  #hdr .topnav { display: none; }
+  @media (min-width: 1024px) {
+    #hdr .topnav { display: flex; gap: 4px; margin-inline: auto; padding: 4px; border-radius: 999px; background: color-mix(in srgb, var(--hdr-bg) 55%, transparent); backdrop-filter: blur(14px); border: 1px solid rgba(127,127,127,.18); }
+    #hdr .topnav a { color: var(--hdr-fg); text-decoration: none; font-size: 14.5px; font-weight: 500; padding: 8px 16px; border-radius: 999px; transition: background .2s, color .2s; }
+    #hdr .topnav a:hover { background: color-mix(in srgb, var(--hdr-fg) 10%, transparent); }
+    #hdr .topnav a.on { background: var(--orange); color: #fff; box-shadow: 0 0 18px var(--orange-glow); }
+  }
+
+  /* الأقسام الرئيسية تحت (الموبايل والتابلت) */
+  :root { --bnav: 0px; }
+  .bnav { display: none; }
+  @media (max-width: 1023px) {
+    :root { --bnav: calc(64px + env(safe-area-inset-bottom, 0px)); }
+    body { padding-bottom: var(--bnav); }
+    .bnav { display: grid; grid-template-columns: repeat(5, 1fr); position: fixed; inset: auto 0 0 0; z-index: 56; height: var(--bnav); padding-bottom: env(safe-area-inset-bottom, 0px); background: color-mix(in srgb, var(--cream) 92%, transparent); backdrop-filter: blur(16px); box-shadow: 0 -1px 0 rgba(14, 58, 99,.1); }
+    .bnav a { display: grid; justify-items: center; align-content: center; gap: 3px; min-height: 44px; color: var(--fg-2); text-decoration: none; font-size: 11.5px; font-weight: 500; }
+    .bnav a svg { opacity: .8; }
+    .bnav a.on { color: var(--orange); }
+    .bnav a.on svg { opacity: 1; filter: drop-shadow(0 0 6px var(--orange-glow)); }
+    .bnav a:focus-visible { outline: 2px solid var(--orange); outline-offset: -4px; border-radius: 12px; }
+  }
 
   #hdr .burger.has::after { content: ''; position: absolute; top: 7px; inset-inline-end: 7px; width: 8px; height: 8px; border-radius: 50%; background: var(--orange); box-shadow: 0 0 8px var(--orange); }
   #hdr .quick { display: flex; align-items: center; gap: 7px; text-decoration: none; padding: 5px 12px 5px 5px; border-radius: 999px; background: rgba(255,255,255,.14); backdrop-filter: blur(14px); border: 1px solid rgba(127,127,127,.18); transition: border-color .25s; }
@@ -145,7 +240,7 @@ const groups = [
   .scrim { position: fixed; inset: 0; z-index: 70; touch-action: none; background: rgba(6,18,20,.55); backdrop-filter: blur(3px); opacity: 0; transition: opacity .25s; }
   .scrim.on { opacity: 1; } .scrim[hidden] { display: none; }
 
-  .drawer { position: fixed; z-index: 71; top: 0; bottom: 0; left: 0; right: auto; width: min(330px, 88vw); display: flex; flex-direction: column; background: var(--cream); color: var(--green); box-shadow: 20px 0 60px -20px rgba(10,46,48,.5); transform: translateX(-100%); transition: transform .25s ease; overflow-y: auto; overscroll-behavior: contain; }
+  .drawer { position: fixed; z-index: 71; top: 0; bottom: 0; left: 0; right: auto; width: min(330px, 88vw); display: flex; flex-direction: column; background: var(--cream); color: var(--green); box-shadow: 20px 0 60px -20px rgba(10, 36, 72,.5); transform: translateX(-100%); transition: transform .25s ease; overflow-y: auto; overscroll-behavior: contain; }
   .drawer[hidden] { display: none; }
   .dtop { display: flex; justify-content: space-between; align-items: center; padding: 18px 20px 12px; }
   .dtop b { font-size: 17px; }
@@ -167,7 +262,7 @@ const groups = [
   .drawer nav a svg { flex: none; opacity: .75; }
   .drawer nav a .ext { margin-inline-start: auto; opacity: .45; font-size: 12px; }
 
-  .dfoot { margin-top: auto; padding: 14px 20px 22px; border-top: 1px solid rgba(15,61,62,.1); }
+  .dfoot { margin-top: auto; padding: 14px 20px 22px; border-top: 1px solid rgba(14, 58, 99,.1); }
   .dfoot p { font-size: 12.5px; color: var(--fg-2); line-height: 1.8; }
   .dfoot button { display: flex; align-items: center; gap: 10px; font: 500 14px var(--font); width: 100%; background: none; border: 0; color: var(--green); padding: 8px 0; cursor: pointer; }
   .dfoot button:hover { color: var(--orange); }

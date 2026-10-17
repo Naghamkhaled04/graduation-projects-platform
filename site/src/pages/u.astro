@@ -13,8 +13,6 @@ import '../styles/community.css';
   import { getBackend } from '../community/backend';
   import { levelOf } from '../community/rules';
   import { esc, ar, stars, demoBanner } from '../community/ui';
-  import { createStore } from '../city/store';
-  import { getSocial } from '../city/social';
   import { uniSlug } from '../data/universities';
   import { svg } from '../data/icons';
   import projects from '../data/projects.json';
@@ -25,12 +23,10 @@ import '../styles/community.css';
 
   (async () => {
     const be = await getBackend();
-    const [p, fb, buildings] = await Promise.all([be.profile(id), be.userFeedback(id), createStore().then((s) => s.list()).catch(() => [])]);
+    const [p, fb] = await Promise.all([be.profile(id), be.userFeedback(id)]);
     if (!p || !id) { root.innerHTML = '<h1>ما لقينا هالطالب</h1><p class="lead">الرابط غير صحيح أو الملف غير متاح.</p>'; return; }
     document.title = `${p.display_name} — مشاريع`;
-    const b = buildings.find((x) => x.owner === id && !x.official);
     const lvl = levelOf(p.points);
-    const bstats = b ? await getSocial().then((s) => s.stats([b.id])).then((x) => x[b.id]).catch(() => null) : null;
     const withPhoto = fb.filter((f) => f.images.length).length;
     const uni = p.university ? (uniSlug(p.university) ? `<a class="ulink" href="/c/${uniSlug(p.university)}">${esc(p.university)}</a>` : esc(p.university)) : '';
     root.innerHTML = `${demoBanner(be)}
@@ -44,10 +40,7 @@ import '../styles/community.css';
       <div class="kpis">
         <div class="kpi"><b>${ar(fb.length)}</b><span>${svg('chat', 14)} تجربة معتمدة</span></div>
         <div class="kpi"><b>${ar(withPhoto)}</b><span>${svg('camera', 14)} مشروع نفّذه</span></div>
-        ${bstats ? `<div class="kpi"><b>${ar(bstats.likes)}</b><span>${svg('heart', 14)} إعجاب</span></div>
-        <div class="kpi"><b>${ar(bstats.visits)}</b><span>${svg('eye', 14)} زيارة</span></div>` : ''}
       </div>
-      ${b ? `<div class="c-card sec bcard"><div><h3>${esc(b.sign)}</h3><p class="c-note">مبناه بالمدينة · ${ar(b.projects.length)} مشاريع</p></div><a class="c-btn" href="/city?b=${encodeURIComponent(b.id)}">${svg('building', 15)} افتح مبناه</a></div>` : ''}
       <div class="c-card sec"><h3>المشاريع اللي شارك تجربته فيها</h3>
         ${fb.length ? fb.map((f) => `<div class="c-row"><span><a href="/projects/${f.project_id}">${esc(titleOf(f.project_id))}</a> <span class="c-stars">${stars(f.rating)}</span></span><span>${f.images.length ? svg('camera', 16) : ''}</span></div><p class="c-note">${esc(f.comment)}</p>`).join('') : '<p class="c-note">لا توجد تجارب معتمدة بعد.</p>'}
       </div>`;
@@ -56,23 +49,22 @@ import '../styles/community.css';
 
 <style is:global>
   /* ---- هيرو الحساب ---- */
-  .pf .hero { position: relative; overflow: hidden; background: var(--green); color: var(--cream); border-radius: 30px; padding: 30px; box-shadow: 0 0 0 1px rgba(232,116,59,.35), 0 0 60px -20px rgba(232,116,59,.35); }
-  .pf .hero::after { content: ''; position: absolute; inset-inline-end: -80px; top: -120px; width: 320px; height: 320px; border-radius: 50%; background: radial-gradient(circle, rgba(232,116,59,.5), transparent 70%); pointer-events: none; }
-  .pf .hero .av { width: 86px; height: 86px; font-size: 36px; background: var(--orange); color: #fff; box-shadow: 0 0 0 4px rgba(255,255,255,.14), 0 0 34px rgba(232,116,59,.6); }
+  .pf .hero { position: relative; overflow: hidden; background: var(--green); color: var(--cream); border-radius: 30px; padding: 30px; box-shadow: 0 0 0 1px rgba(61, 183, 166,.35), 0 0 60px -20px rgba(61, 183, 166,.35); }
+  .pf .hero::after { content: ''; position: absolute; inset-inline-end: -80px; top: -120px; width: 320px; height: 320px; border-radius: 50%; background: radial-gradient(circle, rgba(61, 183, 166,.5), transparent 70%); pointer-events: none; }
+  .pf .hero .av { width: 86px; height: 86px; font-size: 36px; background: var(--orange); color: #fff; box-shadow: 0 0 0 4px rgba(255,255,255,.14), 0 0 34px rgba(61, 183, 166,.6); }
   .pf .hero h1, .pf .hero h2 { font-size: clamp(24px, 3.4vw, 34px); line-height: 1.25; }
   .pf .hero .who p { opacity: .82; margin-top: 6px; } .pf .hero .bio { opacity: .68; font-size: 14px; margin-top: 8px; line-height: 1.9; max-width: 48ch; }
   .pf .hero .ulink { color: var(--cream); }
   .pf .hero .pts { position: relative; text-align: center; background: rgba(0,0,0,.22); border-radius: 22px; padding: 16px 22px; display: grid; gap: 2px; align-content: center; }
   .pf .hero .pts b { font-size: 40px; line-height: 1; color: var(--orange); }
   .pf .hero .pts small { opacity: .7; } .pf .hero .lvl { display: inline-flex; align-items: center; gap: 6px; justify-content: center; font-size: 13px; margin-top: 6px; opacity: .9; }
-  .pf .hero .c-note { color: rgba(247,239,227,.55); }
+  .pf .hero .c-note { color: rgba(233, 243, 248,.55); }
   /* ---- شريط الأرقام ---- */
   .pf .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin-top: 16px; }
-  .pf .kpi { background: #fff; border-radius: 20px; padding: 16px 18px; display: grid; gap: 3px; box-shadow: 0 0 0 1px rgba(15,61,62,.06); }
+  .pf .kpi { background: #fff; border-radius: 20px; padding: 16px 18px; display: grid; gap: 3px; box-shadow: 0 0 0 1px rgba(14, 58, 99,.06); }
   .pf .kpi b { font-size: 26px; line-height: 1; } .pf .kpi span { font-size: 12.5px; color: var(--fg-2); display: inline-flex; align-items: center; gap: 6px; }
   .pf .kpi svg { color: var(--orange); }
   @media (max-width: 700px) { .pf .hero { grid-template-columns: auto 1fr; } .pf .hero .pts { grid-column: 1 / -1; } }
-  .pf .bcard { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
-  .pf .bcard h3 { margin: 0; } .pf .c-btn svg { vertical-align: -3px; margin-inline-end: 4px; }
+  .pf .c-btn svg { vertical-align: -3px; margin-inline-end: 4px; }
   .pf .ulink { color: inherit; text-decoration: none; border-bottom: 1px dotted currentColor; }
 </style>

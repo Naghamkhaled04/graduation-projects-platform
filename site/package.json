@@ -10,7 +10,8 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "test": "node --test src/scripts/guard.test.js src/scripts/guard-inline.test.js src/scripts/journey.test.js src/scripts/imgfallback.test.js src/scripts/navmatch.test.js src/scripts/authled.test.js src/scripts/storeurl.test.js src/scripts/basketsum.test.js src/scripts/mentions.test.js src/scripts/teammatch.test.js"
+    "test": "node --test src/scripts/guard.test.js src/scripts/guard-inline.test.js src/scripts/journey.test.js src/scripts/imgfallback.test.js src/scripts/navmatch.test.js src/scripts/authled.test.js src/scripts/storeurl.test.js src/scripts/basketsum.test.js src/scripts/mentions.test.js src/scripts/teammatch.test.js",
+    "build:hero": "esbuild src/scripts/hero-board.ts --bundle --format=esm --minify --target=es2020 --outfile=dist-hero/hero-board.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.116.0",

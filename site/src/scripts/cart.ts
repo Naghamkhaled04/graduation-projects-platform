@@ -1,6 +1,6 @@
-  interface Opt { k: string; nm: string; d: string; p: number; def?: boolean; url?: string; live?: number; img?: string }
+  interface Opt { k: string; nm: string; d: string; p: number; def?: boolean; url?: string; live?: number; img?: string; note?: string }
   interface Part { id: string; nm: string; req: boolean; qty: number; opts: Opt[] }
-  interface Extra { k: string; nm: string; d: string; p: number }
+  interface Extra { k: string; nm: string; d: string; p: number; note?: string }
 
   const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
   const AR = (n: number) => n.toLocaleString('ar-EG', { maximumFractionDigits: 2 });
@@ -14,6 +14,9 @@ export function mountCart(root: HTMLElement) {
     extras.forEach((e) => (extraOn[e.k] = false));
     const q = <T extends HTMLElement>(s: string) => root.querySelector<T>(s)!;
     const items = q('.items'), extrasEl = root.querySelector<HTMLElement>('.extras');
+    // البدائل مطوية؛ بنتذكر المفتوح لأن السلة بتنرسم من جديد مع كل كبسة
+    const openAlts = new Set<string>();
+    root.addEventListener('toggle', (e) => { const d = e.target as HTMLDetailsElement; if (!d.dataset?.part) return; if (d.open) openAlts.add(d.dataset.part); else openAlts.delete(d.dataset.part); }, true);
 
     function render() {
       items.innerHTML = parts.map((p) => {
@@ -21,23 +24,24 @@ export function mountCart(root: HTMLElement) {
         return `<div class="item ${st.on ? '' : 'off'}">
           <div class="row1">
             <button type="button" class="chk ${st.on ? 'on' : ''}" data-tog="${p.id}" aria-label="تفعيل القطعة">${CHECK}</button>
-            ${sel.img ? `<a class="pimg" href="${esc(sel.url || '#')}"><img src="${esc(sel.img)}" alt="" loading="lazy" /></a>` : ''}
+            ${sel.img ? `<a class="pimg" href="${esc(sel.url || '#')}"><img src="${esc(sel.img)}" alt="" loading="lazy" onerror="this.onerror=null;this.src='/img/part.svg'" /></a>` : ''}
             <div class="mid">
               <div class="nm">${sel.url ? `<a class="plink" href="${esc(sel.url)}">${esc(sel.nm)}</a>` : esc(sel.nm)}${p.req ? '<span class="req">أساسي</span>' : ''}</div>
               <div class="dsc">${esc(sel.d)}</div>
+              ${sel.note ? `<div class="note">${esc(sel.note)}</div>` : ''}
               ${st.on ? `<div class="qty"><button type="button" data-q="${p.id}:-1">−</button><span>${AR(st.qty)}</span><button type="button" data-q="${p.id}:1">+</button></div>` : ''}
             </div>
             <div class="pr">${AR((sel.live ?? sel.p) * st.qty)} د.أ<small>${AR(sel.live ?? sel.p)} للقطعة</small></div>
           </div>
-          ${st.on && multi ? `<div class="alts"><div class="altlbl">بدائل متاحة</div>${p.opts.map((o) => `
+          ${st.on && multi ? `<details class="alts" data-part="${p.id}"${openAlts.has(p.id) ? ' open' : ''}><summary class="altlbl">بدائل (${AR(p.opts.length - 1)})</summary><div class="altl">${p.opts.map((o) => `
             <button type="button" class="alt ${o.k === st.pick ? 'on' : ''}" data-pick="${p.id}:${o.k}">
               <span class="rad"></span><span class="an">${esc(o.nm)}<span class="ad">${esc(o.d)}</span></span><span class="ap">${AR(o.p)} د.أ</span>
-            </button>`).join('')}</div>` : ''}
+            </button>`).join('')}</div></details>` : ''}
         </div>`;
       }).join('');
       if (extrasEl) extrasEl.innerHTML = extras.map((e) => `
         <button type="button" class="addrow ${extraOn[e.k] ? 'on' : ''}" data-ex="${e.k}">
-          <span class="rad sq"></span><span class="an">${esc(e.nm)}<span class="ad">${esc(e.d)}</span></span><span class="ap">+${AR(e.p)} د.أ</span>
+          <span class="rad sq"></span><span class="an">${esc(e.nm)}<span class="ad">${esc(e.d)}</span>${e.note ? `<span class="ad note">${esc(e.note)}</span>` : ''}</span><span class="ap">+${AR(e.p)} د.أ</span>
         </button>`).join('');
 
       let total = 0, count = 0, active = 0;
@@ -64,9 +68,9 @@ export function mountCart(root: HTMLElement) {
 
     q('.order').addEventListener('click', () => {
       const lines: string[] = []; let total = 0;
-      parts.forEach((p) => { const st = state[p.id]; if (!st.on) return; const s = p.opts.find((o) => o.k === st.pick)!; lines.push(`• ${s.nm} × ${st.qty} — ${s.p * st.qty} د.أ`); total += s.p * st.qty; });
+      parts.forEach((p) => { const st = state[p.id]; if (!st.on) return; const s = p.opts.find((o) => o.k === st.pick)!; lines.push(`• ${s.nm} × ${st.qty} — ${s.p * st.qty} د.أ${s.note ? ` (${s.note})` : ''}`); total += s.p * st.qty; });
       const ex = extras.filter((e) => extraOn[e.k]);
-      if (ex.length) { lines.push('', 'إضافات:'); ex.forEach((e) => { lines.push(`• ${e.nm} — ${e.p} د.أ`); total += e.p; }); }
+      if (ex.length) { lines.push('', 'إضافات:'); ex.forEach((e) => { lines.push(`• ${e.nm} — ${e.p} د.أ${e.note ? ` (${e.note})` : ''}`); total += e.p; }); }
       const msg = `مرحبا \nبدي أطلب سلة مشروع:\n*${project}*\n\n${lines.join('\n')}\n\nالمجموع: *${Math.round(total * 100) / 100} د.أ*\n\nالاسم:\nالجامعة:\nالعنوان:`;
       window.open(`https://wa.me/${wa}?text=${encodeURIComponent(msg)}`, '_blank', 'noopener');
     });

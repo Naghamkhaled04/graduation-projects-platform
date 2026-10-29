@@ -1,20 +1,46 @@
-/* صفحات الدخول والتسجيل: عمود واحد يتمدد مع الشاشة */
-.auth { min-height: 100vh; min-height: 100dvh; display: grid; place-items: center; padding: 92px var(--gutter) 48px; }
-.auth .box { width: 100%; max-width: 460px; }
+/* صفحات الدخول والتسجيل: الفورم على اليمين، ولوحة بوردة كحلي على الشمال (نفس قصة "شبّك حالك." بصفحة التعريف) */
+.auth { min-height: 100vh; min-height: 100dvh; display: grid; grid-template-columns: minmax(0, 1fr);
+  background: linear-gradient(rgba(14, 58, 99, .06) 1px, transparent 1px) 0 0/40px 40px, linear-gradient(90deg, rgba(14, 58, 99, .06) 1px, transparent 1px) 0 0/40px 40px, #e9f3f8; }
+.auth .box { width: 100%; max-width: 440px; justify-self: center; align-self: center; padding: 96px var(--gutter) 48px; }
+
+.auth-art { display: grid; place-content: center; justify-items: center; gap: 10px; text-align: center; padding: 96px 32px 48px; color: #e9f3f8;
+  background: linear-gradient(rgba(61, 183, 166, .07) 1px, transparent 1px) 0 0/32px 32px, linear-gradient(90deg, rgba(61, 183, 166, .07) 1px, transparent 1px) 0 0/32px 32px, radial-gradient(ellipse at 50% 45%, #0e3a63, #071a33 75%); }
+.auth-art .art-board { width: min(420px, 100%); height: auto; filter: drop-shadow(0 24px 40px rgba(0, 0, 0, .35)); }
+.auth-art .art-h { font-size: clamp(30px, 3.4vw, 44px); font-weight: 700; margin-top: 18px; }
+.auth-art .art-p { color: #b9cadb; font-size: 15px; max-width: 34ch; }
+/* ضوء الحالة: طافي ← جاهز ← بيرمش ← أحمر */
+.auth .art-led { fill: #2a3550; transition: fill .25s; }
+.auth[data-led='on'] .art-led { fill: #3db7a6; filter: drop-shadow(0 0 8px #3db7a6); }
+.auth[data-led='on'] .art-slot { fill: #3db7a6; }
+.auth[data-led='busy'] .art-led { fill: #3db7a6; animation: artBlink .4s steps(2) infinite; }
+.auth[data-led='err'] .art-led { fill: #e5484d; filter: drop-shadow(0 0 8px #e5484d); }
+@keyframes artBlink { 50% { fill: #2a3550; filter: none; } }
+
+@media (min-width: 900px) {
+  .auth { grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); }
+  .auth-art { position: sticky; top: 0; height: 100vh; height: 100dvh; }
+}
+@media (max-width: 899px) {
+  .auth-art { order: -1; padding: 76px 20px 18px; gap: 4px; }
+  .auth-art .art-board { width: 190px; }
+  .auth-art .art-h { font-size: 22px; margin-top: 6px; }
+  .auth-art .art-p { display: none; }
+  .auth .box { padding-top: 26px; }
+}
 .auth .brand { text-align: center; margin-bottom: 20px; }
 .auth .brand b { font-size: 26px; display: block; } .auth .brand span { color: var(--fg-2); font-size: 14.5px; }
-.auth .card { background: #fff; border-radius: 26px; padding: clamp(20px, 5vw, 32px); box-shadow: 0 0 0 1px rgba(15,61,62,.07), 0 26px 60px -30px rgba(15,61,62,.45); }
+.auth .card { background: #fff; border-radius: 22px; padding: clamp(20px, 5vw, 32px); box-shadow: 0 0 0 1px rgba(14, 58, 99,.08), 0 26px 60px -34px rgba(14, 58, 99,.45); }
 .auth h1 { font-size: clamp(22px, 5vw, 27px); margin-bottom: 6px; }
 .auth .sub { color: var(--fg-2); font-size: 14.5px; line-height: 1.8; margin-bottom: 20px; }
 
 .auth .steps { display: flex; gap: 6px; margin-bottom: 18px; }
-.auth .steps i { flex: 1; height: 4px; border-radius: 2px; background: rgba(15,61,62,.14); }
+.auth .steps i { flex: 1; height: 4px; border-radius: 2px; background: rgba(14, 58, 99,.14); }
 .auth .steps i.on { background: var(--orange); }
 
 .auth .pick { display: grid; gap: 10px; margin-bottom: 4px; }
 .auth .opt { display: flex; align-items: center; gap: 14px; text-align: start; font: 400 14px var(--font); background: var(--cream); color: var(--green); border: 1px solid transparent; border-radius: 18px; padding: 16px; cursor: pointer; transition: all .2s; width: 100%; }
 .auth .opt:hover { border-color: var(--orange); }
-.auth .opt.on { background: #fff4ec; border-color: var(--orange); }
+.auth .opt.on { background: #eef8f6; border-color: var(--orange); }
 .auth .opt .ic { width: 42px; height: 42px; flex: none; border-radius: 13px; background: #fff; color: var(--green); display: grid; place-items: center; }
 .auth .opt.on .ic { background: var(--orange); color: #fff; }
 .auth .opt .tx { flex: 1; min-width: 0; display: grid; gap: 2px; }
@@ -22,21 +48,24 @@
 
 .auth label { display: grid; gap: 6px; font-size: 13.5px; margin-bottom: 14px; }
 .auth label small { color: var(--fg-2); font-weight: 400; }
-.auth input, .auth select { font: 400 15px var(--font); padding: 13px 16px; border-radius: 14px; border: 1px solid rgba(15,61,62,.18); background: #fff; color: var(--green); width: 100%; outline: none; }
-.auth input:focus, .auth select:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(232,116,59,.16); }
+.auth input, .auth select { font: 400 16px var(--font); min-height: 48px; padding: 12px 16px; border-radius: 14px; border: 1px solid rgba(14, 58, 99,.18); background: #fff; color: var(--green); width: 100%; outline: none; }
+.auth input:focus, .auth select:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(61, 183, 166,.16); }
 .auth .two { display: grid; grid-template-columns: 1fr 120px; gap: 12px; }
 .auth .pw { position: relative; } .auth .pw input { padding-inline-end: 52px; }
 .auth .pw button { position: absolute; inset-inline-end: 6px; bottom: 5px; width: 40px; height: 40px; border: 0; background: none; color: var(--fg-2); cursor: pointer; display: grid; place-items: center; }
 
-.auth .go { width: 100%; justify-content: center; font-size: 15.5px; padding: 14px; margin-top: 4px; }
-.auth .back { background: none; border: 0; color: var(--fg-2); font: 400 14px var(--font); cursor: pointer; padding: 10px 0; }
+.auth .go { width: 100%; min-height: 50px; justify-content: center; font-size: 16px; font-weight: 600; padding: 14px; margin-top: 4px; background: #3db7a6; color: #04211d; border: 0; box-shadow: 0 0 22px rgba(61, 183, 166, .4); }
+.auth .go:hover { box-shadow: 0 0 32px rgba(61, 183, 166, .65); }
+.auth .go:disabled { opacity: .75; cursor: progress; }
+.auth .back { background: none; border: 0; color: var(--fg-2); font: 400 14px var(--font); cursor: pointer; padding: 12px 0; min-height: 44px; }
+.auth .back:hover { color: #18766a; }
 .auth .alt { text-align: center; margin-top: 18px; font-size: 14px; color: var(--fg-2); }
 .auth .alt a { color: var(--orange); font-weight: 500; }
-.auth .err { color: #b4553a; font-size: 13.5px; line-height: 1.7; min-height: 1.2em; }
+.auth .err { color: #b42318; font-size: 13.5px; line-height: 1.7; min-height: 1.2em; }
 .auth .ok { color: #2f7d5c; font-size: 13.5px; }
 .auth .fine { font-size: 12.5px; color: var(--fg-2); line-height: 1.8; margin-top: 14px; text-align: center; }
 .auth .hintbox { background: var(--mint); border-radius: 14px; padding: 11px 15px; font-size: 13px; line-height: 1.8; margin-bottom: 14px; }
-.auth .refbox { display: flex; align-items: center; gap: 10px; background: #fff4ec; border: 1px solid var(--orange); border-radius: 16px; padding: 12px 16px; margin-bottom: 16px; font-size: 14px; line-height: 1.6; }
+.auth .refbox { display: flex; align-items: center; gap: 10px; background: #eef8f6; border: 1px solid var(--orange); border-radius: 16px; padding: 12px 16px; margin-bottom: 16px; font-size: 14px; line-height: 1.6; }
 .auth .refbox b { color: var(--orange); }
 .auth .done { text-align: center; display: grid; gap: 10px; justify-items: center; }
 .auth .done .big { width: 62px; height: 62px; border-radius: 50%; background: var(--mint); color: var(--green); display: grid; place-items: center; }
@@ -44,16 +73,43 @@
 
 @media (max-width: 420px) { .auth .two { grid-template-columns: 1fr; } .auth { padding-top: 80px; } }
 
+/* تبويبين: دخول · حساب جديد (مفتاح بقطعتين) */
+.auth .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; margin-bottom: 18px; border-radius: 999px; background: #fff; box-shadow: 0 0 0 1px rgba(14, 58, 99, .1); }
+.auth .tabs a { display: grid; place-items: center; min-height: 44px; font: 500 14.5px var(--font); text-decoration: none; color: #4a6380; border-radius: 999px; transition: background .2s, color .2s; }
+.auth .tabs a:hover { color: #0e3a63; }
+.auth .tabs a.on { background: #0a2448; color: #e9f3f8; }
+.auth .tabs a:focus-visible, .auth .go:focus-visible, .auth .back:focus-visible { outline: 2px solid #18766a; outline-offset: 3px; }
+
+/* الزر بصفحة التعريف بيتمدد ويصير هالكرت (View Transition بين الصفحات) */
+.auth .box { view-transition-name: auth; }
+::view-transition-group(auth) { animation-duration: .55s; animation-timing-function: var(--ease-spring); }
 /* تبويبات الحساب — منقولة عن صفحة الدخول بمتجرنا: كبسولات، والنشط بخط برتقالي تحته */
 .auth .tabs { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 22px; }
 .auth .tabs a {
   position: relative; font: 500 14px var(--font); text-decoration: none;
-  color: #7a7168; background: #f6f8f8; border: 0.8px solid #e6dccd;
+  color: #4a6380; background: #f6f8f8; border: 0.8px solid #d9dee5;
   padding: 11px 22px; border-radius: 999px; transition: all .2s;
 }
 .auth .tabs a:hover { border-color: var(--orange); color: var(--orange); }
-.auth .tabs a.on { background: #1a1613; color: #fffdf9; border-color: #1a1613; }
+.auth .tabs a.on { background: #0a2448; color: #e9f3f8; border-color: #0a2448; }
 .auth .tabs a.on::after {
   content: ''; position: absolute; inset-inline: 18%; bottom: -7px; height: 3px;
   border-radius: 3px; background: var(--orange);
 }
+
+/* قسم الطالب: مطوي لأنه اختياري — ما بدنا الصفحة تبيّن أطول مما هي */
+.auth .more { background: var(--cream); border-radius: 18px; margin-bottom: 16px; overflow: hidden; border: 1px solid transparent; transition: border-color .2s; }
+.auth .more[open] { border-color: rgba(14, 58, 99,.14); }
+.auth .more summary { cursor: pointer; padding: 14px 16px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; font-size: 14px; list-style: none; }
+.auth .more summary::-webkit-details-marker { display: none; }
+.auth .more summary::after { content: '＋'; margin-inline-start: auto; color: var(--orange); font-size: 17px; line-height: 1; }
+.auth .more[open] summary::after { content: '−'; }
+.auth .more summary span { color: var(--fg-2); font-size: 12.5px; }
+.auth .more .in { padding: 0 16px 14px; }
+.auth .more label:last-of-type { margin-bottom: 0; }
+
+/* نتيجة التعرّف على الجامعة من نطاق البريد */
+.auth .found { display: flex; align-items: center; gap: 7px; font-size: 13px; line-height: 1.7;
+  background: #e3eef6; border-radius: 12px; padding: 9px 13px; margin: -6px 0 14px; }
+.auth .found.ok { background: var(--mint); color: var(--green); }
+.auth .found b { font-weight: 600; }

@@ -35,8 +35,8 @@ const items = productsOf(c.cat).sort((a, b) => a.p - b.p);
 
         <div>
           <div class="nv-bar">
-            <input id="q" type="search" placeholder={`ابحث داخل ${c.cat}…`} autocomplete="off" />
-            <select id="sort">
+            <input id="q" type="search" aria-label="ابحث بالقطع" placeholder={`ابحث داخل ${c.cat}…`} autocomplete="off" />
+            <select id="sort" aria-label="ترتيب القطع">
               <option value="p">الأرخص أولاً</option>
               <option value="-p">الأغلى أولاً</option>
               <option value="n">بالاسم</option>
@@ -44,7 +44,7 @@ const items = productsOf(c.cat).sort((a, b) => a.p - b.p);
             <span class="cnt" id="cnt"></span>
           </div>
 
-          <div class="nv-grid" id="grid">
+          <div class="nv-grid nv-grid--cat" id="grid">
             {items.map((p) => <ProdCard p={p} used={usedBy(p.id)} />)}
           </div>
           <p class="none" id="none" hidden>ما لقينا قطعة بهالاسم.</p>
@@ -57,12 +57,15 @@ const items = productsOf(c.cat).sort((a, b) => a.p - b.p);
 </Base>
 
 <script>
+  import { readState, toQuery } from '../../scripts/storeurl.js';
   const ar = (n: number) => n.toLocaleString('ar-EG');
   const grid = document.getElementById('grid')!;
   const all = [...grid.querySelectorAll<HTMLElement>('.nv-card')];
   const q = document.getElementById('q') as HTMLInputElement;
   const sort = document.getElementById('sort') as HTMLSelectElement;
   const cnt = document.getElementById('cnt')!, none = document.getElementById('none')!;
+  // القسم الحالي بيبيّن بنص شريط الأقسام (الموبايل) أو قائمتها (الكمبيوتر)
+  document.querySelector('.nv-side a.on')?.scrollIntoView({ block: 'nearest', inline: 'center' });
 
   function apply() {
     const t = q.value.trim().toLowerCase();
@@ -75,9 +78,14 @@ const items = productsOf(c.cat).sort((a, b) => a.p - b.p);
       const d = Number(a.dataset.price) - Number(b.dataset.price);
       return dir === '-p' ? -d : d;
     }).forEach((el) => grid.appendChild(el));
+    // الحالة بالرابط (الأرخص أولاً هو الافتراضي هون)
+    history.replaceState(null, '', location.pathname + toQuery({ q: q.value, sort: sort.value === 'p' ? '' : sort.value, only: false }) + location.hash);
   }
   let deb = 0;
   q.addEventListener('input', () => { clearTimeout(deb); deb = window.setTimeout(apply, 180); });
   sort.addEventListener('change', apply);
+  const st = readState(location.search);
+  if (st.q) q.value = st.q;
+  if (st.sort && [...sort.options].some((o) => o.value === st.sort)) sort.value = st.sort;
   apply();
 </script>

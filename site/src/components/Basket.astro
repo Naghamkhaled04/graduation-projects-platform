@@ -1,17 +1,25 @@
 ---
 /** لوحة السلة وزرها العائم. تُدرج بأي صفحة فيها شبكة منتجات */
+import { svg } from '../data/icons';
 ---
 
+<div class="bsk-scrim" hidden></div>
 <aside class="bsk" hidden aria-label="سلتك">
-  <div class="top"><b>سلتك</b><button type="button" class="x" aria-label="إغلاق">×</button></div>
+  <div class="grab" aria-hidden="true"><i></i></div>
+  <div class="top">
+    <b>سلتك <small class="cnt"></small></b>
+    <button type="button" class="clear" hidden>إفراغ</button>
+    <button type="button" class="x" aria-label="إغلاق السلة">×</button>
+  </div>
   <div class="list"></div>
   <div class="foot">
     <div class="trow"><span>المجموع التقريبي</span><b class="total">٠ د.أ</b></div>
-    <button type="button" class="order">اطلب السلة على واتساب</button>
+    <button type="button" class="order"><Fragment set:html={svg('send', 17)} /> اطلب السلة على واتساب</button>
     <p class="c-note">بنأكد التوفر والسعر النهائي معك بالواتساب.</p>
   </div>
 </aside>
-<button type="button" class="bfab" hidden><span>0</span> بالسلة</button>
+<button type="button" class="bfab" hidden aria-label="افتح السلة"><Fragment set:html={svg('store', 18)} /><span class="t"></span></button>
+<p class="btoast" role="status" aria-live="polite" hidden><span class="m"></span><button type="button" class="undo" hidden>تراجع</button></p>
 
 <script>
   import { mountBasket } from '../scripts/basket';

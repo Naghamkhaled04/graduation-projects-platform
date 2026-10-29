@@ -1,0 +1,86 @@
+---
+import Base from '../layouts/Base.astro';
+import '../styles/store.css';
+import { svg } from '../data/icons';
+import { WHATSAPP, CONSULT_PRICE } from '../data/config';
+import { POINTS } from '../community/rules';
+const ar = (n: number) => n.toLocaleString('ar-EG');
+---
+
+<Base title="الاستشارة — مشاريع" description={`جلسة ومستند فيه المسار التقني لمشروع تخرجك وحلول تحدياته، بـ${CONSULT_PRICE} د.أ أو مجاناً بنقاطك.`}>
+  <main class="nv cs">
+    <div class="wrap">
+      <section class="cs-goal">
+        <h1>الاستشارة</h1>
+        <p class="o">هدفنا إنك تخلّص مشروع تخرجك وإنت فاهمه. ما بنعمله عنك، بنوضّحلك الطريق وبنشيل العقبات اللي مالها علاقة بشغلك.</p>
+        <p class="pull">المشروع شغلك إنت. إحنا بنجهّز وبنشرح.</p>
+      </section>
+
+      <div class="cs-grid">
+        <section class="cs-card">
+          <h2>شو بتطلع فيه</h2>
+          <ul class="yes">
+            <li>المسار التقني خطوة خطوة: شو تبني أول، وشو بعده</li>
+            <li>حل لكل تحدٍّ بمشروعك: القطع، التوصيل، البرمجة</li>
+            <li>مستند PDF تحتفظ فيه، ونصائح للمناقشة</li>
+          </ul>
+          <h2>كيف بتمشي</h2>
+          <ol class="steps">
+            <li>احجز من هون واحكيلنا فكرتك</li>
+            <li>بنقرأ فكرتك وبنحضّر قبل الجلسة</li>
+            <li>جلسة معك، وبعدها بيوصلك المستند</li>
+          </ol>
+          <p class="no">ما بنعمل المشروع بدالك، وما بنكتب كود جاهز للتسليم.</p>
+        </section>
+
+        <section class="cs-card book">
+          <p class="price"><b>{CONSULT_PRICE} د.أ</b> للجلسة<span>أو مجاناً بـ{ar(POINTS.redeemCost)} نقطة من نشاطك على المنصة · <a href="/profile">نقاطي</a></span></p>
+          <h2>احجز استشارتك</h2>
+          <label>اسمك<input id="c-name" maxlength="40" autocomplete="name" /></label>
+          <label>مشروعك أو فكرتك<textarea id="c-idea" rows="4" maxlength="600" placeholder="مثلاً: نظام ري ذكي بـESP32، وعلقانة بقراءة الحساس"></textarea></label>
+          <label>وقت بيناسبك<input id="c-time" maxlength="60" placeholder="مثلاً: الأحد بعد الساعة ٤" /></label>
+          <p class="c-err" id="c-err"></p>
+          <button type="button" class="nv-btn go" id="c-go"><Fragment set:html={svg('send', 17)} /> احجز على واتساب</button>
+          <p class="fine">بنرد عليك بموعد الجلسة وطريقة الدفع.</p>
+        </section>
+      </div>
+    </div>
+  </main>
+</Base>
+
+<script define:vars={{ WHATSAPP }}>
+  document.getElementById('c-go').addEventListener('click', () => {
+    const v = (id) => document.getElementById(id).value.trim();
+    if (v('c-idea').length < 8) { document.getElementById('c-err').textContent = 'احكيلنا عن مشروعك بسطر على الأقل'; return; }
+    const msg = `مرحباً، بدي أحجز استشارة.\n\nالاسم: ${v('c-name') || '—'}\nالمشروع: ${v('c-idea')}\nالوقت المناسب: ${v('c-time') || '—'}`;
+    window.open(`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(msg)}`, '_blank', 'noopener');
+  });
+</script>
+
+<style>
+  .cs-goal { max-width: 60ch; margin-bottom: 28px; }
+  .cs-goal h1 { font-size: clamp(32px, 5vw, 48px); margin-bottom: 14px; }
+  .cs-goal .o { font-size: 18px; line-height: 1.9; color: #0e3a63; }
+  .cs-goal .pull { margin-top: 14px; padding-inline-start: 14px; border-inline-start: 3px solid #3db7a6; font-weight: 600; color: #0e3a63; }
+  .cs-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+  @media (max-width: 760px) { .cs-grid { grid-template-columns: minmax(0, 1fr); } }
+  .cs-card { background: #fbfdfe; border: 1px solid #d9dee5; border-radius: 18px; padding: 24px; display: grid; gap: 10px; }
+  .cs-card h2 { font-size: 18px; margin-top: 6px; }
+  .cs-card ul, .cs-card ol { margin: 0; padding: 0; list-style: none; display: grid; gap: 7px; }
+  .cs-card li { position: relative; padding-inline-start: 26px; line-height: 1.8; color: #4a6380; font-size: 14.5px; }
+  .yes li::before { content: '✓'; position: absolute; inset-inline-start: 0; color: #18766a; font-weight: 700; }
+  .steps { counter-reset: s; } .steps li { counter-increment: s; }
+  .steps li::before { content: counter(s, arabic-indic); position: absolute; inset-inline-start: 0; top: 3px; width: 20px; height: 20px; border-radius: 6px;
+    background: #e3f3f0; color: #18766a; font-size: 12px; display: grid; place-items: center; }
+  .no { font-size: 13.5px; color: #4a6380; background: #eef3f6; border-radius: 12px; padding: 10px 14px; }
+  .book { background: #0e3a63; border-color: #0e3a63; color: #e9f3f8; }
+  .book h2 { color: #fff; }
+  .book .price { display: grid; gap: 4px; font-size: 15px; } .book .price b { font-size: 30px; color: #7fd8cb; }
+  .book .price span { font-size: 13px; color: rgb(233 243 248 / 75%); } .book .price a { color: #7fd8cb; }
+  .book label { display: grid; gap: 6px; font-size: 13.5px; }
+  .book input, .book textarea { font: 400 15px var(--font); padding: 11px 14px; border-radius: 12px; border: 1px solid rgb(255 255 255 / 18%); background: #fff; color: #0b1230; resize: vertical; }
+  .book input:focus-visible, .book textarea:focus-visible, .book .go:focus-visible { outline: 2px solid #7fd8cb; outline-offset: 2px; }
+  .book .c-err { color: #ffb4a8; font-size: 13px; min-height: 1em; }
+  .book .go { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; font-size: 15px; }
+  .book .fine { font-size: 12.5px; color: rgb(233 243 248 / 70%); }
+</style>

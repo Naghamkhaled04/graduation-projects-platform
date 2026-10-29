@@ -1,0 +1,211 @@
+---
+import Base from '../layouts/Base.astro';
+import '../styles/community.css';
+---
+
+<Base title="مسابقات وإيفنتات — مشاريع" description="مسابقات وإيفنتات لطلاب الحاسوب وإنترنت الأشياء: سجّل بفريقك، أو لحالك وإحنا بنشكّلك فريق حسب مهاراتك.">
+  <main class="pf ev">
+    <div class="container">
+      <a class="back" href="/communities">← المجتمع</a>
+      <h1>مسابقات وإيفنتات</h1>
+      <p class="lead">بنعلن هون عن مسابقات وإيفنتات بتناسب طلاب الحاسوب وإنترنت الأشياء، وبنساعدكم تتشكّلوا كفريق حسب مهاراتكم وتشاركوا.</p>
+
+      <ol class="ev-how">
+        <li><b>اختار مسابقة</b><span>كل وحدة فيها موعدها وحجم الفريق والمهارات المطلوبة.</span></li>
+        <li><b>سجّل بفريقك أو لحالك</b><span>عندك فريق؟ سجّله. لحالك؟ اختار أدوارك وإحنا بنلاقيلك فريق.</span></li>
+        <li><b>بنشكّل الفريق وبنساعدكم</b><span>بنجمع الفرق حسب الأدوار، وبتفتحوا مساحة فريقكم وتبلّشوا.</span></li>
+      </ol>
+
+      <div id="ev-admin"></div>
+      <div id="ev-list"><p class="c-note">جارٍ التحميل…</p></div>
+    </div>
+  </main>
+</Base>
+
+<script>
+  import { getBackend } from '../community/backend';
+  import { getEvents, KIND_LABEL, type EventItem, type Signup } from '../community/events';
+  import { ROLES, roleLabel, type RoleKey } from '../community/teams';
+  import { formTeams } from '../scripts/teammatch.js';
+  import { esc, ar, date } from '../community/ui';
+  import { svg } from '../data/icons';
+
+  const listEl = document.getElementById('ev-list')!, adminEl = document.getElementById('ev-admin')!;
+  const today = new Date().toISOString().slice(0, 10);
+
+  (async () => {
+    const [be, ev] = await Promise.all([getBackend(), getEvents()]);
+    const [s, admin] = await Promise.all([be.session(), be.isAdmin().catch(() => false)]);
+
+    // ---- TFC: نشر مسابقة أو إيفنت ----
+    if (admin) {
+      adminEl.innerHTML = `<details class="c-card ev-new"><summary>${svg('plus', 15)} انشر مسابقة أو إيفنت</summary>
+        <div class="grid">
+          <label>النوع<select id="n-kind"><option value="competition">مسابقة</option><option value="event">إيفنت</option></select></label>
+          <label>الاسم<input id="n-title" maxlength="120" placeholder="مثلاً: هاكاثون إنترنت الأشياء" /></label>
+          <label>التاريخ<input type="date" id="n-start" /></label>
+          <label>آخر موعد للتسجيل<input type="date" id="n-by" /></label>
+          <label>المكان<input id="n-place" maxlength="80" placeholder="عمّان، أو أونلاين" /></label>
+          <label>حجم الفريق<input type="number" id="n-size" min="2" max="8" value="3" /></label>
+          <label class="full">المهارات المطلوبة (افصل بفاصلة)<input id="n-skills" placeholder="ESP32، تطبيقات، عرض تقديمي" /></label>
+          <label class="full">التفاصيل<textarea id="n-body" rows="4" maxlength="1500" placeholder="شو المسابقة، الجوائز، وشو بنساعد فيه"></textarea></label>
+        </div>
+        <p class="c-err" id="n-err"></p>
+        <button type="button" class="c-btn" id="n-go">انشر</button>
+      </details>`;
+      adminEl.querySelector('#n-go')!.addEventListener('click', async () => {
+        const v = (id: string) => (adminEl.querySelector('#' + id) as HTMLInputElement).value;
+        try {
+          await ev.add({ kind: v('n-kind') as EventItem['kind'], title: v('n-title'), body: v('n-body'), starts_on: v('n-start'),
+            signup_by: v('n-by') || null, place: v('n-place'), team_size: Number(v('n-size')), skills: v('n-skills') as any });
+          adminEl.querySelector('details')!.open = false; await paint();
+        } catch (x: any) { adminEl.querySelector('#n-err')!.textContent = x.message; }
+      });
+    }
+
+    const card = (e: EventItem) => {
+      const closed = !!e.signup_by && e.signup_by < today;
+      return `<article class="c-card evc" data-ev="${e.id}">
+        <div class="evh"><span class="kind ${e.kind}">${KIND_LABEL[e.kind]}</span>${closed ? '<span class="kind shut">التسجيل سكّر</span>' : ''}</div>
+        <h2>${esc(e.title)}</h2>
+        <ul class="meta">
+          <li>${svg('medal', 14)} ${date(e.starts_on)}</li>
+          ${e.signup_by ? `<li>${svg('lock', 14)} التسجيل لحد ${date(e.signup_by)}</li>` : ''}
+          ${e.place ? `<li>${svg('building', 14)} ${esc(e.place)}</li>` : ''}
+          <li>${svg('users', 14)} فريق من ${ar(e.team_size)}</li>
+        </ul>
+        ${e.skills.length ? `<div class="chips">${e.skills.map((k) => `<span>${esc(k)}</span>`).join('')}</div>` : ''}
+        ${e.body ? `<p class="body">${esc(e.body)}</p>` : ''}
+        <div class="act" data-closed="${closed}"></div>
+        ${admin ? `<div class="adm"><button type="button" class="c-btn ghost sm" data-subs="${e.id}">التسجيلات</button><button type="button" class="c-btn ghost sm" data-del="${e.id}">احذف</button><div class="subs" hidden></div></div>` : ''}
+      </article>`;
+    };
+
+    let events: EventItem[] = [];
+    async function paint() {
+      events = await ev.list().catch(() => []);
+      listEl.innerHTML = events.length ? events.map(card).join('')
+        : `<div class="c-card evempty"><h3>${svg('medal', 19)} ما في مسابقات منشورة هلأ</h3>
+            <p class="c-note">أول ما TFC تنشر مسابقة أو إيفنت بيطلع هون، وبيوصلك خبره بقناة <a href="/c/news">الإعلانات</a>.</p></div>`;
+      for (const e of events) await paintAct(e);
+    }
+
+    /** خانة الطالب بكل كرت: سجّل، أو حالة تسجيله وفريقه */
+    async function paintAct(e: EventItem) {
+      const box = listEl.querySelector<HTMLElement>(`.evc[data-ev="${e.id}"] .act`)!;
+      if (!s) { box.innerHTML = `<a class="c-btn" href="/join">${svg('lock', 15)} سجّل دخولك عشان تشارك</a>`; return; }
+      const mine = await ev.mySignup(e.id).catch(() => null);
+      if (!mine) {
+        box.innerHTML = box.dataset.closed === 'true' ? '<p class="c-note">التسجيل سكّر.</p>'
+          : `<button type="button" class="c-btn" data-mode="team" data-id="${e.id}">${svg('users', 15)} عندي فريق</button>
+             <button type="button" class="c-btn ghost" data-mode="match" data-id="${e.id}">شكّلولي فريق</button>`;
+        return;
+      }
+      const mates = mine.team_no ? await ev.teammates(e.id).catch(() => []) : [];
+      box.innerHTML = `<div class="mine">
+        <b>✓ سجّلت ${mine.mode === 'team' ? `بفريق «${esc(mine.team_name ?? '')}»` : 'وبنشكّلك فريق'}</b>
+        ${mine.mode === 'match' ? `<span class="c-note">أدوارك: ${mine.roles.map((r) => esc(roleLabel(r))).join('، ')}</span>` : ''}
+        ${mine.team_no ? `<div class="mates"><b>فريقك رقم ${ar(mine.team_no)}:</b> ${mates.map((m) => `${esc(m.name)} <small>(${m.roles.map((r) => esc(roleLabel(r))).join('، ')})</small>`).join(' · ') || 'إنت'}
+            <a class="c-btn sm" href="/team">افتحوا مساحة فريقكم</a></div>`
+          : mine.mode === 'match' ? '<span class="c-note">بنبلّغك أول ما يتشكّل فريقك.</span>' : ''}
+        <button type="button" class="link" data-cancel="${e.id}">ألغِ تسجيلي</button>
+      </div>`;
+    }
+
+    function signupForm(box: HTMLElement, id: string, mode: 'team' | 'match') {
+      box.innerHTML = `<div class="sform">
+        ${mode === 'team' ? `<label>اسم فريقك<input class="f-team" maxlength="60" /></label>`
+          : `<span class="c-note">شو الأدوار اللي بتقدر تاخدها؟ (لحد ٤)</span>
+             <div class="roles">${ROLES.map((r) => `<label class="role"><input type="checkbox" value="${r.k}" /><span>${esc(r.label)}<small>${esc(r.hint)}</small></span></label>`).join('')}</div>
+             <label>مهاراتك (اختياري، افصل بفاصلة)<input class="f-skills" placeholder="ESP32، Flutter، لحام" /></label>`}
+        <p class="c-err"></p>
+        <button type="button" class="c-btn" data-send="${id}" data-m="${mode}">سجّلني</button>
+        <button type="button" class="link" data-back="${id}">رجوع</button>
+      </div>`;
+    }
+
+    listEl.addEventListener('click', async (ev0) => {
+      const t = (ev0.target as HTMLElement).closest<HTMLElement>('[data-mode],[data-send],[data-back],[data-cancel],[data-subs],[data-del],[data-form],[data-approve]'); if (!t) return;
+      const art = t.closest<HTMLElement>('.evc')!, e = events.find((x) => x.id === art.dataset.ev)!, box = art.querySelector<HTMLElement>('.act')!;
+      if (t.dataset.mode) return signupForm(box, e.id, t.dataset.mode as 'team' | 'match');
+      if (t.dataset.back) return paintAct(e);
+      if (t.dataset.cancel) { await ev.cancel(e.id).catch(() => {}); return paintAct(e); }
+      if (t.dataset.send) {
+        const roles = [...box.querySelectorAll<HTMLInputElement>('.role input:checked')].map((x) => x.value as RoleKey);
+        try {
+          await ev.signup(e.id, { mode: t.dataset.m as Signup['mode'], team_name: box.querySelector<HTMLInputElement>('.f-team')?.value ?? null,
+            roles, skills: (box.querySelector<HTMLInputElement>('.f-skills')?.value ?? '') as any });
+          return paintAct(e);
+        } catch (x: any) { box.querySelector('.c-err')!.textContent = roles.length > 4 ? 'اختار ٤ أدوار بالكثير' : x.message === 'AUTH' ? 'سجّل دخولك أولاً' : x.message; return; }
+      }
+      if (t.dataset.del) { if (confirm('أكيد بدك تحذف هالمسابقة وتسجيلاتها؟')) { await ev.remove(e.id); await paint(); } return; }
+      // ---- TFC: التسجيلات وتشكيل الفرق ----
+      const subsEl = art.querySelector<HTMLElement>('.subs')!;
+      const subs = await ev.signups(e.id).catch(() => []);
+      const nameOf = (id: string) => esc(subs.find((x) => x.user_id === id)?.name ?? 'طالب');
+      if (t.dataset.subs) {
+        if (!subsEl.hidden) { subsEl.hidden = true; return; }
+        subsEl.hidden = false;
+        const match = subs.filter((x) => x.mode === 'match');
+        subsEl.innerHTML = subs.length ? `<ul>${subs.map((x) => `<li><b>${esc(x.name ?? 'طالب')}</b> · ${x.mode === 'team' ? `فريق «${esc(x.team_name ?? '')}»` : x.roles.map((r) => esc(roleLabel(r))).join('، ')}${x.team_no ? ` · فريق ${ar(x.team_no)}` : ''}</li>`).join('')}</ul>
+          ${match.length ? `<button type="button" class="c-btn sm" data-form="${e.id}">شكّل الفرق (${ar(match.length)} لحالهم)</button>` : ''}<div class="plan"></div>`
+          : '<p class="c-note">ما حدا سجّل لسا.</p>';
+        return;
+      }
+      if (t.dataset.form) {
+        const { teams, left } = formTeams(subs.filter((x) => x.mode === 'match').map((x) => ({ id: x.user_id, roles: x.roles })), e.team_size);
+        const plan = subsEl.querySelector<HTMLElement>('.plan')!;
+        plan.dataset.teams = JSON.stringify(teams);
+        plan.innerHTML = `${teams.map((tm, i) => `<p><b>فريق ${ar(i + 1)}:</b> ${tm.map(nameOf).join('، ')}</p>`).join('') || '<p class="c-note">العدد أقل من فريق كامل.</p>'}
+          ${left.length ? `<p class="c-note">بيستنوا تسجيلات أكثر: ${left.map(nameOf).join('، ')}</p>` : ''}
+          ${teams.length ? `<button type="button" class="c-btn sm" data-approve="${e.id}">اعتمد الفرق</button>` : ''}`;
+        return;
+      }
+      if (t.dataset.approve) {
+        await ev.setTeams(e.id, JSON.parse(subsEl.querySelector<HTMLElement>('.plan')!.dataset.teams!));
+        subsEl.hidden = true; await paintAct(e);
+      }
+    });
+
+    await paint();
+  })();
+</script>
+
+<style is:global>
+  .ev .back { color: var(--fg-2); text-decoration: none; font-size: 14px; }
+  .ev h1 { margin: 8px 0 10px; } .ev .lead { color: var(--fg-2); line-height: 1.9; max-width: 62ch; }
+  /* الخطوات تسلسل فعلي، فالأرقام إلها معنى */
+  .ev-how { list-style: none; counter-reset: s; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 22px 0 26px; padding: 0; }
+  .ev-how li { counter-increment: s; display: grid; gap: 4px; padding: 16px 18px; border-radius: 18px; background: #fff; box-shadow: 0 0 0 1px rgba(14, 58, 99, .08); }
+  .ev-how li::before { content: counter(s, arabic-indic); display: grid; place-items: center; width: 28px; height: 28px; border-radius: 9px; background: var(--mint); color: var(--green); font-weight: 600; margin-bottom: 4px; }
+  .ev-how b { font-size: 15.5px; } .ev-how span { font-size: 13.5px; color: var(--fg-2); line-height: 1.75; }
+  .ev-new { margin-bottom: 18px; } .ev-new summary { cursor: pointer; font-weight: 500; color: var(--green); }
+  .ev-new summary svg { vertical-align: -3px; }
+  .ev-new .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0 14px; margin-top: 14px; }
+  .ev-new .full { grid-column: 1 / -1; }
+  .evc { margin-bottom: 14px; display: grid; gap: 10px; }
+  .evc .evh { display: flex; gap: 8px; }
+  .evc .kind { font-size: 12.5px; padding: 3px 11px; border-radius: 999px; background: var(--mint); color: var(--green); }
+  .evc .kind.event { background: #e3eef6; color: #0e3a63; } .evc .kind.shut { background: #f1f3f5; color: var(--fg-2); }
+  .evc h2 { font-size: 21px; line-height: 1.4; }
+  .evc .meta { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13.5px; color: var(--fg-2); }
+  .evc .meta svg { vertical-align: -2px; opacity: .7; }
+  .evc .chips { display: flex; flex-wrap: wrap; gap: 6px; } .evc .chips span { font-size: 12.5px; padding: 4px 11px; border-radius: 999px; background: var(--cream); color: var(--green); }
+  .evc .body { color: var(--fg-2); line-height: 1.9; white-space: pre-wrap; }
+  .evc .act { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding-top: 12px; border-top: 1px solid rgba(14, 58, 99, .08); }
+  .evc .act .c-btn svg { vertical-align: -3px; margin-inline-end: 4px; }
+  .evc .mine { display: grid; gap: 6px; width: 100%; } .evc .mine b { color: var(--green); }
+  .evc .mates { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; background: var(--mint); border-radius: 14px; padding: 10px 14px; font-size: 14px; }
+  .evc .link { font: 500 13px var(--font); background: none; border: 0; color: var(--fg-2); cursor: pointer; padding: 4px 0; justify-self: start; }
+  .evc .sform { display: grid; gap: 10px; width: 100%; }
+  .evc .roles { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 8px; }
+  .evc .role input { position: absolute; opacity: 0; }
+  .evc .role span { display: grid; gap: 2px; font-size: 14px; padding: 10px 13px; border-radius: 14px; background: var(--cream); border: 1px solid transparent; cursor: pointer; }
+  .evc .role small { font-size: 12px; color: var(--fg-2); }
+  .evc .role input:checked + span { background: #eef8f6; border-color: var(--orange); }
+  .evc .role input:focus-visible + span { outline: 2px solid #18766a; outline-offset: 2px; }
+  .evc .adm { display: flex; flex-wrap: wrap; gap: 8px; } .evc .subs { width: 100%; display: grid; gap: 8px; font-size: 14px; }
+  .evc .subs[hidden] { display: none; } .evc .subs .c-btn { justify-self: start; }
+  .evc .subs ul { margin: 0; padding-inline-start: 18px; display: grid; gap: 4px; }
+  .evempty h3 { display: flex; align-items: center; gap: 9px; font-size: 19px; margin-bottom: 6px; }
+</style>

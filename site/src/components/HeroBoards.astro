@@ -68,7 +68,7 @@ const n = (projects as unknown[]).length;
     display: grid; grid-template-columns: 1fr 1fr; gap: clamp(20px, 4vw, 54px); align-items: center; }
 
   .k { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--fg-2);
-    background: #fff; border: 1px solid rgba(15,61,62,.1); padding: 6px 15px; border-radius: 999px; margin-bottom: 18px; }
+    background: #fff; border: 1px solid rgba(14, 58, 99,.1); padding: 6px 15px; border-radius: 999px; margin-bottom: 18px; }
   .k i { width: 7px; height: 7px; border-radius: 50%; background: var(--orange); box-shadow: 0 0 8px var(--orange); }
 
   .hb-copy h1 { font-size: clamp(2.4rem, 1.2rem + 4.4vw, 5rem); line-height: 1.08; letter-spacing: -0.02em; margin-bottom: 16px; }
@@ -78,8 +78,8 @@ const n = (projects as unknown[]).length;
   .hb-acts { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 30px; }
   .btn { font: 500 14.5px var(--font); text-decoration: none; padding: 13px 24px; border-radius: 999px;
     background: var(--orange); color: #fff; transition: transform .2s, box-shadow .2s, background .2s; }
-  .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 24px -10px rgba(232,116,59,.8); }
-  .btn.ghost { background: #fff; color: var(--green); box-shadow: inset 0 0 0 1px rgba(15,61,62,.14); }
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 24px -10px rgba(61, 183, 166,.8); }
+  .btn.ghost { background: #fff; color: var(--green); box-shadow: inset 0 0 0 1px rgba(14, 58, 99,.14); }
   .btn.ghost:hover { box-shadow: inset 0 0 0 1px var(--orange); color: var(--orange); }
 
   .hb-stats { display: flex; gap: 30px; flex-wrap: wrap; }
@@ -92,13 +92,13 @@ const n = (projects as unknown[]).length;
   .hb-stage canvas:active { cursor: grabbing; }
 
   .hb-now { position: absolute; inset-inline-start: 0; bottom: 34px; display: flex; align-items: center; gap: 9px;
-    background: #fff; border: 1px solid rgba(15,61,62,.1); border-radius: 999px; padding: 9px 18px;
-    box-shadow: 0 14px 34px -22px rgba(15,61,62,.7); pointer-events: none; }
+    background: #fff; border: 1px solid rgba(14, 58, 99,.1); border-radius: 999px; padding: 9px 18px;
+    box-shadow: 0 14px 34px -22px rgba(14, 58, 99,.7); pointer-events: none; }
   .hb-now .dot { width: 8px; height: 8px; border-radius: 50%; background: #3ad17a; box-shadow: 0 0 8px #3ad17a; }
   .hb-now b { font-size: 14.5px; } .hb-now span { font-size: 12.5px; color: var(--fg-2); }
 
   .hb-dots { position: absolute; inset-inline-end: 6px; bottom: 40px; display: grid; gap: 7px; }
-  .hb-dots i { width: 7px; height: 7px; border-radius: 50%; background: rgba(15,61,62,.2); transition: all .3s; }
+  .hb-dots i { width: 7px; height: 7px; border-radius: 50%; background: rgba(14, 58, 99,.2); transition: all .3s; }
   .hb-dots i.on { background: var(--orange); transform: scale(1.5); }
 
   @media (max-width: 900px) {

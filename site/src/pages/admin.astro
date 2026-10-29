@@ -17,6 +17,8 @@ import '../styles/community.css';
   import { POINTS } from '../community/rules';
   import { openEditor } from '../admin/editor';
   import { getProjectStore, docFromStatic, type ProjectDoc } from '../projects/store';
+  import { getCommunities, kindLabel } from '../community/communities';
+  import { ALL_SPACES } from '../data/spaces';
 
   const titleOf = (id: string) => (projects as any[]).find((p) => p.id === id)?.t ?? id;
   const root = document.getElementById('ad-root')!;
@@ -26,7 +28,7 @@ import '../styles/community.css';
     // بوابة: لا تُعرض أي بيانات قبل التأكد من أنه أدمن
     if (!(await be.session())) { location.replace('/join?next=/admin'); return; }
     if (!(await be.isAdmin())) {
-      root.innerHTML = '<div class="c-card"><h2>هالصفحة للإدارة فقط</h2><p class="c-note">حسابك ما إله صلاحية هون.</p><a class="c-btn" href="/">الرجوع للرئيسية</a></div>';
+      root.innerHTML = '<div class="c-card"><h2>هالصفحة للإدارة فقط</h2><p class="c-note">حسابك ما إله صلاحية هون.</p><a class="c-btn" href="/home">الرجوع للرئيسية</a></div>';
       return;
     }
     root.innerHTML = `<h1>لوحة الأدمن</h1>${demoBanner(be)}<div id="g"></div><div id="b" hidden></div>`;
@@ -37,10 +39,26 @@ import '../styles/community.css';
 
     let tab = 'fb', q = '';
     const pstore = await getProjectStore();
+    const com = await getCommunities();
+    const spaceName = (slug: string) => ALL_SPACES.find((x) => x.slug === slug)?.name ?? slug;
+    let thread: string | null = null;   // خيط الرسائل المفتوح
+    let unsub: (() => void) | null = null;   // اشتراك البث على الخيط المفتوح
     async function paint() {
-      const [fb, bl, rd, us, docs] = await Promise.all([be.adminPendingFeedback(), be.adminPendingBuildings(), be.adminRedemptions(), be.adminUsers(), pstore.listAll()]);
+      const [fb, rd, us, docs, pend, mods, thr] = await Promise.all([
+        be.adminPendingFeedback(), be.adminRedemptions(), be.adminUsers(), pstore.listAll(),
+        com.allPending(), com.modApplications(), be.adminThreads(),
+      ]);
       const byId = new Map(docs.map((d) => [d.id, d]));
-      const tabs: [string, string, number][] = [['fb', 'الفيدباك', fb.length], ['bl', 'المباني', bl.length], ['rd', 'الاستبدالات', rd.filter((r) => r.status === 'open').length], ['us', 'الطلاب والنقاط', us.length], ['pj', 'المشاريع', 0]];
+      const tabs: [string, string, number][] = [
+        ['po', 'منشورات المجتمع', pend.length],
+        ['ms', 'الرسائل', thr.reduce((n, t) => n + t.unread, 0)],
+        ['mo', 'طلبات الإشراف', mods.length],
+        ['fb', 'الفيدباك', fb.length],
+        ['rd', 'الاستبدالات', rd.filter((r) => r.status === 'open').length],
+        ['us', 'الطلاب والنقاط', us.length],
+        ['pj', 'المشاريع', 0],
+        ['ex', 'نسخة احتياطية', 0],
+      ];
       let inner = '';
       if (tab === 'fb') inner = fb.length ? fb.map((f) => `<article class="c-card">
           <div class="top"><b>${esc(f.author ?? 'طالب')}</b> على <a href="/projects/${f.project_id}" target="_blank">${esc(titleOf(f.project_id))}</a> <span class="c-stars">${stars(f.rating)}</span> <small>${date(f.created_at)}</small></div>
@@ -48,9 +66,46 @@ import '../styles/community.css';
           ${f.images.length ? `<div class="c-thumbs">${f.images.map((u) => `<a href="${esc(u)}" target="_blank" rel="noopener"><img src="${esc(u)}" alt="" /></a>`).join('')}</div>` : ''}
           <div class="acts"><button class="c-btn" data-fb="${f.id}:approved">اعتماد (+${f.images.length ? POINTS.photoFeedback : POINTS.ideaComment} نقطة)</button><button class="c-btn danger" data-fb="${f.id}:rejected">رفض</button></div>
         </article>`).join('') : '<p class="c-note">لا يوجد فيدباك بانتظار المراجعة.</p>';
-      if (tab === 'bl') inner = be.mode === 'local' ? '<p class="c-note">مباني الزوّار بتظهر هون بالوضع السحابي فقط.</p>' : bl.length ? bl.map((x) => `<article class="c-card"><b>${esc(x.sign)}</b> <small>(${esc(x.name)})</small><div class="acts"><button class="c-btn" data-bl="${x.id}:approved">اعتماد (+${POINTS.building})</button><button class="c-btn danger" data-bl="${x.id}:rejected">رفض</button></div></article>`).join('') : '<p class="c-note">لا مباني بانتظار المراجعة.</p>';
       if (tab === 'rd') inner = rd.length ? `<div class="c-card">${rd.map((r) => `<div class="c-row"><span><b dir="ltr">${esc(r.code)}</b> — ${esc(r.author ?? '')} <small>${date(r.created_at)}</small></span><span><span class="c-badge ${r.status}">${STATUS[r.status]}</span>${r.status === 'open' ? ` <button class="c-btn ghost sm" data-rd="${r.id}:used">تم استخدامه</button> <button class="c-btn ghost sm" data-rd="${r.id}:cancelled">إلغاء</button>` : ''}</span></div>`).join('')}</div>` : '<p class="c-note">لا استبدالات بعد.</p>';
-      if (tab === 'us') inner = `<div class="c-card">${us.map((u) => `<div class="c-row"><span><b>${esc(u.display_name)}</b> <small class="c-note">${esc([u.university, u.major].filter(Boolean).join(' · '))}</small></span><span><b>${ar(u.points)}</b> نقطة <button class="c-btn ghost sm" data-adj="${u.id}">تعديل</button></span></div>`).join('')}</div>`;
+      if (tab === 'us') inner = `<div class="c-card">
+          <p class="c-note">«فريق المنصة» = صلاحية أدمن كاملة، وشارة جنب اسمه بكل المنصة.</p>
+          ${us.map((u) => `<div class="c-row">
+            <span><b>${esc(u.display_name)}</b>${u.role === 'admin' ? '<span class="c-team">★ فريق المنصة</span>' : ''} <small class="c-note">${esc([u.university, u.major].filter(Boolean).join(' · '))}</small></span>
+            <span><b>${ar(u.points)}</b> نقطة
+              <button class="c-btn ghost sm" data-adj="${u.id}">نقاط</button>
+              <button class="c-btn ghost sm" data-role="${u.id}:${u.role === 'admin' ? 'student' : 'admin'}">${u.role === 'admin' ? 'إنزال من الأدمن' : 'ترقية لأدمن'}</button>
+            </span></div>`).join('')}</div>`;
+      if (tab === 'po') inner = pend.length ? pend.map((x) => `<article class="c-card">
+          <div class="top"><b>${esc(x.author ?? 'طالب')}</b> <span class="c-badge">${esc(spaceName(x.uni))}</span> <span class="c-badge">${esc(kindLabel(x.kind))}</span> <small>${date(x.created_at)}</small></div>
+          <b>${esc(x.title)}</b><p>${esc(x.body)}</p>
+          ${x.due ? `<p class="c-note">الموعد: ${esc(x.due)}</p>` : ''}
+          <div class="acts"><button class="c-btn" data-po="${x.id}:approved">نشر</button><button class="c-btn danger" data-po="${x.id}:rejected">رفض</button></div>
+        </article>`).join('') : '<p class="c-note">ما في منشورات بانتظار المراجعة. ✅</p>';
+
+      if (tab === 'mo') inner = mods.length ? mods.map((m) => `<article class="c-card">
+          <div class="top"><b>${esc(m.name)}</b> بدّه إشراف <span class="c-badge">${esc(spaceName(m.uni))}</span> <small>${date(m.created_at)}</small></div>
+          ${m.why ? `<p>${esc(m.why)}</p>` : '<p class="c-note">ما كتب سبباً.</p>'}
+          <div class="acts"><button class="c-btn" data-mo="${esc(m.uni)}|${m.user_id}|active">اعتماد مشرفاً</button><button class="c-btn danger" data-mo="${esc(m.uni)}|${m.user_id}|rejected">رفض</button></div>
+        </article>`).join('') : '<p class="c-note">ما في طلبات إشراف.</p>';
+
+      if (tab === 'ms') {
+        if (thread) {
+          const msgs = await be.adminThread(thread);
+          const who = thr.find((t) => t.user_id === thread)?.name ?? 'طالب';
+          inner = `<div class="c-card"><div class="top"><button class="c-btn ghost sm" data-back>← كل الرسائل</button><b>${esc(who)}</b></div>
+            <div class="chat">${msgs.map((m) => `<div class="bub ${m.from_admin ? 'me' : ''}"><p>${esc(m.body)}</p><small>${date(m.created_at)}</small></div>`).join('') || '<p class="c-note">ما في رسائل.</p>'}</div>
+            <div class="pj-top"><input id="rp" placeholder="اكتب ردك…" /><button class="c-btn" data-reply="${thread}">رد</button></div></div>`;
+        } else {
+          inner = thr.length ? `<div class="c-card">${thr.map((t) => `<div class="c-row"><span><b>${esc(t.name)}</b> <small class="c-note">${esc(t.last_body.slice(0, 60))}</small></span><span>${t.unread ? `<span class="c-badge pending">${ar(t.unread)} جديد</span> ` : ''}<small>${date(t.last_at)}</small> <button class="c-btn ghost sm" data-open="${t.user_id}">فتح</button></span></div>`).join('')}</div>` : '<p class="c-note">ما وصلت رسائل بعد.</p>';
+        }
+      }
+
+      if (tab === 'ex') inner = `<div class="c-card">
+          <h2>نسخة احتياطية</h2>
+          <p class="c-note">بينزّل كل الجداول بملف JSON واحد على جهازك. احتفظي فيه خارج سوبابيس.</p>
+          <div class="acts"><button class="c-btn" data-export>⬇ نزّل كل البيانات</button></div>
+        </div>`;
+
       if (tab === 'pj') {
         const fixedIds = new Set((projects as any[]).map((p) => p.id));
         const all = [...(projects as any[]).map((p) => ({ id: p.id, title: p.t, fixed: true })), ...docs.filter((d) => !fixedIds.has(d.id)).map((d) => ({ id: d.id, title: d.title, fixed: false }))]
@@ -61,7 +116,19 @@ import '../styles/community.css';
           ${all.map((r) => { const d = byId.get(r.id); const hidden = d && d.status === 'hidden'; return `<div class="c-row"><span><b>${esc(r.title)}</b> <small class="c-note" dir="ltr">${esc(r.id)}</small></span><span>${badge(d, r.fixed)} <button class="c-btn ghost sm" data-edit="${r.id}">تعديل</button>${hidden ? ` <button class="c-btn ghost sm" data-show="${r.id}">إظهار</button>` : r.fixed ? ` <button class="c-btn ghost sm" data-hide="${r.id}">إخفاء</button>` : ''}</span></div>`; }).join('')}</div>`;
       }
       b.innerHTML = `<div class="tabs">${tabs.map(([k, n, c]) => `<button class="c-btn ${k === tab ? '' : 'ghost'}" data-tab="${k}">${n}${c ? ` (${ar(c)})` : ''}</button>`).join('')}</div><div class="c-list">${inner}</div>`;
+      const c = b.querySelector('.chat'); if (c) c.scrollTop = c.scrollHeight;
+      // بث لحظي على الخيط المفتوح وحده
+      unsub?.(); unsub = null;
+      if (tab === 'ms' && thread) unsub = await be.onMessages(thread, () => paint());
     }
+    // Enter يبعث الرد
+    b.addEventListener('keydown', (e) => {
+      const k = e as KeyboardEvent;
+      if ((e.target as HTMLElement).id === 'rp' && k.key === 'Enter') {
+        e.preventDefault();
+        (b.querySelector('[data-reply]') as HTMLElement)?.click();
+      }
+    });
     b.addEventListener('input', (e) => {
       const t = e.target as HTMLInputElement;
       if (t.id !== 'pj-q') return;
@@ -69,11 +136,37 @@ import '../styles/community.css';
       (window as any).__pq = setTimeout(async () => { await paint(); const i = document.getElementById('pj-q') as HTMLInputElement; i?.focus(); i?.setSelectionRange(q.length, q.length); }, 250);
     });
     b.addEventListener('click', async (e) => {
-      const t = (e.target as HTMLElement).closest<HTMLElement>('[data-tab],[data-fb],[data-bl],[data-rd],[data-adj],[data-new],[data-edit],[data-hide],[data-show]'); if (!t) return;
+      const t = (e.target as HTMLElement).closest<HTMLElement>('[data-tab],[data-role],[data-fb],[data-po],[data-mo],[data-open],[data-back],[data-reply],[data-export],[data-rd],[data-adj],[data-new],[data-edit],[data-hide],[data-show]'); if (!t) return;
       try {
-        if (t.dataset.tab) tab = t.dataset.tab;
+        if (t.dataset.tab) { tab = t.dataset.tab; thread = null; }
+        else if (t.dataset.role) {
+          const [id, r] = t.dataset.role.split(':');
+          const who = us.find((u) => u.id === id)?.display_name ?? 'الحساب';
+          if (!confirm(r === 'admin' ? `ترقية ${who} لأدمن؟ بيقدر يعتمد وينشر ويعدّل النقاط.` : `إنزال ${who} من الأدمن؟`)) return;
+          await be.adminSetRole(id, r as any);
+        }
         else if (t.dataset.fb) { const [id, st] = t.dataset.fb.split(':'); await be.adminModerateFeedback(id, st as any); }
-        else if (t.dataset.bl) { const [id, st] = t.dataset.bl.split(':'); await be.adminModerateBuilding(id, st as any); }
+        else if (t.dataset.po) { const [id, st] = t.dataset.po.split(':'); await com.moderate(id, st as any); }
+        else if (t.dataset.mo) { const [uni, uid, st] = t.dataset.mo.split('|'); await com.setModerator(uni, uid, st as any); }
+        else if (t.dataset.open) { thread = t.dataset.open; }
+        else if (t.hasAttribute('data-back')) { thread = null; }
+        else if (t.dataset.reply) {
+          const i = document.getElementById('rp') as HTMLInputElement;
+          const v = i?.value.trim(); if (!v) return;
+          i.value = '';
+          await be.adminReply(t.dataset.reply, v);
+        }
+        else if (t.hasAttribute('data-export')) {
+          t.textContent = 'جارٍ التجميع…';
+          const data = await be.adminExport();
+          const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = `backup-${new Date().toISOString().slice(0, 10)}.json`;
+          a.click(); URL.revokeObjectURL(a.href);
+          t.textContent = '⬇ نزّل كل البيانات';
+          return;
+        }
         else if (t.dataset.rd) { const [id, st] = t.dataset.rd.split(':'); await be.adminSetRedemption(id, st as any); }
         else if (t.hasAttribute('data-new')) { openEditor(null, paint); return; }
         else if (t.dataset.edit) { const id = t.dataset.edit; const d = (await pstore.get(id)) ?? docFromStatic(id); if (d) openEditor(d, paint); return; }
@@ -93,26 +186,30 @@ import '../styles/community.css';
   .ad .acts { display: flex; gap: 8px; margin-top: 14px; } .ad .top { margin-bottom: 8px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
   .ad .c-card p { line-height: 1.9; } .ad .sm { padding: 4px 12px; font-size: 12px; }
   .pj-top { display: flex; gap: 10px; margin-bottom: 8px; } .pj-top input { flex: 1; }
+  .ad .chat { display: grid; gap: 10px; margin: 14px 0; max-height: 60vh; overflow-y: auto; }
+  .ad .bub { background: #fff; border-radius: 16px 16px 16px 4px; padding: 11px 14px; max-width: 76%; justify-self: start; box-shadow: 0 0 0 1px rgba(14, 58, 99,.07); }
+  .ad .bub.me { background: var(--mint); border-radius: 16px 16px 4px 16px; justify-self: end; }
+  .ad .bub p { margin: 0; line-height: 1.8; white-space: pre-wrap; } .ad .bub small { display: block; margin-top: 4px; opacity: .55; font-size: 11.5px; }
   .ed-ov { position: fixed; inset: 0; z-index: 200; background: rgba(6, 18, 20, .72); backdrop-filter: blur(6px); display: grid; place-items: center; padding: 18px; }
   .ed { background: var(--cream); border-radius: 28px; width: min(1180px, 100%); height: min(92vh, 900px); display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 40px 100px -20px rgba(0,0,0,.6); }
-  .ed-top { display: flex; justify-content: space-between; align-items: center; padding: 18px 26px; border-bottom: 1px solid rgba(15,61,62,.1); } .ed-top h2 { font-size: 20px; }
+  .ed-top { display: flex; justify-content: space-between; align-items: center; padding: 18px 26px; border-bottom: 1px solid rgba(14, 58, 99,.1); } .ed-top h2 { font-size: 20px; }
   .ed-body { flex: 1; display: grid; grid-template-columns: 1fr 380px; min-height: 0; }
-  .ed-form { overflow-y: auto; padding: 22px 26px; } .ed-side { overflow-y: auto; padding: 18px; border-inline-start: 1px solid rgba(15,61,62,.1); background: var(--cream-2); }
+  .ed-form { overflow-y: auto; padding: 22px 26px; } .ed-side { overflow-y: auto; padding: 18px; border-inline-start: 1px solid rgba(14, 58, 99,.1); background: var(--cream-2); }
   .ed section { margin-bottom: 26px; } .ed h3 { font-size: 16px; margin-bottom: 10px; }
   .ed label { display: grid; gap: 5px; font-size: 13px; margin-bottom: 10px; }
-  .ed input:not([type='checkbox']):not([type='radio']):not([type='color']), .ed select, .ed textarea { font: 400 14px var(--font); padding: 9px 12px; border-radius: 12px; border: 1px solid rgba(15,61,62,.18); background: #fff; color: var(--green); width: 100%; outline: none; }
+  .ed input:not([type='checkbox']):not([type='radio']):not([type='color']), .ed select, .ed textarea { font: 400 14px var(--font); padding: 9px 12px; border-radius: 12px; border: 1px solid rgba(14, 58, 99,.18); background: #fff; color: var(--green); width: 100%; outline: none; }
   .ed input:focus, .ed textarea:focus, .ed select:focus { border-color: var(--orange); }
   .ed .chk { display: flex; align-items: center; gap: 8px; } .ed .two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   .ed .row3 { display: grid; grid-template-columns: 140px 1fr 30px; gap: 8px; margin-bottom: 8px; }
   .ed .row4 { display: grid; grid-template-columns: 1fr 1.4fr 90px 30px; gap: 8px; margin-bottom: 8px; }
-  .ed .part { background: #fff; border-radius: 18px; padding: 12px; margin-bottom: 12px; box-shadow: 0 0 0 1px rgba(15,61,62,.07); }
+  .ed .part { background: #fff; border-radius: 18px; padding: 12px; margin-bottom: 12px; box-shadow: 0 0 0 1px rgba(14, 58, 99,.07); }
   .ed .row5 { display: grid; grid-template-columns: 1.4fr 1fr 64px auto 30px; gap: 8px; align-items: center; margin-bottom: 8px; }
   .ed .row6 { display: grid; grid-template-columns: 20px 1.2fr 1.4fr 80px 30px; gap: 8px; align-items: center; margin-bottom: 6px; }
-  .ed .x { border: 0; background: rgba(180,85,58,.15); color: #b4553a; border-radius: 10px; height: 32px; cursor: pointer; }
-  .ed .bulk { background: #fff4ec; border: 1px dashed var(--orange); border-radius: 16px; padding: 12px; margin-bottom: 14px; } .ed .bulk textarea { margin-bottom: 4px; }
+  .ed .x { border: 0; background: rgba(180,85,58,.15); color: #18766a; border-radius: 10px; height: 32px; cursor: pointer; }
+  .ed .bulk { background: #eef8f6; border: 1px dashed var(--orange); border-radius: 16px; padding: 12px; margin-bottom: 14px; } .ed .bulk textarea { margin-bottom: 4px; }
   .ed .tagsel { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; align-content: start; } .ed .tagsel span { grid-column: 1 / -1; font-size: 13px; }
   .ed .tot { margin-top: 8px; } .ed .ed-acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; } .ed a.c-btn { text-decoration: none; display: inline-block; }
-  .ed-prev { position: relative; height: 300px; border-radius: 20px; overflow: hidden; background: radial-gradient(120% 90% at 50% 100%, #e4d8c3, var(--cream)); margin-bottom: 14px; box-shadow: 0 0 0 1px rgba(15,61,62,.08); }
+  .ed-prev { position: relative; height: 300px; border-radius: 20px; overflow: hidden; background: radial-gradient(120% 90% at 50% 100%, #d5dee6, var(--cream)); margin-bottom: 14px; box-shadow: 0 0 0 1px rgba(14, 58, 99,.08); }
   .ed-prev canvas { position: absolute; inset: 0; width: 100%; height: 100%; } .ed-prev small { position: absolute; bottom: 8px; inset-inline-start: 12px; color: var(--fg-2); }
   .ed .mrow { display: grid; grid-template-columns: 1.3fr 60px 60px 62px 34px 26px; gap: 5px; align-items: end; margin-bottom: 8px; background: #fff; padding: 8px; border-radius: 12px; }
   .ed .mrow label { margin: 0; } .ed .mrow input[type='color'] { width: 34px; height: 34px; padding: 0; border: 0; background: none; }

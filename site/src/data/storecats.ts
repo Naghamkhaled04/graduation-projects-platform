@@ -1,4 +1,4 @@
-import catalog from './novatera.json';
+import catalog from './abela.json';
 
 export interface Prod { id: string; nm: string; cat: string; p: number; img: string }
 export const PRODUCTS = catalog as Prod[];
@@ -20,6 +20,9 @@ const ORDER: { cat: string; slug: string; icon: string; blurb: string }[] = [
   { cat: 'المنزل الذكي', slug: 'smart-home', icon: 'home', blurb: 'مفاتيح، مرحّلات، تحكم عن بُعد' },
   { cat: 'ليدات وإضاءة', slug: 'led', icon: 'energy', blurb: 'ليدات، شرائط، مصفوفات' },
   { cat: 'أطقم للأطفال', slug: 'kids', icon: 'medal', blurb: 'تعليمية وآمنة للصغار' },
+  { cat: 'مقاومات', slug: 'resistors', icon: 'energy', blurb: 'مقاومات ثابتة ومتغيّرة وأطقم قيم' },
+  { cat: 'مكثفات', slug: 'capacitors', icon: 'box', blurb: 'سيراميك وإلكتروليتي وأطقم' },
+  { cat: 'ترانزستورات', slug: 'transistors', icon: 'ai', blurb: 'NPN وPNP وموسفت' },
   { cat: 'متنوّعات', slug: 'misc', icon: 'box', blurb: 'قطع وأدوات متفرقة' },
 ];
 
@@ -28,6 +31,8 @@ export const CATEGORIES = ORDER.filter((c) => PRODUCTS.some((p) => p.cat === c.c
 
 export const catBySlug = (slug: string) => CATEGORIES.find((c) => c.slug === slug);
 export const slugOf = (cat: string) => ORDER.find((c) => c.cat === cat)?.slug ?? '';
+/** أيقونة القسم: بتبيّن بالكرت لما صورة القطعة مش متوفرة */
+export const iconOf = (cat: string) => ORDER.find((c) => c.cat === cat)?.icon ?? 'box';
 export const productsOf = (cat: string) => PRODUCTS.filter((p) => p.cat === cat);
 
 /** قطع مختارة للواجهة: الأرخص من كل قسم أساسي، بترتيب ثابت */
@@ -43,5 +48,9 @@ export const SERVICES = [
   { icon: 'chat', t: 'تطبيقات ويب وهواتف', d: 'لوحة تحكم أو تطبيق يقرأ بيانات مشروعك ويعرضها.' },
   { icon: 'flask', t: 'استشارة تقنية', d: 'المسار التقني وحلول التحديات، بجلسة ومستند.' },
 ];
+
+/** صورة بديلة لما تكون صورة المنتج مكسورة */
+export const IMG_FALLBACK = '/img/part.svg';
+export const imgFallback = `this.onerror=null;this.src='${IMG_FALLBACK}'`;
 
 export const ar = (n: number) => n.toLocaleString('ar-EG', { maximumFractionDigits: 3 });

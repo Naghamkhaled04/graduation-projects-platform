@@ -24,7 +24,21 @@ const kf = (p: number) => {
   return a.slice(1).map((v, k) => v + (b[k + 1] - v) * t);
 };
 
-export function initHero(root: HTMLElement) {
+export interface Palette { bg: Stops; fg: Stops; fg2: Stops }
+export interface HeroOpts {
+  /** ألوان المسرح من برّا (موقع الدروبال بياخدها من متغيّرات الثيم). بتنقرأ من جديد لما يتغيّر الوضع الليلي */
+  palette?: () => Palette;
+  /** false: الهيرو ما بيغيّر لون الهيدر، فبيضل زي باقي الموقع */
+  header?: boolean;
+}
+
+export function initHero(root: HTMLElement, opts: HeroOpts = {}) {
+  let pal: Palette = opts.palette?.() ?? { bg: BG, fg: FG, fg2: FG2 };
+  if (opts.palette) {
+    const reread = () => { pal = opts.palette!(); };
+    new MutationObserver(reread).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class'] });
+    matchMedia('(prefers-color-scheme: dark)').addEventListener('change', reread);
+  }
   const q = <T extends HTMLElement>(s: string) => root.querySelector<T>(s)!;
   const canvas = q<HTMLCanvasElement>('canvas');
   let renderer: THREE.WebGLRenderer;
@@ -84,7 +98,7 @@ export function initHero(root: HTMLElement) {
   const tick = () => {
     requestAnimationFrame(tick);
     const { p: target, visible, covers } = sectionProgress(root);
-    if (covers) setHeader(rgb(colorAt(FG, cur)), rgb(colorAt(BG, cur)));
+    if (covers && opts.header !== false) setHeader(rgb(colorAt(pal.fg, cur)), rgb(colorAt(pal.bg, cur)));
     if (!visible) return;
     const t = (performance.now() - t0) / 1000;
     cur += (target - cur) * (reduce ? 1 : 0.075);
@@ -107,10 +121,10 @@ export function initHero(root: HTMLElement) {
     sm.opacity = (1 - sstep(0.6, 0.8, p)) * (1 - e * 0.35); shadow.scale.setScalar(1 + e * 0.4);
     dust.rotation.y = t * 0.03 + p * 0.8; dust.position.y = p * 2.2;
 
-    const bg = rgb(colorAt(BG, p));
+    const bg = rgb(colorAt(pal.bg, p));
     stage.style.background = bg;
-    stage.style.setProperty('--fg', rgb(colorAt(FG, p)));
-    stage.style.setProperty('--fg-2', rgb(colorAt(FG2, p)));
+    stage.style.setProperty('--fg', rgb(colorAt(pal.fg, p)));
+    stage.style.setProperty('--fg-2', rgb(colorAt(pal.fg2, p)));
     stage.style.setProperty('--bgc', bg);
 
     titleEl.style.opacity = String(1 - sstep(0.02, 0.16, p));

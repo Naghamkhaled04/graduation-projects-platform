@@ -16,15 +16,16 @@ const tok = (name: string): RGB => {
   return [+m[0], +m[1], +m[2]];
 };
 
-// المرحلة الأولى بخلفية الموقع ونصّه (فاتح أو ليلي)، والكحلية بكحلي الموقع ونص فاتح
+// خلفية الموقع ← كحلي الموقع (المرحلة ٢) ← خلفية الموقع من جديد (المرحلة ٣)،
+// فالهيرو بيخلص بنفس لون القسم اللي تحته. بالوضع الليلي «خلفية الموقع» غامقة لحالها
 const palette = (): Palette => {
-  const paper = tok('--cream'), navy = tok('--green-2'), deep = tok('--green-deep');
+  const paper = tok('--cream'), navy = tok('--green-2');
   const ink = tok('--fg'), ink2 = tok('--fg-2');
   const on: RGB = [233, 243, 248], on2: RGB = [185, 202, 219];
   return {
-    bg: [[0, paper], [0.4, paper], [0.56, navy], [1, deep]],
-    fg: [[0, ink], [0.4, ink], [0.56, on], [1, on]],
-    fg2: [[0, ink2], [0.4, ink2], [0.56, on2], [1, on2]],
+    bg: [[0, paper], [0.4, paper], [0.52, navy], [0.7, navy], [0.82, paper], [1, paper]],
+    fg: [[0, ink], [0.4, ink], [0.52, on], [0.7, on], [0.82, ink], [1, ink]],
+    fg2: [[0, ink2], [0.4, ink2], [0.52, on2], [0.7, on2], [0.82, ink2], [1, ink2]],
   };
 };
 

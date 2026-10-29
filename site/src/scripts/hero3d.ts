@@ -43,12 +43,14 @@ export function initHero(root: HTMLElement, opts: HeroOpts = {}) {
   const canvas = q<HTMLCanvasElement>('canvas');
   let renderer: THREE.WebGLRenderer;
   try {
-    renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+    renderer = new THREE.WebGLRenderer({ canvas, antialias: devicePixelRatio < 1.5, alpha: true, powerPreference: 'high-performance' });
   } catch {
     root.classList.add('no-webgl');
     return;
   }
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  // ponytail: حد الدقة ١٫٥ وبينزل لحاله على الأجهزة البطيئة (تحت). لو بدنا جودة أعلى على أجهزة قوية بنرفع الحد
+  let dpr = Math.min(devicePixelRatio, 1.5);
+  renderer.setPixelRatio(dpr);
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1;
 
@@ -83,9 +85,11 @@ export function initHero(root: HTMLElement, opts: HeroOpts = {}) {
   const tags = [...root.querySelectorAll<HTMLElement>('.tag')];
   const tagPart = (el: HTMLElement) => parts[el.dataset.part!];
 
+  let sw = 1, sh = 1;
   const resize = () => {
-    renderer.setSize(stage.clientWidth, stage.clientHeight, false);
-    cam.aspect = stage.clientWidth / stage.clientHeight; cam.updateProjectionMatrix();
+    sw = stage.clientWidth; sh = stage.clientHeight;
+    renderer.setSize(sw, sh, false);
+    cam.aspect = sw / sh; cam.updateProjectionMatrix();
   };
   addEventListener('resize', resize); resize();
 
@@ -95,13 +99,30 @@ export function initHero(root: HTMLElement, opts: HeroOpts = {}) {
   const t0 = performance.now();
   const v = new THREE.Vector3();
 
+  // بنكتب الستايل بس لما القيمة تتغيّر: كل كتابة على المسرح بتجبر المتصفح يعيد حساب ستايلات الهيرو كله
+  const last = new Map<string, string>();
+  const put = (el: HTMLElement, key: string, val: string) => {
+    const id = key + '|' + (el.dataset.k ??= String(last.size));
+    if (last.get(id) === val) return;
+    last.set(id, val);
+    if (key.startsWith('--')) el.style.setProperty(key, val); else (el.style as any)[key] = val;
+  };
+  // التسميات والشريط بيتحرّكوا بـtransform (على كرت الشاشة، بلا إعادة ترتيب الصفحة)
+  tags.forEach((el) => { el.style.left = '0'; el.style.top = '0'; });
+  bar.style.height = '100%'; bar.style.transformOrigin = 'bottom';
+  // أجهزة بطيئة: لو معدّل الفريم أبطأ من ~٤٠ فريم بالثانية، بننزّل دقة الرسم
+  let slow = 0, frames = 0, lastT = performance.now(), lastIdx = -1;
+
   const tick = () => {
     requestAnimationFrame(tick);
     const { p: target, visible, covers } = sectionProgress(root);
     if (covers && opts.header !== false) setHeader(rgb(colorAt(pal.fg, cur)), rgb(colorAt(pal.bg, cur)));
     if (!visible) return;
-    const t = (performance.now() - t0) / 1000;
+    const now = performance.now(), dt = now - lastT; lastT = now;
+    if (dt < 200 && ++frames > 30) { slow = slow * 0.95 + (dt > 25 ? 1 : 0) * 0.05; if (slow > 0.5 && dpr > 0.75) { dpr = Math.max(0.75, dpr - 0.25); renderer.setPixelRatio(dpr); resize(); slow = 0; frames = 0; } }
+    const t = (now - t0) / 1000;
     cur += (target - cur) * (reduce ? 1 : 0.075);
+    if (Math.abs(target - cur) < 0.0004) cur = target; // لما يوقف السكرول بتوقف الكتابات كمان
     const p = cur;
     smx += (mx - smx) * 0.06; smy += (my - smy) * 0.06;
 
@@ -122,28 +143,28 @@ export function initHero(root: HTMLElement, opts: HeroOpts = {}) {
     dust.rotation.y = t * 0.03 + p * 0.8; dust.position.y = p * 2.2;
 
     const bg = rgb(colorAt(pal.bg, p));
-    stage.style.background = bg;
-    stage.style.setProperty('--fg', rgb(colorAt(pal.fg, p)));
-    stage.style.setProperty('--fg-2', rgb(colorAt(pal.fg2, p)));
-    stage.style.setProperty('--bgc', bg);
+    put(stage, 'background', bg);
+    put(stage, '--fg', rgb(colorAt(pal.fg, p)));
+    put(stage, '--fg-2', rgb(colorAt(pal.fg2, p)));
+    put(stage, '--bgc', bg);
 
-    titleEl.style.opacity = String(1 - sstep(0.02, 0.16, p));
-    titleEl.style.transform = `translateY(${-6 - p * 40}vh) scale(${1 + p * 0.35})`;
-    sub.style.opacity = String(1 - sstep(0, 0.06, p));
-    sub.style.transform = `translateY(${p * 120}px)`;
-    sub.style.pointerEvents = p > 0.06 ? 'none' : 'auto';
-    hint.style.opacity = p < 0.03 ? '0.55' : '0';
-    bar.style.height = `${p * 100}%`;
+    put(titleEl, 'opacity', (1 - sstep(0.02, 0.16, p)).toFixed(3));
+    put(titleEl, 'transform', `translateY(${(-6 - p * 40).toFixed(2)}vh) scale(${(1 + p * 0.35).toFixed(4)})`);
+    put(sub, 'opacity', (1 - sstep(0, 0.06, p)).toFixed(3));
+    put(sub, 'transform', `translateY(${(p * 120).toFixed(1)}px)`);
+    put(sub, 'pointerEvents', p > 0.06 ? 'none' : 'auto');
+    put(hint, 'opacity', p < 0.03 ? '0.55' : '0');
+    put(bar, 'transform', `scaleY(${p.toFixed(4)})`);
 
     const idx = p < 0.2 ? 0 : p < 0.47 ? 1 : p < 0.75 ? 2 : 3;
-    caps.forEach((c) => c.classList.toggle('on', Number(c.dataset.i) === idx));
+    if (idx !== lastIdx) { lastIdx = idx; caps.forEach((c) => c.classList.toggle('on', Number(c.dataset.i) === idx)); }
 
-    const sw = stage.clientWidth, sh = stage.clientHeight;
+    const tagOp = clamp((e - 0.7) * 3.3);
     for (const el of tags) {
+      put(el, 'opacity', tagOp.toFixed(3));
+      if (tagOp <= 0) continue; // مخفية: ما في داعي نحسب مكانها
       tagPart(el).g.getWorldPosition(v); v.project(cam);
-      el.style.left = `${(v.x * 0.5 + 0.5) * sw}px`;
-      el.style.top = `${(-v.y * 0.5 + 0.5) * sh}px`;
-      el.style.opacity = String(clamp((e - 0.7) * 3.3));
+      put(el, 'transform', `translate(${((v.x * 0.5 + 0.5) * sw).toFixed(1)}px, ${((-v.y * 0.5 + 0.5) * sh).toFixed(1)}px) translate(-50%, -50%)`);
     }
     renderer.render(scene, cam);
   };
